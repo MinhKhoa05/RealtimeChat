@@ -1,0 +1,146 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - backend/**
+      - deployments/**
+      - docker-compose.yml
+      - .github/workflows/backend-ci.yml
+      - .github/scripts/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - backend/**
+      - deployments/**
+      - docker-compose.yml
+      - .github/workflows/backend-ci.yml
+      - .github/scripts/**
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+ 
+permissions:
+  contents: read
+  checks: write
+  actions: read
+  pull-requests: read
+
+env:
+  DOTNET_VERSION: 8.0.x
+  SOLUTION_PATH: backend/RealtimeChat.slnx
+  UNIT_TEST_PROJECT: backend/RealtimeChat.UnitTests/RealtimeChat.UnitTests.csproj
+  INTEGRATION_TEST_PROJECT: backend/RealtimeChat.IntegrationTests/RealtimeChat.IntegrationTests.csproj
+  BUILD_CONFIGURATION: Release
+
+jobs:
+  backend-ci:
+    name: Backend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Prepare artifacts
+        run: |
+          rm -rf artifacts
+          mkdir -p artifacts
+
+      - name: Restore packages
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Build solution
+        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+      - name: Run unit tests
+        run: |
+          mkdir -p artifacts/unit-test-results
+          dotnet test ${{ env.UNIT_TEST_PROJECT }} \
+            --configuration ${{ env.BUILD_CONFIGURATION }} \
+            --no-restore \
+            --no-build \
+            --results-directory artifacts/unit-test-results \
+            --logger "trx;LogFileName=unit-tests.trx" \
+            --collect "XPlat Code Coverage"
+
+      - name: Run integration tests
+        run: |
+          mkdir -p artifacts/integration-test-results
+          dotnet test ${{ env.INTEGRATION_TEST_PROJECT }} \
+            --configuration ${{ env.BUILD_CONFIGURATION }} \
+            --no-restore \
+            --no-build \
+            --results-directory artifacts/integration-test-results \
+            --logger "trx;LogFileName=integration-tests.trx" \
+            --collect "XPlat Code Coverage"
+
+      - name: Add test summary
+        if: always() && (hashFiles('artifacts/unit-test-results/**/*.trx') != '' || hashFiles('artifacts/integration-test-results/**/*.trx') != '')
+        shell: pwsh
+        run: ./.github/scripts/test-summary.ps1
+
+      - name: Publish unit test report
+        if: always() && hashFiles('artifacts/unit-test-results/**/*.trx') != ''
+        uses: dorny/test-reporter@v1
+        with:
+          name: .NET Unit Tests
+          path: artifacts/unit-test-results/**/*.trx
+          reporter: dotnet-trx
+          fail-on-error: false
+
+      - name: Publish integration test report
+        if: always() && hashFiles('artifacts/integration-test-results/**/*.trx') != ''
+        uses: dorny/test-reporter@v1
+        with:
+          name: .NET Integration Tests
+          path: artifacts/integration-test-results/**/*.trx
+          reporter: dotnet-trx
+          fail-on-error: false
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: artifacts/unit-test-results
+          if-no-files-found: warn
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: artifacts/integration-test-results
+          if-no-files-found: warn
+
+      - name: Install coverage report generator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: |
+          reportgenerator \
+            "-reports:artifacts/**/*coverage.cobertura.xml" \
+            "-targetdir:artifacts/coverage-report" \
+            "-reporttypes:Html;Cobertura;MarkdownSummaryGithub;Badges"
+
+      - name: Add coverage summary
+        run: |
+          if [ -f artifacts/coverage-report/SummaryGithub.md ]; then
+            cat artifacts/coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: artifacts/coverage-report
+          if-no-files-found: warn

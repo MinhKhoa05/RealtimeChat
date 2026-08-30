@@ -1,0 +1,37 @@
+# Example deployment workflow.
+# This is only a reference implementation for deploying to a Linux VPS over SSH.
+# Update the deployment strategy to match your own infrastructure.
+
+name: Deploy Production Example
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: Production Example
+
+    steps:
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            set -e
+            cd "${{ secrets.APP_PATH }}"
+            git fetch origin
+            git reset --hard origin/main
+            docker compose up -d --build
+            docker image prune -f

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="RealtimeChat.Api/RealtimeChat.Api.csproj" />
+    <Project Path="RealtimeChat.BLL/RealtimeChat.BLL.csproj" />
+    <Project Path="RealtimeChat.DAL/RealtimeChat.DAL.csproj" />
+    <Project Path="RealtimeChat.UnitTests/RealtimeChat.UnitTests.csproj" />
+    <Project Path="RealtimeChat.IntegrationTests/RealtimeChat.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

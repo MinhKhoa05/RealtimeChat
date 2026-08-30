@@ -1,0 +1,32 @@
+# Environment
+.env
+!.env.example
+
+# App config overrides
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+!appsettings.json
+
+# Build output
+**/bin/
+**/obj/
+frontend/dist/
+frontend/*.tsbuildinfo
+coverage/
+TestResults/
+
+# IDE / editor
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.rsuser
+*.sln.docstates
+
+# Local uploads
+uploads/
+
+# Node / tooling
+node_modules/

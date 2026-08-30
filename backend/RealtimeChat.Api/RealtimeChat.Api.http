@@ -1,0 +1,6 @@
+@RealtimeChat.Api_HostAddress = http://localhost:5028
+
+GET {{RealtimeChat.Api_HostAddress}}/health
+Accept: application/json
+
+###

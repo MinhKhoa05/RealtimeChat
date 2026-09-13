@@ -4,8 +4,9 @@ WORKDIR /src
 
 COPY RealtimeChat.slnx ./
 COPY RealtimeChat.Api/*.csproj ./RealtimeChat.Api/
-COPY RealtimeChat.BLL/*.csproj ./RealtimeChat.BLL/
-COPY RealtimeChat.DAL/*.csproj ./RealtimeChat.DAL/
+COPY RealtimeChat.Application/*.csproj ./RealtimeChat.Application/
+COPY RealtimeChat.Domain/*.csproj ./RealtimeChat.Domain/
+COPY RealtimeChat.Infrastructure/*.csproj ./RealtimeChat.Infrastructure/
 
 RUN dotnet restore RealtimeChat.Api/RealtimeChat.Api.csproj
 

@@ -7,12 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.24" />
+    <Compile Remove="Setups\DatabaseSetup.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RealtimeChat.BLL\RealtimeChat.BLL.csproj" />
+    <ProjectReference Include="..\RealtimeChat.Application\RealtimeChat.Application.csproj" />
+    <ProjectReference Include="..\RealtimeChat.Infrastructure\RealtimeChat.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Setups\DatabaseSetup.cs" />
   </ItemGroup>
 
 </Project>

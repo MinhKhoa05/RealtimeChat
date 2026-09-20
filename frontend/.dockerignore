@@ -1,3 +1,7 @@
-node_modules/
-dist/
-*.tsbuildinfo
+node_modules
+dist
+.git
+.gitignore
+.env
+.env.local
+*.log

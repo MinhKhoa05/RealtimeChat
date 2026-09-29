@@ -2,11 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Domain.Entities;
 
-namespace RealtimeChat.Infrastructure.Data
+namespace RealtimeChat.Infrastructure.Persistence
 {
     public class AppDbContext : DbContext, IAppDbContext
     {
-        public DbSet<User> Users => Set<User>();
         public DbSet<Call> Calls => Set<Call>();
         public DbSet<Conversation> Conversations => Set<Conversation>();
         public DbSet<ConversationMember> ConversationMembers => Set<ConversationMember>();
@@ -14,6 +13,8 @@ namespace RealtimeChat.Infrastructure.Data
         public DbSet<Friendship> Friendships => Set<Friendship>();
         public DbSet<Media> Medias => Set<Media>();
         public DbSet<Message> Messages => Set<Message>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<User> Users => Set<User>();
         public DbSet<UserBlock> UserBlocks => Set<UserBlock>();
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)

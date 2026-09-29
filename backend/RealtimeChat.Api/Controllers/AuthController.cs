@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealtimeChat.Application.Features.Auth;
 
@@ -46,6 +47,7 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(LogoutRequest request, CancellationToken ct)
     {
@@ -53,6 +55,7 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
+    [Authorize]
     [HttpPost("logout-all")]
     public async Task<IActionResult> LogoutAll(CancellationToken ct)
     {
@@ -60,6 +63,7 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
+    [Authorize]
     [HttpPost("password/change")]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken ct)
     {

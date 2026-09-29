@@ -2,6 +2,7 @@ namespace RealtimeChat.Domain.Entities;
 
 public class FriendRequest
 {
+    public long Id {get; set; }
     public long SenderId { get; set; }
     public User Sender { get; set; } = null!;
 

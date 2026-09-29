@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealtimeChat.Application.Features.Users;
 
@@ -16,6 +17,7 @@ public class UserController : ControllerBase
         _getUserProfileUseCase = getUserProfileUseCase;
     }
 
+    [Authorize]
     [HttpGet("/me")]
     public async Task<IActionResult> GetMe(CancellationToken ct)
     {

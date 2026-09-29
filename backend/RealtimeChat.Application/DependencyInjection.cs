@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using RealtimeChat.Application.Features.Auth;
+using RealtimeChat.Application.Features.Friends;
 using RealtimeChat.Application.Features.Users;
 
 namespace RealtimeChat.Application;
@@ -20,6 +21,12 @@ public static class DependencyInjection
         // Users
         services.AddScoped<GetCurrentUserUseCase>();
         services.AddScoped<GetUserProfileUseCase>();
+
+        // Friends
+        services.AddScoped<SendFriendRequestUseCase>();
+        services.AddScoped<AcceptFriendRequestUseCase>();
+        services.AddScoped<RejectFriendRequestUseCase>();
+        services.AddScoped<RevokeFriendRequestUseCase>();
 
         return services;
     }

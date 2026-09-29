@@ -11,8 +11,12 @@ public class FriendRequestConfiguration
     {
         builder.ToTable("friend_requests");
 
-        // Composite Primary Key
-        builder.HasKey(x => new
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Id)
+            .ValueGeneratedOnAdd();
+
+        builder.HasIndex(x => new
         {
             x.SenderId,
             x.ReceiverId

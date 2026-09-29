@@ -18,7 +18,7 @@ public class UserController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("/me")]
+    [HttpGet("me")]
     public async Task<IActionResult> GetMe(CancellationToken ct)
     {
         var response = await _getCurrentUserUseCase.ExecuteAsync(ct);

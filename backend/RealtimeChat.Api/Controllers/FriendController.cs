@@ -15,15 +15,24 @@ public class FriendController : ControllerBase
     private readonly RevokeFriendRequestUseCase _revokeFriendRequestUseCase;
     private readonly RemoveFriendUseCase _removeFriendUseCase;
 
+    private readonly GetFriendsUseCase _getFriendsUseCase;
+    private readonly GetSentFriendRequestsUseCase _getSentFriendRequestsUseCase;
+    private readonly GetReceivedFriendRequestsUseCase _getReceivedFriendRequestsUseCase;
+
     public FriendController(SendFriendRequestUseCase sendFriendRequestUseCase, AcceptFriendRequestUseCase acceptFriendRequestUseCase,
         RejectFriendRequestUseCase rejectFriendRequestUseCase, RevokeFriendRequestUseCase revokeFriendRequestUseCase,
-        RemoveFriendUseCase removeFriendUseCase)
+        RemoveFriendUseCase removeFriendUseCase, GetFriendsUseCase getFriendsUseCase, GetSentFriendRequestsUseCase getSentFriendRequestsUseCase,
+        GetReceivedFriendRequestsUseCase getReceivedFriendRequestsUseCase)
     {
         _sendFriendRequestUseCase = sendFriendRequestUseCase;
         _acceptFriendRequestUseCase = acceptFriendRequestUseCase;
         _rejectFriendRequestUseCase = rejectFriendRequestUseCase;
         _revokeFriendRequestUseCase = revokeFriendRequestUseCase;
         _removeFriendUseCase = removeFriendUseCase;
+
+        _getFriendsUseCase = getFriendsUseCase;
+        _getSentFriendRequestsUseCase = getSentFriendRequestsUseCase;
+        _getReceivedFriendRequestsUseCase = getReceivedFriendRequestsUseCase;
     }
 
     [HttpPost("requests")]
@@ -59,5 +68,26 @@ public class FriendController : ControllerBase
     {
         await _removeFriendUseCase.ExecuteAsync(userId, ct);
         return Ok();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetFriends(CancellationToken ct)
+    {
+        var friends = await _getFriendsUseCase.ExecuteAsync(ct);
+        return Ok(friends);
+    }
+
+    [HttpGet("requests/sent")]
+    public async Task<IActionResult> GetSentFriendRequest(CancellationToken ct)
+    {
+        var friendRequests = await _getSentFriendRequestsUseCase.ExecuteAsync(ct);
+        return Ok(friendRequests);
+    }
+
+    [HttpGet("requests/received")]
+    public async Task<IActionResult> GetReceivedFriendRequest(CancellationToken ct)
+    {
+        var friendRequests = await _getReceivedFriendRequestsUseCase.ExecuteAsync(ct);
+        return Ok(friendRequests);
     }
 }

@@ -28,6 +28,9 @@ public static class DependencyInjection
         services.AddScoped<RejectFriendRequestUseCase>();
         services.AddScoped<RevokeFriendRequestUseCase>();
         services.AddScoped<RemoveFriendUseCase>();
+        services.AddScoped<GetFriendsUseCase>();
+        services.AddScoped<GetSentFriendRequestsUseCase>();
+        services.AddScoped<GetReceivedFriendRequestsUseCase>();
 
         return services;
     }

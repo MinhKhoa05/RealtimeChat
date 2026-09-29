@@ -20,8 +20,7 @@ public class ConversationConfiguration
 
         // Name
         builder.Property(x => x.Name)
-            .HasMaxLength(200)
-            .IsRequired(false);
+            .HasMaxLength(200);
 
         // Avatar
         builder.HasOne(x => x.AvatarMedia)
@@ -34,8 +33,7 @@ public class ConversationConfiguration
             .IsRequired();
 
         // DisbandedAt
-        builder.Property(x => x.DisbandedAt)
-            .IsRequired(false);
+        builder.Property(x => x.DisbandedAt);
 
         // Conversation -> Members
         builder.HasMany(x => x.Members)

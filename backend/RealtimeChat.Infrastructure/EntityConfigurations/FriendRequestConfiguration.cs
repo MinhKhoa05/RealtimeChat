@@ -32,8 +32,7 @@ public class FriendRequestConfiguration
 
         // Introduction
         builder.Property(x => x.Introduction)
-            .HasMaxLength(500)
-            .IsRequired(false);
+            .HasMaxLength(500);
 
         // CreatedAt
         builder.Property(x => x.CreatedAt)

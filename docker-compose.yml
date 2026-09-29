@@ -1,6 +1,8 @@
 services:
   db:
     image: mariadb:11
+    ports:
+    - "3306:3306"
     container_name: realtime_chat_db
     restart: unless-stopped
 
@@ -37,7 +39,7 @@ services:
 
     environment:
       ASPNETCORE_URLS: http://+:8080
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Development
 
       ConnectionStrings__DefaultConnection: "Server=db;Port=3306;Database=realtime_chat_db;User=realtime_chat_user;Password=${DB_PASSWORD}"
 

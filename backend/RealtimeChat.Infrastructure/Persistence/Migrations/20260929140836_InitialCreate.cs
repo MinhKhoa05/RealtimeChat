@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -121,6 +122,8 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                 name: "friend_requests",
                 columns: table => new
                 {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     SenderId = table.Column<long>(type: "bigint", nullable: false),
                     ReceiverId = table.Column<long>(type: "bigint", nullable: false),
                     Introduction = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
@@ -129,7 +132,7 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_friend_requests", x => new { x.SenderId, x.ReceiverId });
+                    table.PrimaryKey("PK_friend_requests", x => x.Id);
                     table.ForeignKey(
                         name: "FK_friend_requests_users_ReceiverId",
                         column: x => x.ReceiverId,
@@ -168,6 +171,31 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                         principalTable: "users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "RefreshTokens",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    TokenHash = table.Column<string>(type: "varchar(44)", maxLength: 44, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ExpiredAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    RevokedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -309,6 +337,11 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                 column: "ReceiverId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_friend_requests_SenderId_ReceiverId",
+                table: "friend_requests",
+                columns: new[] { "SenderId", "ReceiverId" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_friendships_FriendId",
                 table: "friendships",
                 column: "FriendId");
@@ -340,6 +373,17 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                 column: "SenderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_TokenHash",
+                table: "RefreshTokens",
+                column: "TokenHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_UserId",
+                table: "RefreshTokens",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_user_blocks_BlockedUserId",
                 table: "user_blocks",
                 column: "BlockedUserId");
@@ -367,6 +411,9 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
 
             migrationBuilder.DropTable(
                 name: "friendships");
+
+            migrationBuilder.DropTable(
+                name: "RefreshTokens");
 
             migrationBuilder.DropTable(
                 name: "user_blocks");

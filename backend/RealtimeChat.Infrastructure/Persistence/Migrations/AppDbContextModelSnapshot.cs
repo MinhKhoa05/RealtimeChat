@@ -119,11 +119,11 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.FriendRequest", b =>
                 {
-                    b.Property<long>("SenderId")
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    b.Property<long>("ReceiverId")
-                        .HasColumnType("bigint");
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -132,9 +132,17 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
-                    b.HasKey("SenderId", "ReceiverId");
+                    b.Property<long>("ReceiverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SenderId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId", "ReceiverId");
 
                     b.ToTable("friend_requests", (string)null);
                 });

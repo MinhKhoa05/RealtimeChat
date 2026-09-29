@@ -11,11 +11,17 @@ public class AuthController : ControllerBase
     private readonly LoginUseCase _loginUseCase;
     private readonly RefreshTokenUseCase _refreshTokenUseCase;
 
-    public AuthController(RegisterUseCase registerUseCase, LoginUseCase loginUseCase, RefreshTokenUseCase refreshTokenUseCase)
+    private readonly LogoutUseCase _logoutUseCase;
+    private readonly LogoutAllUseCase _logoutAllUseCase;
+
+    public AuthController(RegisterUseCase registerUseCase, LoginUseCase loginUseCase, RefreshTokenUseCase refreshTokenUseCase,
+        LogoutUseCase logoutUseCase, LogoutAllUseCase logoutAllUseCase)
     {
         _registerUseCase = registerUseCase;
         _loginUseCase = loginUseCase;
         _refreshTokenUseCase = refreshTokenUseCase;
+        _logoutUseCase = logoutUseCase;
+        _logoutAllUseCase = logoutAllUseCase;
     }
 
     [HttpPost("register")]
@@ -37,5 +43,19 @@ public class AuthController : ControllerBase
     {
         var response = await _refreshTokenUseCase.ExecuteAsync(request, ct);
         return Ok(response);
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(LogoutRequest request, CancellationToken ct)
+    {
+        await _logoutUseCase.ExecuteAsync(request, ct);
+        return Ok();
+    }
+
+    [HttpPost("logout/all")]
+    public async Task<IActionResult> LogoutAll(CancellationToken ct)
+    {
+        await _logoutAllUseCase.ExecuteAsync(ct);
+        return Ok();
     }
 }

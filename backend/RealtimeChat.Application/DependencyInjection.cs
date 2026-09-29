@@ -13,6 +13,8 @@ public static class DependencyInjection
         services.AddScoped<RegisterUseCase>();
         services.AddScoped<LoginUseCase>();
         services.AddScoped<RefreshTokenUseCase>();
+        services.AddScoped<LogoutUseCase>();
+        services.AddScoped<LogoutAllUseCase>();
 
         // Users
         services.AddScoped<GetCurrentUserUseCase>();

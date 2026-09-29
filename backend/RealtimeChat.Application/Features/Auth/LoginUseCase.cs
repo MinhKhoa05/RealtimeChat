@@ -19,18 +19,15 @@ public class LoginUseCase
 
     public async Task<LoginResponse> ExecuteAsync(LoginRequest request, CancellationToken ct)
     {
-        // Kiểm tra user tồn tại
         var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == request.Email, ct)
             ?? throw new Exception("Invalid Credentials");
 
-        // Kiểm tra mật khẩu
         var isMatch = _passwordHasher.Verify(request.Password, user.Password);
         if (!isMatch)
         {
             throw new Exception("Invalid Credentials");
         }
 
-        // Tạo Refresh Token
         var token = _tokenService.GenerateRefreshToken();
         var tokenHash = _tokenService.HashRefreshToken(token);
 
@@ -45,7 +42,6 @@ public class LoginUseCase
         _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync(ct);
 
-        // Tạo access token
         var accessToken = _tokenService.GenerateAccessToken(user);
 
         return new LoginResponse

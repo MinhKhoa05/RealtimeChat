@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Friends;
 
@@ -15,15 +17,16 @@ public class RejectFriendRequestUseCase
 
     public async Task ExecuteAsync(long requestId, CancellationToken ct)
     {
-        var friendRequest = await _context.FriendRequests.FindAsync(requestId)
+        var friendRequest = await _context.Relationships
+            .FirstOrDefaultAsync(x => x.Type == RelationshipType.FriendRequest && x.Id == requestId, ct)
             ?? throw new Exception("Request not found");
 
-        if (_currentUser.UserId != friendRequest.ReceiverId)
+        if (_currentUser.UserId != friendRequest.TargetUserId)
         {
             throw new Exception("Cannot reject");
         }
 
-        _context.FriendRequests.Remove(friendRequest);
+        _context.Relationships.Remove(friendRequest);
         await _context.SaveChangesAsync(ct);
     }
 }

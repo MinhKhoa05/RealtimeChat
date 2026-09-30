@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
-
+using RealtimeChat.Domain.Enums;
 namespace RealtimeChat.Application.Features.Friends;
 
 public class RemoveFriendUseCase
@@ -26,15 +26,16 @@ public class RemoveFriendUseCase
         var user1Id = Math.Min(userId, currentUserId);
         var user2Id = Math.Max(userId, currentUserId);
 
-        var friendship = await _context.Friendships
-            .FirstOrDefaultAsync(x=> x.UserId == user1Id && x.FriendId == user2Id, ct);
+        var friendship = await _context.Relationships
+            .FirstOrDefaultAsync(x => x.Type == RelationshipType.Friend &&
+                x.UserId == user1Id && x.TargetUserId == user2Id, ct);
 
         if (friendship is null)
         {
             throw new Exception("Not friends.");
         }
 
-        _context.Friendships.Remove(friendship);
+        _context.Relationships.Remove(friendship);
         await _context.SaveChangesAsync(ct);
     }
 }

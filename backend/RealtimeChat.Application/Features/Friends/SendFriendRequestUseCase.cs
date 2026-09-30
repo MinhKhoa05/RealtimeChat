@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Domain.Entities;
+using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Friends;
 
@@ -31,34 +32,35 @@ public class SendFriendRequestUseCase
         var user1Id = Math.Min(request.UserId, currentUserId);
         var user2Id = Math.Max(request.UserId, currentUserId);
 
-        var isFriend = await _context.Friendships.AnyAsync(x => x.UserId == user1Id && x.FriendId == user2Id, ct);
+        var isFriend = await _context.Relationships.AnyAsync(x => x.Type == RelationshipType.Friend && x.UserId == user1Id && x.TargetUserId == user2Id, ct);
         if (isFriend)
         {
             throw new Exception("Already friends.");
         }
 
-        var existingRequest = await _context.FriendRequests
-            .AnyAsync(x => x.SenderId == currentUserId && x.ReceiverId == request.UserId, ct);
+        var existingRequest = await _context.Relationships
+            .AnyAsync(x => x.Type == RelationshipType.FriendRequest && x.UserId == currentUserId && x.TargetUserId == request.UserId, ct);
 
         if (existingRequest)
         {
             throw new Exception("Friend request already sent");
         }
 
-        var reverseRequest = await _context.FriendRequests
-            .AnyAsync(x => x.SenderId == request.UserId && x.ReceiverId == currentUserId, ct);
+        var reverseRequest = await _context.Relationships
+            .AnyAsync(x => x.Type == RelationshipType.FriendRequest && x.UserId == request.UserId && x.TargetUserId == currentUserId, ct);
 
         if (reverseRequest)
             throw new Exception("Friend request already received.");
 
-        var friendRequest = new FriendRequest
+        var friendRequest = new Relationship
         {
-            SenderId = currentUserId,
-            ReceiverId = request.UserId,
-            Introduction = request.Introduction
+            UserId = currentUserId,
+            TargetUserId = request.UserId,
+            Introduction = request.Introduction,
+            Type = RelationshipType.FriendRequest
         };
         
-        _context.FriendRequests.Add(friendRequest);
+        _context.Relationships.Add(friendRequest);
         await _context.SaveChangesAsync(ct);
     }
 }

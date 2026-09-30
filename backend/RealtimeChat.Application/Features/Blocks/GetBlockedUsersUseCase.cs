@@ -16,13 +16,13 @@ public class GetBlockedUsersUseCase
 
     public async Task<List<BlockedUserResponse>> ExecuteAsync(CancellationToken ct)
     {
-        var blockedUsers = await _context.UserBlocks
+        var blockedUsers = await _context.Relationships
             .AsNoTracking()
-            .Where(x => x.BlockerId == _currentUser.UserId)
+            .Where(x => x.Type == Domain.Enums.RelationshipType.Block && x.UserId == _currentUser.UserId)
             .Select(x => new BlockedUserResponse
             {
-                UserId = x.BlockedUser.Id,
-                Name = x.BlockedUser.Name,
+                UserId = x.TargetUser.Id,
+                Name = x.TargetUser.Name,
                 AvatarUrl = null
             })
             .ToListAsync(ct);

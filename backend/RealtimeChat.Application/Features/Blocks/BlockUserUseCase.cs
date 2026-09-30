@@ -30,41 +30,43 @@ public class BlockUserUseCase
             throw new Exception("User not found");
         }
 
-        var exists = await _context.UserBlocks
-            .AnyAsync(x => x.BlockerId == currentUserId && x.BlockedUserId == userId, ct);
+        var exists = await _context.Relationships
+            .AnyAsync(x => x.Type == Domain.Enums.RelationshipType.Block && x.UserId == currentUserId && x.TargetUserId == userId, ct);
 
         if (exists)
         {
             throw new Exception("Already block");
         }
 
-        var userBlock = new UserBlock
+        var userBlock = new Relationship
         {
-            BlockerId = currentUserId,
-            BlockedUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            UserId = currentUserId,
+            TargetUserId = userId,
+            CreatedAt = DateTime.UtcNow,
+            Type = Domain.Enums.RelationshipType.Block
         };
 
-        _context.UserBlocks.Add(userBlock);
+        _context.Relationships.Add(userBlock);
 
         var user1Id = Math.Min(userId, currentUserId);
         var user2Id = Math.Max(userId, currentUserId);
 
-        var friendship = await _context.Friendships
-            .FirstOrDefaultAsync(x => x.UserId == user1Id && x.FriendId == user2Id, ct);
+        var friendship = await _context.Relationships
+            .FirstOrDefaultAsync(x => x.Type == Domain.Enums.RelationshipType.Friend && x.UserId == user1Id && x.TargetUserId == user2Id, ct);
         
         if (friendship is not null)
         {
-            _context.Friendships.Remove(friendship);
+            _context.Relationships.Remove(friendship);
         }
 
-        var friendRequests = await _context.FriendRequests
+        var friendRequests = await _context.Relationships
             .Where(x =>
-                (x.SenderId == currentUserId && x.ReceiverId == userId) ||
-                (x.SenderId == userId && x.ReceiverId == currentUserId))
+                x.Type == Domain.Enums.RelationshipType.FriendRequest &&
+                ((x.UserId == currentUserId && x.TargetUserId == userId) ||
+                (x.UserId == userId && x.TargetUserId == currentUserId)))
             .ToListAsync(ct);
 
-        _context.FriendRequests.RemoveRange(friendRequests);
+        _context.Relationships.RemoveRange(friendRequests);
 
         await _context.SaveChangesAsync(ct);
     }

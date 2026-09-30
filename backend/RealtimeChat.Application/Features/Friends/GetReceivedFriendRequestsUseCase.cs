@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Friends;
 
@@ -16,15 +17,15 @@ public class GetReceivedFriendRequestsUseCase
 
     public async Task<List<FriendRequestResponse>> ExecuteAsync(CancellationToken ct)
     {
-        var friendRequests = await _context.FriendRequests
+        var friendRequests = await _context.Relationships
             .AsNoTracking()
-            .Where(x => x.ReceiverId == _currentUser.UserId)
+            .Where(x => x.Type == RelationshipType.FriendRequest && x.TargetUserId == _currentUser.UserId)
             .Select(x => new FriendRequestResponse
             {
                 RequestId = x.Id,
-                UserId = x.Receiver.Id,
+                UserId = x.User.Id,
                 Introduction = x.Introduction,
-                Name = x.Receiver.Name,
+                Name = x.User.Name,
                 AvatarUrl = null
             })
             .ToListAsync(ct);

@@ -16,12 +16,12 @@ public class UnBlockUserUseCase
 
     public async Task ExecuteAsync(long userId, CancellationToken ct)
     {
-        var userBlock = await _context.UserBlocks
-            .FirstOrDefaultAsync(x => x.BlockerId == _currentUser.UserId && x.BlockedUserId == userId, ct);
+        var userBlock = await _context.Relationships
+            .FirstOrDefaultAsync(x => x.Type == Domain.Enums.RelationshipType.Block && x.UserId == _currentUser.UserId && x.TargetUserId == userId, ct);
 
         if (userBlock is not null)
         {
-            _context.UserBlocks.Remove(userBlock);
+            _context.Relationships.Remove(userBlock);
             await _context.SaveChangesAsync(ct);
         }
     }

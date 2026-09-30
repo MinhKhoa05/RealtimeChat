@@ -22,6 +22,7 @@ public static class DependencyInjection
         // Users
         services.AddScoped<GetCurrentUserUseCase>();
         services.AddScoped<GetUserProfileUseCase>();
+        services.AddScoped<SearchUsersUseCase>();
 
         // Friends
         services.AddScoped<SendFriendRequestUseCase>();

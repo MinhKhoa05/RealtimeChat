@@ -19,9 +19,6 @@ public static class RelationshipQueryExtensions
     public static IQueryable<Relationship> FriendRequests(this IQueryable<Relationship> query)
         => query.Where(x => x.Type == RelationshipType.FriendRequest);
 
-    public static IQueryable<Relationship> FriendRequest(this IQueryable<Relationship> query, long senderId, long receiverId)
-        => query.FriendRequests().Where(x => x.UserId == senderId && x.TargetUserId == receiverId);
-
     public static IQueryable<Relationship> Blocks(this IQueryable<Relationship> query)
         => query.Where(x => x.Type == RelationshipType.Block);
 
@@ -32,4 +29,9 @@ public static class RelationshipQueryExtensions
         => query.Where(x =>
             (x.UserId == userId && x.TargetUserId == otherUserId) ||
             (x.UserId == otherUserId && x.TargetUserId == userId));
+
+    public static IQueryable<Relationship> WithUsers(this IQueryable<Relationship> query, long userId, IEnumerable<long> otherUserIds)
+        => query.Where(x =>
+            (x.UserId == userId && otherUserIds.Contains(x.TargetUserId)) ||
+            (otherUserIds.Contains(x.UserId) && x.TargetUserId == userId));
 }

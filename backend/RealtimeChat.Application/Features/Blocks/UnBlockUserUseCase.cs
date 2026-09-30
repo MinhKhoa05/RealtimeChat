@@ -4,12 +4,12 @@ using RealtimeChat.Application.QueryExtensions;
 
 namespace RealtimeChat.Application.Features.Blocks;
 
-public class UnBlockUserUseCase
+public class UnblockUserUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
 
-    public UnBlockUserUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public UnblockUserUseCase(IAppDbContext context, ICurrentUser currentUser)
     {
         _context = context;
         _currentUser = currentUser;

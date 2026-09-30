@@ -9,36 +9,38 @@ namespace RealtimeChat.Api.Controllers;
 [Route("api/users")]
 public class UserController : ControllerBase
 {
-    private readonly GetCurrentUserUseCase _getCurrentUserUseCase;
-    private readonly GetUserProfileUseCase _getUserProfileUseCase;
-    private readonly SearchUsersUseCase _searchUsersUseCase;
+    private readonly GetCurrentUserUseCase _getCurrentUser;
+    private readonly GetUserProfileUseCase _getUserProfile;
+    private readonly SearchUsersUseCase _searchUsers;
 
-    public UserController(GetCurrentUserUseCase getCurrentUserUseCase, GetUserProfileUseCase getUserProfileUseCase,
-        SearchUsersUseCase searchUsersUseCase)
+    public UserController(
+        GetCurrentUserUseCase getCurrentUser,
+        GetUserProfileUseCase getUserProfile,
+        SearchUsersUseCase searchUsers)
     {
-        _getCurrentUserUseCase = getCurrentUserUseCase;
-        _getUserProfileUseCase = getUserProfileUseCase;
-        _searchUsersUseCase = searchUsersUseCase;
+        _getCurrentUser = getCurrentUser;
+        _getUserProfile = getUserProfile;
+        _searchUsers = searchUsers;
     }
 
     [HttpGet("me")]
     public async Task<IActionResult> GetMe(CancellationToken ct)
     {
-        var result = await _getCurrentUserUseCase.ExecuteAsync(ct);
+        var result = await _getCurrentUser.ExecuteAsync(ct);
         return Ok(result);
     }
 
     [HttpGet("search")]
     public async Task<IActionResult> SearchUser([FromQuery] string keyword, CancellationToken ct)
     {
-        var result = await _searchUsersUseCase.ExecuteAsync(keyword, ct);
+        var result = await _searchUsers.ExecuteAsync(keyword, ct);
         return Ok(result);
     }
 
     [HttpGet("{userId:long}")]
     public async Task<IActionResult> GetUserProfile(long userId, CancellationToken ct)
     {
-        var result = await _getUserProfileUseCase.ExecuteAsync(userId, ct);
+        var result = await _getUserProfile.ExecuteAsync(userId, ct);
         return Ok(result);
     }
 }

@@ -8,42 +8,47 @@ namespace RealtimeChat.Api.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly RegisterUseCase _registerUseCase;
-    private readonly LoginUseCase _loginUseCase;
-    private readonly RefreshTokenUseCase _refreshTokenUseCase;
-    private readonly LogoutUseCase _logoutUseCase;
-    private readonly LogoutAllUseCase _logoutAllUseCase;
-    private readonly ChangePasswordUseCase _changePasswordUseCase;
+    private readonly RegisterUseCase _register;
+    private readonly LoginUseCase _login;
+    private readonly RefreshTokenUseCase _refreshToken;
+    private readonly LogoutUseCase _logout;
+    private readonly LogoutAllUseCase _logoutAll;
+    private readonly ChangePasswordUseCase _changePassword;
 
-    public AuthController(RegisterUseCase registerUseCase, LoginUseCase loginUseCase, RefreshTokenUseCase refreshTokenUseCase,
-        LogoutUseCase logoutUseCase, LogoutAllUseCase logoutAllUseCase, ChangePasswordUseCase changePasswordUseCase)
+    public AuthController(
+        RegisterUseCase register,
+        LoginUseCase login,
+        RefreshTokenUseCase refreshToken,
+        LogoutUseCase logout,
+        LogoutAllUseCase logoutAll,
+        ChangePasswordUseCase changePassword)
     {
-        _registerUseCase = registerUseCase;
-        _loginUseCase = loginUseCase;
-        _refreshTokenUseCase = refreshTokenUseCase;
-        _logoutUseCase = logoutUseCase;
-        _logoutAllUseCase = logoutAllUseCase;
-        _changePasswordUseCase = changePasswordUseCase;
+        _register = register;
+        _login = login;
+        _refreshToken = refreshToken;
+        _logout = logout;
+        _logoutAll = logoutAll;
+        _changePassword = changePassword;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
     {
-        await _registerUseCase.ExecuteAsync(request, ct);
+        await _register.ExecuteAsync(request, ct);
         return Ok();
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request, CancellationToken ct)
     {
-        var response = await _loginUseCase.ExecuteAsync(request, ct);
+        var response = await _login.ExecuteAsync(request, ct);
         return Ok(response);
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> RefreshToken(RefreshTokenRequest request, CancellationToken ct)
     {
-        var response = await _refreshTokenUseCase.ExecuteAsync(request, ct);
+        var response = await _refreshToken.ExecuteAsync(request, ct);
         return Ok(response);
     }
 
@@ -51,7 +56,7 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(LogoutRequest request, CancellationToken ct)
     {
-        await _logoutUseCase.ExecuteAsync(request, ct);
+        await _logout.ExecuteAsync(request, ct);
         return Ok();
     }
 
@@ -59,7 +64,7 @@ public class AuthController : ControllerBase
     [HttpPost("logout-all")]
     public async Task<IActionResult> LogoutAll(CancellationToken ct)
     {
-        await _logoutAllUseCase.ExecuteAsync(ct);
+        await _logoutAll.ExecuteAsync(ct);
         return Ok();
     }
 
@@ -67,7 +72,7 @@ public class AuthController : ControllerBase
     [HttpPost("password/change")]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken ct)
     {
-        await _changePasswordUseCase.ExecuteAsync(request, ct);
+        await _changePassword.ExecuteAsync(request, ct);
         return Ok();
     }
 }

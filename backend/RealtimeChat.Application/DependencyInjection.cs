@@ -37,7 +37,7 @@ public static class DependencyInjection
 
         // Blocks
         services.AddScoped<BlockUserUseCase>();
-        services.AddScoped<UnBlockUserUseCase>();
+        services.AddScoped<UnblockUserUseCase>();
         services.AddScoped<GetBlockedUsersUseCase>();
 
         // Groups

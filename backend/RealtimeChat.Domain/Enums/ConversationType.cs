@@ -2,6 +2,6 @@ namespace RealtimeChat.Domain.Enums;
 
 public enum ConversationType
 {
-    Private,
+    Direct,
     Group
 }

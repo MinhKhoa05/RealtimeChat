@@ -39,10 +39,5 @@ public class ConversationConfiguration
         builder.HasMany(x => x.Members)
             .WithOne(x => x.Conversation)
             .HasForeignKey(x => x.ConversationId);
-
-        // Conversation -> Messages
-        builder.HasMany(x => x.Messages)
-            .WithOne(x => x.Conversation)
-            .HasForeignKey(x => x.ConversationId);
     }
 }

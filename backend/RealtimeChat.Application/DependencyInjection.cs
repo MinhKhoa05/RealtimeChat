@@ -3,6 +3,7 @@ using RealtimeChat.Application.Features.Auth;
 using RealtimeChat.Application.Features.Blocks;
 using RealtimeChat.Application.Features.Friends;
 using RealtimeChat.Application.Features.Users;
+using RealtimeChat.Application.Features.Groups;
 
 namespace RealtimeChat.Application;
 
@@ -38,6 +39,16 @@ public static class DependencyInjection
         services.AddScoped<BlockUserUseCase>();
         services.AddScoped<UnBlockUserUseCase>();
         services.AddScoped<GetBlockedUsersUseCase>();
+
+        // Groups
+        services.AddScoped<AddMemberUseCase>();
+        services.AddScoped<CreateGroupUseCase>();
+        services.AddScoped<GetGroupMembersUseCase>();
+        services.AddScoped<GetGroupUseCase>();
+        services.AddScoped<GetMyGroupsUseCase>();
+        services.AddScoped<KickMemberUseCase>();
+        services.AddScoped<LeaveGroupUseCase>();
+        services.AddScoped<TransferAdminUseCase>();
 
         return services;
     }

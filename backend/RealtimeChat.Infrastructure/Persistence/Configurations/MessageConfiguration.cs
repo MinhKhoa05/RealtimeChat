@@ -23,7 +23,7 @@ public class MessageConfiguration
 
         // Conversation
         builder.HasOne(x => x.Conversation)
-            .WithMany(x => x.Messages)
+            .WithMany()
             .HasForeignKey(x => x.ConversationId)
             .OnDelete(DeleteBehavior.Cascade);
 

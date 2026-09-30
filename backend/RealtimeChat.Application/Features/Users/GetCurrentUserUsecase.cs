@@ -1,5 +1,4 @@
 using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Application.Features.Users;
 

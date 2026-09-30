@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.QueryExtensions;
 
 namespace RealtimeChat.Application.Features.Blocks;
 
@@ -18,10 +19,11 @@ public class GetBlockedUsersUseCase
     {
         var blockedUsers = await _context.Relationships
             .AsNoTracking()
-            .Where(x => x.Type == Domain.Enums.RelationshipType.Block && x.UserId == _currentUser.UserId)
+            .Blocks()
+            .Where(x => x.UserId == _currentUser.UserId)
             .Select(x => new BlockedUserResponse
             {
-                UserId = x.TargetUser.Id,
+                UserId = x.TargetUserId,
                 Name = x.TargetUser.Name,
                 AvatarUrl = null
             })

@@ -22,7 +22,9 @@ public class ChangePasswordUseCase
 
         var isMatch = _passwordHasher.Verify(request.CurrentPassword, user.Password);
         if (!isMatch)
+        {
             throw new Exception("Invalid Current Password");
+        }
 
         user.Password = _passwordHasher.Hash(request.NewPassword);
 
@@ -32,6 +34,6 @@ public class ChangePasswordUseCase
 
 public class ChangePasswordRequest
 {
-    public string CurrentPassword {get; set;} = null!;
-    public string NewPassword {get; set;} = null!;
+    public string CurrentPassword { get; set; } = null!;
+    public string NewPassword { get; set; } = null!;
 }

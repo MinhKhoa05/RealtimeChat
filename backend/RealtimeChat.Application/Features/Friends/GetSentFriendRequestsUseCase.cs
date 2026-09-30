@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Domain.Enums;
+using RealtimeChat.Application.QueryExtensions;
 
 namespace RealtimeChat.Application.Features.Friends;
 
@@ -19,7 +19,8 @@ public class GetSentFriendRequestsUseCase
     {
         var friendRequests = await _context.Relationships
             .AsNoTracking()
-            .Where(x => x.Type == RelationshipType.FriendRequest && x.UserId == _currentUser.UserId)
+            .FriendRequests()
+            .Where(x => x.UserId == _currentUser.UserId)
             .Select(x => new FriendRequestResponse
             {
                 RequestId = x.Id,

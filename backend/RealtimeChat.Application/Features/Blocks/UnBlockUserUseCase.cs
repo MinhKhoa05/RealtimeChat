@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.QueryExtensions;
 
 namespace RealtimeChat.Application.Features.Blocks;
 
@@ -17,7 +18,8 @@ public class UnBlockUserUseCase
     public async Task ExecuteAsync(long userId, CancellationToken ct)
     {
         var userBlock = await _context.Relationships
-            .FirstOrDefaultAsync(x => x.Type == Domain.Enums.RelationshipType.Block && x.UserId == _currentUser.UserId && x.TargetUserId == userId, ct);
+            .Block(_currentUser.UserId, userId)
+            .FirstOrDefaultAsync(ct);
 
         if (userBlock is not null)
         {

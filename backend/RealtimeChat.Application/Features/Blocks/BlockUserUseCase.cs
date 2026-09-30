@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Application.Features.Blocks;
@@ -30,40 +31,28 @@ public class BlockUserUseCase
             throw new Exception("User not found");
         }
 
-        var exists = await _context.Relationships
-            .AnyAsync(x => x.Type == Domain.Enums.RelationshipType.Block && x.UserId == currentUserId && x.TargetUserId == userId, ct);
+        var exists = await _context.Relationships.Block(currentUserId, userId).AnyAsync(ct);
 
         if (exists)
         {
             throw new Exception("Already block");
         }
 
-        var userBlock = new Relationship
-        {
-            UserId = currentUserId,
-            TargetUserId = userId,
-            CreatedAt = DateTime.UtcNow,
-            Type = Domain.Enums.RelationshipType.Block
-        };
-
-        _context.Relationships.Add(userBlock);
-
-        var user1Id = Math.Min(userId, currentUserId);
-        var user2Id = Math.Max(userId, currentUserId);
+        var blocks = Relationship.CreateBlock(currentUserId, userId);
+        _context.Relationships.Add(blocks);
 
         var friendship = await _context.Relationships
-            .FirstOrDefaultAsync(x => x.Type == Domain.Enums.RelationshipType.Friend && x.UserId == user1Id && x.TargetUserId == user2Id, ct);
-        
+            .Friend(currentUserId, userId)
+            .FirstOrDefaultAsync(ct);
+            
         if (friendship is not null)
         {
             _context.Relationships.Remove(friendship);
         }
 
         var friendRequests = await _context.Relationships
-            .Where(x =>
-                x.Type == Domain.Enums.RelationshipType.FriendRequest &&
-                ((x.UserId == currentUserId && x.TargetUserId == userId) ||
-                (x.UserId == userId && x.TargetUserId == currentUserId)))
+            .FriendRequests()
+            .Between(currentUserId, userId)
             .ToListAsync(ct);
 
         _context.Relationships.RemoveRange(friendRequests);

@@ -8,6 +8,9 @@ public static class ConversationQueryExtensions
     public static IQueryable<Conversation> GetById(this IQueryable<Conversation> query, long conversationId)
         => query.Where(x => x.Id == conversationId);
 
+    public static IQueryable<Conversation> Active(this IQueryable<Conversation> query)
+        => query.Where(x => x.DisbandedAt == null);
+
     public static IQueryable<Conversation> Groups(this IQueryable<Conversation> query)
         => query.Where(x => x.Type == ConversationType.Group);
 

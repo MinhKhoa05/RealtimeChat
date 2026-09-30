@@ -49,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<KickMemberUseCase>();
         services.AddScoped<LeaveGroupUseCase>();
         services.AddScoped<TransferAdminUseCase>();
+        services.AddScoped<DisbandGroupUseCase>();
 
         return services;
     }

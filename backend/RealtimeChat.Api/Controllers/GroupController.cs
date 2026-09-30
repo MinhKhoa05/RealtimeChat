@@ -17,6 +17,7 @@ public class GroupsController : ControllerBase
     private readonly KickMemberUseCase _kickMember;
     private readonly LeaveGroupUseCase _leaveGroup;
     private readonly TransferAdminUseCase _transferAdmin;
+    private readonly DisbandGroupUseCase _disbandGroup;
 
     public GroupsController(
         AddMemberUseCase addMember,
@@ -26,7 +27,8 @@ public class GroupsController : ControllerBase
         GetMyGroupsUseCase getMyGroups,
         KickMemberUseCase kickMember,
         LeaveGroupUseCase leaveGroup,
-        TransferAdminUseCase transferAdmin)
+        TransferAdminUseCase transferAdmin,
+        DisbandGroupUseCase disbandGroup)
     {
         _addMember = addMember;
         _createGroup = createGroup;
@@ -36,6 +38,7 @@ public class GroupsController : ControllerBase
         _kickMember = kickMember;
         _leaveGroup = leaveGroup;
         _transferAdmin = transferAdmin;
+        _disbandGroup = disbandGroup;
     }
 
     [HttpPost]
@@ -83,7 +86,7 @@ public class GroupsController : ControllerBase
     }
 
     [HttpPost("{groupId:long}/leave")]
-    public async Task<IActionResult> Leave(long groupId, CancellationToken ct)
+    public async Task<IActionResult> LeaveGroup(long groupId, CancellationToken ct)
     {
         await _leaveGroup.ExecuteAsync(groupId, ct);
         return NoContent();
@@ -93,6 +96,13 @@ public class GroupsController : ControllerBase
     public async Task<IActionResult> TransferAdmin(long groupId, TransferAdminRequest request, CancellationToken ct)
     {
         await _transferAdmin.ExecuteAsync(groupId, request, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{groupId:long}")]
+    public async Task<IActionResult> DisbandGroup(long groupId, CancellationToken ct)
+    {
+        await _disbandGroup.ExecuteAsync(groupId, ct);
         return NoContent();
     }
 }

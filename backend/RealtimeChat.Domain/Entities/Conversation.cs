@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Domain.Entities;
@@ -15,6 +14,8 @@ public class Conversation
     public DateTime CreatedAt { get; private set; }
     public DateTime? DisbandedAt { get; private set; }
 
+    public string? DirectKey { get; private set; }
+
     public ICollection<ConversationMember> Members { get; private set; }
         = new List<ConversationMember>();
 
@@ -22,10 +23,16 @@ public class Conversation
 
     public static Conversation CreateDirect(long user1Id, long user2Id)
     {
+        if (user1Id == user2Id)
+        {
+            throw new Exception("Cannot create private conversation with yourself");
+        }
+
         var conversation = new Conversation
         {
             Type = ConversationType.Direct,
             CreatedAt = DateTime.UtcNow,
+            DirectKey = GenerateDirectKey(user1Id, user2Id)
         };
 
         conversation.AddMemberInternal(user1Id, ConversationMemberRole.Member);
@@ -55,11 +62,11 @@ public class Conversation
         AddMemberInternal(memberId, ConversationMemberRole.Member);
     }
 
-    public void Leave(long memberId)
+    public void LeaveGroup(long memberId)
     {
         EnsureGroup();
 
-        var member = Members.FirstOrDefault(x => x.MemberId == memberId);
+        var member = FindMember(memberId);
         if (member is null)
         {
             return;
@@ -82,13 +89,13 @@ public class Conversation
             throw new Exception("Cannot kick");
         }
 
-        var actor = Members.FirstOrDefault(x => x.MemberId == actorId);
+        var actor = FindMember(actorId);
         if (actor is null || actor.Role != ConversationMemberRole.Admin)
         {
             throw new Exception("Forbidden");
         }
 
-        var targetMember = Members.FirstOrDefault(x => x.MemberId == memberId);
+        var targetMember = FindMember(memberId);
         if (targetMember is not null)
         {
             Members.Remove(targetMember);
@@ -101,11 +108,11 @@ public class Conversation
 
         if (actorId == newAdminId) return;
 
-        var actor = Members.FirstOrDefault(x => x.MemberId == actorId);
+        var actor = FindMember(actorId);
         if (actor is null || actor.Role != ConversationMemberRole.Admin)
             throw new Exception("Forbidden.");
 
-        var target = Members.FirstOrDefault(x => x.MemberId == newAdminId);
+        var target = FindMember(newAdminId);
         if (target is null)
             throw new Exception("User is not a member.");
 
@@ -113,9 +120,26 @@ public class Conversation
         target.Role = ConversationMemberRole.Admin;
     }
 
+    public void DisbandGroup(long actorId)
+    {
+        EnsureGroup();
+
+        var actor = FindMember(actorId);
+        if (actor is null || actor.Role != ConversationMemberRole.Admin)
+            throw new Exception("Forbidden.");
+
+        DisbandedAt = DateTime.UtcNow;
+    }
+
+    private ConversationMember? FindMember(long memberId)
+    {
+        return Members.FirstOrDefault(x => x.MemberId == memberId);
+    }
+
     private void AddMemberInternal(long memberId, ConversationMemberRole role)
     {
-        if (Members.Any(x => x.MemberId == memberId))
+        var exist = FindMember(memberId);
+        if (exist is not null)
         {
             throw new Exception("User is already a member of the conversation.");
         }
@@ -126,9 +150,17 @@ public class Conversation
 
     private void EnsureGroup()
     {
-        if (Type == ConversationType.Direct)
+        if (Type != ConversationType.Group)
         {
-            throw new Exception("Not groups");
+            throw new Exception("This operation is only available for group conversations.");
         }
+    }
+
+    private static string GenerateDirectKey(long user1Id, long user2Id)
+    {
+        var min = Math.Min(user1Id, user2Id);
+        var max = Math.Max(user1Id, user2Id);
+
+        return $"{min}:{max}";
     }
 }

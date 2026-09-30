@@ -21,6 +21,7 @@ public class GetGroupMembersUseCase
         var currentUserId = _currentUser.UserId;
 
         var isMember = await _context.Conversations
+            .Active()
             .Group(groupId)
             .AnyAsync(x => x.Members.Any(m => m.MemberId == currentUserId), ct);
 

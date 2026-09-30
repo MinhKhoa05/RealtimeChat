@@ -21,6 +21,7 @@ public class GetMyGroupsUseCase
 
         var groups = await _context.Conversations
             .AsNoTracking()
+            .Active()
             .Groups()
             .Where(x => x.Members.Any(m => m.MemberId == currentUserId))
             .Select(x => new GroupResponse

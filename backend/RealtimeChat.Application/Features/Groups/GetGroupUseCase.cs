@@ -20,6 +20,7 @@ public class GetGroupUseCase
         var currentUserId = _currentUser.UserId;
 
         var group = await _context.Conversations
+            .Active()
             .Group(groupId)
             .Where(x => x.Members.Any(m => m.MemberId == currentUserId))
             .Select(x => new GroupResponse

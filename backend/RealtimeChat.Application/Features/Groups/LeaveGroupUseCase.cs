@@ -20,6 +20,7 @@ public class LeaveGroupUseCase
         var currentUserId = _currentUser.UserId;
 
         var group = await _context.Conversations
+            .Active()
             .Group(groupId)
             .Include(x => x.Members
                 .Where(m => m.MemberId == currentUserId))
@@ -30,7 +31,7 @@ public class LeaveGroupUseCase
             throw new Exception("Group not found");
         }
 
-        group.Leave(currentUserId);
+        group.LeaveGroup(currentUserId);
         await _context.SaveChangesAsync(ct);
     }
 }

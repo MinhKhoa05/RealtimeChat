@@ -35,9 +35,15 @@ public class ConversationConfiguration
         // DisbandedAt
         builder.Property(x => x.DisbandedAt);
 
+        // DirectKey
+        builder.Property(x => x.DirectKey);
+
+        builder.HasIndex(x => x.DirectKey);
+
         // Conversation -> Members
         builder.HasMany(x => x.Members)
             .WithOne(x => x.Conversation)
             .HasForeignKey(x => x.ConversationId);
+
     }
 }

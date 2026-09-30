@@ -21,6 +21,7 @@ public class TransferAdminUseCase
         var newAdminId = request.NewAdminId;
 
         var group = await _context.Conversations
+            .Active()
             .Group(groupId)
             .Include(x => x.Members
                 .Where(m => m.MemberId == currentUserId || m.MemberId == newAdminId))

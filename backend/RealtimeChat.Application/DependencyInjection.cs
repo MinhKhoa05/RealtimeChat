@@ -4,6 +4,7 @@ using RealtimeChat.Application.Features.Blocks;
 using RealtimeChat.Application.Features.Friends;
 using RealtimeChat.Application.Features.Users;
 using RealtimeChat.Application.Features.Groups;
+using RealtimeChat.Application.Features.Conversations;
 
 namespace RealtimeChat.Application;
 
@@ -50,6 +51,12 @@ public static class DependencyInjection
         services.AddScoped<LeaveGroupUseCase>();
         services.AddScoped<TransferAdminUseCase>();
         services.AddScoped<DisbandGroupUseCase>();
+
+        // Conversations
+        services.AddScoped<StartDirectConversationUseCase>();
+        services.AddScoped<GetConversationUseCase>();
+        services.AddScoped<GetListConversationUseCase>();
+        services.AddScoped<SetConversationPinUseCase>();
 
         return services;
     }

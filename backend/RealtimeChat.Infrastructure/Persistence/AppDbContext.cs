@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence
@@ -23,6 +25,27 @@ namespace RealtimeChat.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        }
+
+        public override async Task<int> SaveChangesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (IsDuplicateKey(ex))
+            {
+                throw new DuplicateKeyException(ex);
+            }
+        }
+
+        private static bool IsDuplicateKey(DbUpdateException ex)
+        {
+            return ex.InnerException is MySqlException
+            {
+                Number: 1062
+            };
         }
     }
 }

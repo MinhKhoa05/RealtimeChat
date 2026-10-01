@@ -1,24 +1,13 @@
 using RealtimeChat.Domain.Entities;
 using RealtimeChat.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace RealtimeChat.Application.QueryExtensions;
 
 public static class ConversationQueryExtensions
 {
-    public static IQueryable<Conversation> GetById(this IQueryable<Conversation> query, long conversationId)
-        => query.Where(x => x.Id == conversationId);
-
-    public static IQueryable<Conversation> Active(this IQueryable<Conversation> query)
-        => query.Where(x => x.DisbandedAt == null);
-
     public static IQueryable<Conversation> Groups(this IQueryable<Conversation> query)
         => query.Where(x => x.Type == ConversationType.Group);
-
-    public static IQueryable<Conversation> Group(this IQueryable<Conversation> query, long groupId)
-        => query.GetById(groupId).Groups();
-
-    public static IQueryable<Conversation> Directs(this IQueryable<Conversation> query)
-        => query.Where(x => x.Type == ConversationType.Direct);
 
     public static IQueryable<Conversation> Direct(this IQueryable<Conversation> query, long user1Id, long user2Id)
     {
@@ -27,9 +16,22 @@ public static class ConversationQueryExtensions
 
         var directKey = $"{min}:{max}";
 
-        return query.Directs().Where(x => x.DirectKey == directKey);
+        return query.Where(x => x.Type == ConversationType.Direct && x.DirectKey == directKey);
     }
+
+    public static IQueryable<Conversation> Active(this IQueryable<Conversation> query)
+        => query.Where(x => x.DisbandedAt == null);
+
+    public static IQueryable<Conversation> FilterAccessible(this IQueryable<Conversation> query, long conversationId, long userId)
+        => query.Active().AccessibleBy(userId).Where(x => x.Id == conversationId);
 
     public static IQueryable<Conversation> AccessibleBy(this IQueryable<Conversation> query, long userId)
         => query.Where(x => x.Members.Any(m => m.MemberId == userId));
+
+    public static IQueryable<Conversation> FilterAccessibleGroup(this IQueryable<Conversation> query, long groupId, long userId)
+        => query.FilterAccessible(groupId, userId).Groups();
+
+    // Chỉ dùng khi cần dữ liệu thành viên để tránh tải dữ liệu không cần thiết.
+    public static IQueryable<Conversation> WithMembers(this IQueryable<Conversation> query, params long[] userIds)
+        => query.Include(x => x.Members.Where(m => userIds.Contains(m.MemberId)));
 }

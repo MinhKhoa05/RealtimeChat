@@ -21,9 +21,9 @@ public class GetMyGroupsUseCase
 
         var groups = await _context.Conversations
             .AsNoTracking()
-            .Active()
             .Groups()
             .AccessibleBy(currentUserId)
+            .Active()
             .Select(x => new GroupResponse
             {
                 GroupId = x.Id,

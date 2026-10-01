@@ -21,10 +21,8 @@ public class DisbandGroupUseCase
         var currentUserId = _currentUser.UserId;
 
         var group = await _context.Conversations
-            .Active()
-            .Group(groupId)
-            .AccessibleBy(currentUserId)
-            .Include(x => x.Members.Where(m => m.MemberId == currentUserId))
+            .FilterAccessibleGroup(groupId, currentUserId)
+            .WithMembers(currentUserId) // Lấy member để kiểm tra quyền
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 

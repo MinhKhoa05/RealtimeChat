@@ -25,30 +25,21 @@ public class AddMemberUseCase
             throw new BadRequestException("Cannot add yourself.");
         }
 
-        var group = await _context.Conversations
-            .Active()
-            .Group(groupId)
-            .AccessibleBy(currentUserId)
-            .Include(x => x.Members
-                .Where(m => m.MemberId == userId))
-            .FirstOrDefaultAsync(ct)
-            ?? throw new NotFoundException();
-
-        // UserId đã trong group thì không làm gì nữa
-        if (group.Members.Any())
-        {
-            return;
-        }
-
         var isFriend = await _context.Relationships
             .Friends()
             .Between(userId, currentUserId)
             .AnyAsync(ct);
-
+        
         if (!isFriend)
         {
-            throw new ForbiddenException("Users must be friends.");
+            throw new ForbiddenException("Users must be friends");
         }
+
+        var group = await _context.Conversations
+            .FilterAccessibleGroup(groupId, currentUserId)
+            .WithMembers(userId) // Lấy member để kiểm tra đã tham gia nhóm chưa
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException();
 
         group.AddMember(userId);
         await _context.SaveChangesAsync(ct);

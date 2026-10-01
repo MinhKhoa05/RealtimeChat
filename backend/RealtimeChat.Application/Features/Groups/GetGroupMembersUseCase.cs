@@ -22,9 +22,7 @@ public class GetGroupMembersUseCase
         var currentUserId = _currentUser.UserId;
 
         var hasAccess  = await _context.Conversations
-            .Active()
-            .Group(groupId)
-            .AccessibleBy(currentUserId)
+            .FilterAccessibleGroup(groupId, currentUserId)
             .AnyAsync(ct);
 
         if (!hasAccess)

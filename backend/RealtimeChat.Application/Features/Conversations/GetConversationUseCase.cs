@@ -23,9 +23,7 @@ public class GetConversationUseCase
 
         var conversation = await _context.Conversations
             .AsNoTracking()
-            .Active()
-            .GetById(conversationId)
-            .AccessibleBy(currentUserId)
+            .FilterAccessible(conversationId, currentUserId)
             .Select(x => new ConversationResponse
             {
                 Id = x.Id,

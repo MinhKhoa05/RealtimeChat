@@ -21,11 +21,8 @@ public class LeaveGroupUseCase
         var currentUserId = _currentUser.UserId;
 
         var group = await _context.Conversations
-            .Active()
-            .Group(groupId)
-            .AccessibleBy(currentUserId)
-            .Include(x => x.Members
-                .Where(m => m.MemberId == currentUserId))
+            .FilterAccessibleGroup(groupId, currentUserId)
+            .WithMembers(currentUserId) // Lấy member để thực hiện hành động ở Domain
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
         

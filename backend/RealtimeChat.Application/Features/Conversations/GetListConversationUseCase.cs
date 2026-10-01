@@ -22,8 +22,8 @@ public class GetListConversationUseCase
 
         var conversations = await _context.Conversations
             .AsNoTracking()
-            .Active()
             .AccessibleBy(currentUserId)
+            .Active()
             .Select(x => new ConversationItem
             {
                 Id = x.Id,

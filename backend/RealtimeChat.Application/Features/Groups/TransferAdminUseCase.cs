@@ -22,11 +22,8 @@ public class TransferAdminUseCase
         var newAdminId = request.NewAdminId;
 
         var group = await _context.Conversations
-            .Active()
-            .Group(groupId)
-            .AccessibleBy(currentUserId)
-            .Include(x => x.Members
-                .Where(m => m.MemberId == currentUserId || m.MemberId == newAdminId))
+            .FilterAccessibleGroup(groupId, currentUserId)
+            .WithMembers(currentUserId, newAdminId) // Lấy member liên quan để thực hiện action ở Domain
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
         

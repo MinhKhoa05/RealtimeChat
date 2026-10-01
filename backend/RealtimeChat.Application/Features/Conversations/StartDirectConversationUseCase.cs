@@ -24,6 +24,7 @@ public class StartDirectConversationUseCase
 
         var conversation = await _context.Conversations
             .Direct(currentUserId, userId)
+            .Active()
             .FirstOrDefaultAsync(ct);
 
         if (conversation is not null) return conversation.Id;
@@ -41,6 +42,7 @@ public class StartDirectConversationUseCase
         {
             return await _context.Conversations
                 .Direct(currentUserId, userId)
+                .Active()
                 .Select(x => x.Id)
                 .FirstAsync(ct);
         }

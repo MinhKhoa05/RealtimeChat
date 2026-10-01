@@ -22,6 +22,7 @@ public class LeaveGroupUseCase
         var group = await _context.Conversations
             .Active()
             .Group(groupId)
+            .AccessibleBy(currentUserId)
             .Include(x => x.Members
                 .Where(m => m.MemberId == currentUserId))
             .FirstOrDefaultAsync(ct);

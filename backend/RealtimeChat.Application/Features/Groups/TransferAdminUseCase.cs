@@ -23,6 +23,7 @@ public class TransferAdminUseCase
         var group = await _context.Conversations
             .Active()
             .Group(groupId)
+            .AccessibleBy(currentUserId)
             .Include(x => x.Members
                 .Where(m => m.MemberId == currentUserId || m.MemberId == newAdminId))
             .FirstOrDefaultAsync(ct);

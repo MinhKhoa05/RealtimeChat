@@ -27,23 +27,18 @@ public class AddMemberUseCase
         var group = await _context.Conversations
             .Active()
             .Group(groupId)
+            .AccessibleBy(currentUserId)
             .Include(x => x.Members
-                .Where(m => m.MemberId == currentUserId || m.MemberId == userId))
+                .Where(m => m.MemberId == userId))
             .FirstOrDefaultAsync(ct);
 
         if (group is null)
         {
-            throw new Exception("Group not founds");
+            throw new Exception("Group not founds or fobidden");
         }
 
-        var currentMember = group.Members.FirstOrDefault(m => m.MemberId == currentUserId);
-        if (currentMember is null)
-        {
-            throw new Exception("You are not a member");
-        }
-
-        var targetMember = group.Members.FirstOrDefault(m => m.MemberId == userId);
-        if (targetMember is not null)
+        // UserId đã trong group thì không làm gì nữa
+        if (group.Members.Any())
         {
             return;
         }

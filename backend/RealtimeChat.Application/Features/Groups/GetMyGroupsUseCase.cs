@@ -23,7 +23,7 @@ public class GetMyGroupsUseCase
             .AsNoTracking()
             .Active()
             .Groups()
-            .Where(x => x.Members.Any(m => m.MemberId == currentUserId))
+            .AccessibleBy(currentUserId)
             .Select(x => new GroupResponse
             {
                 GroupId = x.Id,

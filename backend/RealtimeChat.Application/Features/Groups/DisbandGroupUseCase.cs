@@ -22,12 +22,13 @@ public class DisbandGroupUseCase
         var group = await _context.Conversations
             .Active()
             .Group(groupId)
+            .AccessibleBy(currentUserId)
             .Include(x => x.Members.Where(m => m.MemberId == currentUserId))
             .FirstOrDefaultAsync(ct);
 
         if (group is null)
         {
-            throw new Exception("Group not found");
+            throw new Exception("Group not found or forbidden");
         }
 
         group.DisbandGroup(currentUserId);

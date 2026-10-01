@@ -20,12 +20,13 @@ public class GetGroupMembersUseCase
     {
         var currentUserId = _currentUser.UserId;
 
-        var isMember = await _context.Conversations
+        var hasAccess  = await _context.Conversations
             .Active()
             .Group(groupId)
-            .AnyAsync(x => x.Members.Any(m => m.MemberId == currentUserId), ct);
+            .AccessibleBy(currentUserId)
+            .AnyAsync(ct);
 
-        if (!isMember)
+        if (!hasAccess )
         {
             throw new Exception("Group not found or not member");
         }

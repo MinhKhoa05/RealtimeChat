@@ -15,14 +15,14 @@ public class GetGroupUseCase
         _currentUser = currentUser;
     }
 
-    public async Task<GroupResponse?> ExecuteAsync(long groupId, CancellationToken ct)
+    public async Task<GroupResponse> ExecuteAsync(long groupId, CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
 
         var group = await _context.Conversations
             .Active()
             .Group(groupId)
-            .Where(x => x.Members.Any(m => m.MemberId == currentUserId))
+            .AccessibleBy(currentUserId)
             .Select(x => new GroupResponse
             {
                 GroupId = x.Id,
@@ -30,6 +30,11 @@ public class GetGroupUseCase
                 AvatarUrl = null,
             })
             .FirstOrDefaultAsync(ct);
+
+        if (group is null)
+        {
+            throw new Exception("Group not found or forbidden");
+        }
 
         return group;
     }

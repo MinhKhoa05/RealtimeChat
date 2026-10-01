@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
@@ -20,11 +21,11 @@ public class RevokeFriendRequestUseCase
         var friendRequest = await _context.Relationships
             .FriendRequest(requestId)
             .FirstOrDefaultAsync(ct)
-            ?? throw new Exception("Request not found");
+            ?? throw new NotFoundException();
 
         if (_currentUser.UserId != friendRequest.UserId)
         {
-            throw new Exception("Cannot revoke");
+            throw new ForbiddenException();
         }
 
         _context.Relationships.Remove(friendRequest);

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Groups;
@@ -26,9 +27,9 @@ public class GetGroupMembersUseCase
             .AccessibleBy(currentUserId)
             .AnyAsync(ct);
 
-        if (!hasAccess )
+        if (!hasAccess)
         {
-            throw new Exception("Group not found or not member");
+            throw new NotFoundException();
         }
 
         var members = await _context.ConversationMembers

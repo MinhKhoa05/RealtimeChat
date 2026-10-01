@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
@@ -25,13 +26,9 @@ public class LeaveGroupUseCase
             .AccessibleBy(currentUserId)
             .Include(x => x.Members
                 .Where(m => m.MemberId == currentUserId))
-            .FirstOrDefaultAsync(ct);
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException();
         
-        if (group is null)
-        {
-            throw new Exception("Group not found");
-        }
-
         group.LeaveGroup(currentUserId);
         await _context.SaveChangesAsync(ct);
     }

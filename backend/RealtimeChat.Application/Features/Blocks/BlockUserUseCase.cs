@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Entities;
@@ -22,13 +23,13 @@ public class BlockUserUseCase
 
         if (currentUserId == userId)
         {
-            throw new Exception("Cannot block to yourself");
+            throw new BadRequestException("Cannot block yourself.");
         }
 
         var targetExists = await _context.Users.AnyAsync(x => x.Id == userId, ct);
         if (!targetExists)
         {
-            throw new Exception("User not found");
+            throw new NotFoundException();
         }
 
         var exists = await _context.Relationships
@@ -38,11 +39,11 @@ public class BlockUserUseCase
 
         if (exists)
         {
-            throw new Exception("Already block");
+            throw new ConflictException("User is already blocked.");
         }
 
-        var blocks = Relationship.CreateBlock(currentUserId, userId);
-        _context.Relationships.Add(blocks);
+        var block = Relationship.CreateBlock(currentUserId, userId);
+        _context.Relationships.Add(block);
 
         var friendship = await _context.Relationships
             .Friends()

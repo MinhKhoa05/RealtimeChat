@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Enums;
@@ -39,12 +40,8 @@ public class GetConversationUseCase
                     ? x.Members.First(m => m.MemberId != currentUserId).MemberId
                     : null,
             })
-            .FirstOrDefaultAsync(ct);
-
-        if (conversation is null)
-        {
-            throw new Exception("Conversation not found or forbidden");
-        }
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException();
 
         return conversation;
     }

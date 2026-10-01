@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Application.Features.Auth;
 
@@ -17,7 +16,6 @@ public class LogoutAllUseCase
 
     public async Task ExecuteAsync(CancellationToken ct)
     {
-
         var tokens = await _context.RefreshTokens
             .Where(x => x.UserId == _currentUser.UserId && x.RevokedAt == null)
             .ToListAsync(ct);

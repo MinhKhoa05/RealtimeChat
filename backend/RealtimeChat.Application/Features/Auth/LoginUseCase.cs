@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Domain.Entities;
 
@@ -20,12 +21,12 @@ public class LoginUseCase
     public async Task<LoginResponse> ExecuteAsync(LoginRequest request, CancellationToken ct)
     {
         var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == request.Email, ct)
-            ?? throw new Exception("Invalid Credentials");
+            ?? throw new UnauthorizedException("Invalid Credentials");
 
         var isMatch = _passwordHasher.Verify(request.Password, user.Password);
         if (!isMatch)
         {
-            throw new Exception("Invalid Credentials");
+            throw new UnauthorizedException("Invalid Credentials");
         }
 
         var token = _tokenService.GenerateRefreshToken();

@@ -19,7 +19,7 @@ public class UserOnlineUseCase
     {
         var friendIds = await _context.Relationships
             .Friends()
-            .Where(x => x.UserId == userId || x.TargetUserId == userId)
+            .OfUsers(userId)
             .Select(x => x.UserId == userId ? x.TargetUserId : x.UserId)
             .ToListAsync(ct);
 

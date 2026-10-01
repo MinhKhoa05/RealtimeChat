@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Application.Features.Auth;
@@ -22,16 +23,16 @@ public class RefreshTokenUseCase
         var refreshToken = await _context.RefreshTokens
             .Include(x=> x.User)
             .FirstOrDefaultAsync(x => x.TokenHash == hash, ct)
-            ?? throw new Exception("Invalid Refresh Token");
+            ?? throw new UnauthorizedException("Invalid Refresh Token");
 
         if (refreshToken.RevokedAt != null)
         {
-            throw new Exception("Token was Revoked");            
+            throw new UnauthorizedException("Token was Revoked");            
         }
 
         if (refreshToken.ExpiredAt < DateTime.UtcNow)
         {
-            throw new Exception("Token was expired");
+            throw new UnauthorizedException("Token was expired");
         }
 
         refreshToken.RevokedAt = DateTime.UtcNow;

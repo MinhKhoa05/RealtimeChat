@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
@@ -21,7 +22,7 @@ public class AddMemberUseCase
 
         if (userId == currentUserId)
         {
-            throw new Exception("Cannot add yourself.");
+            throw new BadRequestException("Cannot add yourself.");
         }
 
         var group = await _context.Conversations
@@ -30,19 +31,15 @@ public class AddMemberUseCase
             .AccessibleBy(currentUserId)
             .Include(x => x.Members
                 .Where(m => m.MemberId == userId))
-            .FirstOrDefaultAsync(ct);
-
-        if (group is null)
-        {
-            throw new Exception("Group not founds or fobidden");
-        }
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException();
 
         // UserId đã trong group thì không làm gì nữa
         if (group.Members.Any())
         {
             return;
         }
-        
+
         var isFriend = await _context.Relationships
             .Friends()
             .Between(userId, currentUserId)
@@ -50,7 +47,7 @@ public class AddMemberUseCase
 
         if (!isFriend)
         {
-            throw new Exception("Must be friends");
+            throw new ForbiddenException("Users must be friends.");
         }
 
         group.AddMember(userId);

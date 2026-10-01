@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Domain.Entities;
 
@@ -17,9 +18,10 @@ public class RegisterUseCase
 
     public async Task ExecuteAsync(RegisterRequest request, CancellationToken ct)
     {
-        if (await _context.Users.AnyAsync(x=> x.Email == request.Email, ct))
+        var emailExist = await _context.Users.AnyAsync(x => x.Email == request.Email, ct);
+        if (emailExist)
         {
-            throw new Exception("Email already exists.");
+            throw new ConflictException("Email already exists.");
         }
 
         var passwordHash = _passwordHasher.Hash(request.Password);

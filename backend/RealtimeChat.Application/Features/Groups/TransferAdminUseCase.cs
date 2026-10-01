@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
@@ -26,13 +27,9 @@ public class TransferAdminUseCase
             .AccessibleBy(currentUserId)
             .Include(x => x.Members
                 .Where(m => m.MemberId == currentUserId || m.MemberId == newAdminId))
-            .FirstOrDefaultAsync(ct);
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException();
         
-        if (group is null)
-        {
-            throw new Exception("Group not found");
-        }
-
         group.TransferAdmin(currentUserId, newAdminId);
         await _context.SaveChangesAsync(ct);
     }

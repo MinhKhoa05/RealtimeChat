@@ -1,3 +1,4 @@
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 
 namespace RealtimeChat.Application.Features.Users;
@@ -16,7 +17,7 @@ public class GetCurrentUserUseCase
     public async Task<UserResposne> ExecuteAsync(CancellationToken ct)
     {
         var user = await _context.Users.FindAsync(_currentUser.UserId, ct)
-            ?? throw new Exception("User not found");
+            ?? throw new NotFoundException();
 
         return new UserResposne
         {

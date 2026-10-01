@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Enums;
@@ -26,13 +27,9 @@ public class KickMemberUseCase
             .AccessibleBy(currentUserId)
             .Include(x => x.Members
                 .Where(m => m.MemberId == userId || m.MemberId == currentUserId))
-            .FirstOrDefaultAsync(ct);
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException();
         
-        if (group is null)
-        {
-            throw new Exception("Group not found or forbidden");
-        }
-
         group.KickMember(currentUserId, userId);
         await _context.SaveChangesAsync(ct);
     }

@@ -1,5 +1,5 @@
 using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Domain.Entities;
+using RealtimeChat.Application.Exceptions;
 
 namespace RealtimeChat.Application.Features.Users;
 
@@ -15,7 +15,7 @@ public class GetUserProfileUseCase
     public async Task<UserResposne> ExecuteAsync(long userId, CancellationToken ct)
     {
         var user = await _context.Users.FindAsync(userId, ct)
-            ?? throw new Exception("User not found");
+            ?? throw new NotFoundException();
 
         return new UserResposne
         {

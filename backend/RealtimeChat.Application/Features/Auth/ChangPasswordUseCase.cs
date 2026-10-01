@@ -1,3 +1,4 @@
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 
 namespace RealtimeChat.Application.Features.Auth;
@@ -17,13 +18,14 @@ public class ChangePasswordUseCase
 
     public async Task ExecuteAsync(ChangePasswordRequest request, CancellationToken ct)
     {
-        var user = await _context.Users.FindAsync(_currentUser.UserId)
-            ?? throw new Exception("User not found");
+        var user = await _context.Users
+            .FindAsync(_currentUser.UserId)
+            ?? throw new NotFoundException();
 
         var isMatch = _passwordHasher.Verify(request.CurrentPassword, user.Password);
         if (!isMatch)
         {
-            throw new Exception("Invalid Current Password");
+            throw new BadRequestException("Invalid Current Password");
         }
 
         user.Password = _passwordHasher.Hash(request.NewPassword);

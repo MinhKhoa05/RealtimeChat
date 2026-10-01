@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Entities;
@@ -23,14 +24,14 @@ public class SendFriendRequestUseCase
 
         if (currentUserId == targetUserId)
         {
-            throw new Exception("Cannot send friend request to yourself.");
+            throw new BadRequestException("Cannot send friend request to yourself.");
         }
 
         var targetExists = await _context.Users.AnyAsync(x => x.Id == targetUserId, ct);
 
         if (!targetExists)
         {
-            throw new Exception("User not found.");
+            throw new NotFoundException();
         }
 
         var isFriend = await _context.Relationships
@@ -40,7 +41,7 @@ public class SendFriendRequestUseCase
 
         if (isFriend)
         {
-            throw new Exception("Already friends.");
+            throw new ConflictException("Already friends.");
         }
 
         var existingRequest = await _context.Relationships
@@ -50,7 +51,7 @@ public class SendFriendRequestUseCase
 
         if (existingRequest)
         {
-            throw new Exception("Friend request already exists.");
+            throw new ConflictException("Friend request already exists.");
         }
 
         var friendRequest = Relationship.CreateFriendRequest(currentUserId, request.UserId, request.Introduction);

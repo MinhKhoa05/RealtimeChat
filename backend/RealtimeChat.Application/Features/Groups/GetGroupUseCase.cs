@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
@@ -29,12 +30,8 @@ public class GetGroupUseCase
                 Name = x.Name!,
                 AvatarUrl = null,
             })
-            .FirstOrDefaultAsync(ct);
-
-        if (group is null)
-        {
-            throw new Exception("Group not found or forbidden");
-        }
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException();
 
         return group;
     }

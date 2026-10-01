@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Entities;
@@ -23,7 +24,7 @@ public class CreateGroupUseCase
         var memberIds = request.MemberIds.Where(x => x != currentUserId).Distinct().ToList();
         if (memberIds.Count < 2)
         {
-            throw new Exception("Group Least 3 member include yourself");
+            throw new BadRequestException("A group must have at least 3 members.");
         }
 
         var friendCount = await _context.Relationships
@@ -33,7 +34,7 @@ public class CreateGroupUseCase
 
         if (friendCount != memberIds.Count)
         {
-            throw new Exception("All members must be friends.");
+            throw new ForbiddenException("All members must be friends.");
         }
 
         var conversation = Conversation.CreateGroup(request.Name, currentUserId);

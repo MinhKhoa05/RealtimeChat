@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 
 namespace RealtimeChat.Application.Features.Conversations;
@@ -23,12 +24,8 @@ public class SetConversationPinUseCase
                 x.ConversationId == conversationId &&
                 x.MemberId == currentUserId &&
                 x.Conversation.DisbandedAt == null,
-                ct);
-
-        if (member is null)
-        {
-            throw new Exception("Not found or forbidden");
-        }
+                ct)
+            ?? throw new NotFoundException();
 
         member.IsPinned = request.IsPinned;
         await _context.SaveChangesAsync(ct);

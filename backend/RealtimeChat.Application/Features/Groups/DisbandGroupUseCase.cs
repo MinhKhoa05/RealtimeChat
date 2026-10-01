@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
@@ -24,12 +25,8 @@ public class DisbandGroupUseCase
             .Group(groupId)
             .AccessibleBy(currentUserId)
             .Include(x => x.Members.Where(m => m.MemberId == currentUserId))
-            .FirstOrDefaultAsync(ct);
-
-        if (group is null)
-        {
-            throw new Exception("Group not found or forbidden");
-        }
+            .FirstOrDefaultAsync(ct)
+            ?? throw new NotFoundException();
 
         group.DisbandGroup(currentUserId);
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
@@ -21,14 +22,14 @@ public class RemoveFriendUseCase
 
         if (currentUserId == userId)
         {
-            throw new Exception("Cannot remove friend to yourself.");
+            throw new BadRequestException("Cannot remove friend to yourself.");
         }
 
         var friendship = await _context.Relationships
             .Friends()
             .Between(currentUserId, userId)
             .FirstOrDefaultAsync(ct)
-            ?? throw new Exception("Not friends");
+            ?? throw new NotFoundException();
 
         _context.Relationships.Remove(friendship);
         await _context.SaveChangesAsync(ct);

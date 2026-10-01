@@ -2,6 +2,6 @@
 {
     public class DomainException : Exception
     {
-        public DomainException() : base() { }
+        public DomainException(string message = "Domain Exception") : base(message) { }
     }
 }

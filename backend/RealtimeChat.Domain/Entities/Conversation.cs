@@ -1,4 +1,5 @@
 using RealtimeChat.Domain.Enums;
+using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
@@ -25,7 +26,7 @@ public class Conversation
     {
         if (user1Id == user2Id)
         {
-            throw new Exception("Cannot create private conversation with yourself");
+            throw new DomainException("Cannot create private conversation with yourself");
         }
 
         var conversation = new Conversation
@@ -74,7 +75,7 @@ public class Conversation
 
         if (member.Role == ConversationMemberRole.Admin)
         {
-            throw new Exception("Admin cannot leave");
+            throw new DomainException("Admin cannot leave");
         }
 
         Members.Remove(member);
@@ -86,13 +87,13 @@ public class Conversation
 
         if (actorId == memberId)
         {
-            throw new Exception("Cannot kick");
+            throw new DomainException("Cannot kick");
         }
 
         var actor = FindMember(actorId);
         if (actor is null || actor.Role != ConversationMemberRole.Admin)
         {
-            throw new Exception("Forbidden");
+            throw new DomainException("Forbidden");
         }
 
         var targetMember = FindMember(memberId);
@@ -110,11 +111,11 @@ public class Conversation
 
         var actor = FindMember(actorId);
         if (actor is null || actor.Role != ConversationMemberRole.Admin)
-            throw new Exception("Forbidden.");
+            throw new DomainException("Forbidden.");
 
         var target = FindMember(newAdminId);
         if (target is null)
-            throw new Exception("User is not a member.");
+            throw new DomainException("User is not a member.");
 
         actor.Role = ConversationMemberRole.Member;
         target.Role = ConversationMemberRole.Admin;
@@ -126,7 +127,7 @@ public class Conversation
 
         var actor = FindMember(actorId);
         if (actor is null || actor.Role != ConversationMemberRole.Admin)
-            throw new Exception("Forbidden.");
+            throw new DomainException("Forbidden.");
 
         DisbandedAt = DateTime.UtcNow;
     }
@@ -141,7 +142,7 @@ public class Conversation
         var exist = FindMember(memberId);
         if (exist is not null)
         {
-            throw new Exception("User is already a member of the conversation.");
+            throw new DomainException("User is already a member of the conversation.");
         }
 
         var member = ConversationMember.CreateMember(memberId, role);
@@ -152,7 +153,7 @@ public class Conversation
     {
         if (Type != ConversationType.Group)
         {
-            throw new Exception("This operation is only available for group conversations.");
+            throw new DomainException("This operation is only available for group conversations.");
         }
     }
 

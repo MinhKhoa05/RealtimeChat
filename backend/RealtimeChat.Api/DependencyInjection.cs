@@ -14,7 +14,7 @@ public static class DependencyInjection
 
         // SignalR
         services.AddSignalR();
-        services.AddScoped<IChatNotifier, SignalRChatNotifier>();
+        services.AddScoped<IClientNotifier, SignalRNotifier>();
 
         return services;
     }

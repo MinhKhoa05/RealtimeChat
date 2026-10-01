@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Infrastructure.Persistence;
 using RealtimeChat.Infrastructure.Security;
+using RealtimeChat.Infrastructure.Presence;
 
 namespace RealtimeChat.Infrastructure;
 
@@ -26,6 +27,9 @@ public static class DependencyInjection
         // Security
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, JwtTokenService>();
+
+        // Presence
+        services.AddSingleton<IPresenceTracker, InMemoryPresenceTracker>();
 
         return services;
     }

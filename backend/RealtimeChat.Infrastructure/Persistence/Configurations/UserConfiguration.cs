@@ -36,5 +36,9 @@ public class UserConfiguration
             .WithMany()
             .HasForeignKey(x => x.AvatarMediaId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // CreatedAt
+        builder.Property(x => x.CreatedAt)
+            .IsRequired();
     }
 }

@@ -9,4 +9,7 @@ public class User
 
     public long? AvatarMediaId { get; set; }
     public Media? AvatarMedia { get; set; }
+
+    public DateTime? LastSeenAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

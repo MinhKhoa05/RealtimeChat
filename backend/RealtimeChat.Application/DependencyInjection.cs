@@ -5,6 +5,7 @@ using RealtimeChat.Application.Features.Friends;
 using RealtimeChat.Application.Features.Users;
 using RealtimeChat.Application.Features.Groups;
 using RealtimeChat.Application.Features.Conversations;
+using RealtimeChat.Application.Features.Presence;
 
 namespace RealtimeChat.Application;
 
@@ -57,6 +58,10 @@ public static class DependencyInjection
         services.AddScoped<GetConversationUseCase>();
         services.AddScoped<GetListConversationUseCase>();
         services.AddScoped<SetConversationPinUseCase>();
+
+        // Presence
+        services.AddScoped<UserOfflineUseCase>();
+        services.AddScoped<UserOnlineUseCase>();
 
         return services;
     }

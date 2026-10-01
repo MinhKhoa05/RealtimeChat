@@ -6,11 +6,13 @@ namespace RealtimeChat.Api;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApi(
-        this IServiceCollection services)
+    public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         // Security
+        services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, CurrentUser>();
+        services.AddJwtAuthentication(configuration);
+        services.AddAuthorization();
 
         // SignalR
         services.AddSignalR();

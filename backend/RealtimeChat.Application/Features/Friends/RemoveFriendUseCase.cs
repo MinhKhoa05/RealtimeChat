@@ -25,7 +25,8 @@ public class RemoveFriendUseCase
         }
 
         var friendship = await _context.Relationships
-            .Friend(currentUserId, userId)
+            .Friends()
+            .Between(currentUserId, userId)
             .FirstOrDefaultAsync(ct)
             ?? throw new Exception("Not friends");
 

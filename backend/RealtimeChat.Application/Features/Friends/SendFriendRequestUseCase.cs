@@ -19,13 +19,14 @@ public class SendFriendRequestUseCase
     public async Task ExecuteAsync(SendFriendRequestRequest request, CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
+        var targetUserId = request.UserId;
 
-        if (currentUserId == request.UserId)
+        if (currentUserId == targetUserId)
         {
             throw new Exception("Cannot send friend request to yourself.");
         }
 
-        var targetExists = await _context.Users.AnyAsync(x => x.Id == request.UserId, ct);
+        var targetExists = await _context.Users.AnyAsync(x => x.Id == targetUserId, ct);
 
         if (!targetExists)
         {
@@ -33,7 +34,8 @@ public class SendFriendRequestUseCase
         }
 
         var isFriend = await _context.Relationships
-            .Friend(currentUserId, request.UserId)
+            .Friends()
+            .Between(currentUserId, targetUserId)
             .AnyAsync(ct);
 
         if (isFriend)

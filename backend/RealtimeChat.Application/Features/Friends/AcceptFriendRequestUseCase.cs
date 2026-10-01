@@ -19,8 +19,8 @@ public class AcceptFriendRequestUseCase
     public async Task ExecuteAsync(long requestId, CancellationToken ct)
     {
         var friendRequest = await _context.Relationships
-            .FriendRequests()
-            .FirstOrDefaultAsync(x => x.Id == requestId, ct)
+            .FriendRequest(requestId)
+            .FirstOrDefaultAsync(ct)
             ?? throw new Exception("Request not found");
 
         if (_currentUser.UserId != friendRequest.TargetUserId)
@@ -30,8 +30,8 @@ public class AcceptFriendRequestUseCase
 
         var friendship = Relationship.CreateFriend(friendRequest.UserId, friendRequest.TargetUserId);
 
-        _context.Relationships.Remove(friendRequest);
         _context.Relationships.Add(friendship);
+        _context.Relationships.Remove(friendRequest);
 
         await _context.SaveChangesAsync(ct);
     }

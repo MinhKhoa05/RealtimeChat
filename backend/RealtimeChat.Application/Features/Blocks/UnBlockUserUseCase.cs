@@ -18,7 +18,8 @@ public class UnblockUserUseCase
     public async Task ExecuteAsync(long userId, CancellationToken ct)
     {
         var userBlock = await _context.Relationships
-            .Block(_currentUser.UserId, userId)
+            .Blocks()
+            .Where(x => x.UserId == _currentUser.UserId && x.TargetUserId == userId)
             .FirstOrDefaultAsync(ct);
 
         if (userBlock is not null)

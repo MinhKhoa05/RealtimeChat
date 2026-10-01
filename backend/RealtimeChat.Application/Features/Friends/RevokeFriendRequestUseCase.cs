@@ -18,8 +18,8 @@ public class RevokeFriendRequestUseCase
     public async Task ExecuteAsync(long requestId, CancellationToken ct)
     {
         var friendRequest = await _context.Relationships
-            .FriendRequests()
-            .FirstOrDefaultAsync(x => x.Id == requestId, ct)
+            .FriendRequest(requestId)
+            .FirstOrDefaultAsync(ct)
             ?? throw new Exception("Request not found");
 
         if (_currentUser.UserId != friendRequest.UserId)

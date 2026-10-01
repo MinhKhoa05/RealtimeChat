@@ -31,7 +31,10 @@ public class BlockUserUseCase
             throw new Exception("User not found");
         }
 
-        var exists = await _context.Relationships.Block(currentUserId, userId).AnyAsync(ct);
+        var exists = await _context.Relationships
+            .Blocks()
+            .Between(currentUserId, userId)
+            .AnyAsync(ct);
 
         if (exists)
         {
@@ -42,7 +45,8 @@ public class BlockUserUseCase
         _context.Relationships.Add(blocks);
 
         var friendship = await _context.Relationships
-            .Friend(currentUserId, userId)
+            .Friends()
+            .Between(currentUserId, userId)
             .FirstOrDefaultAsync(ct);
             
         if (friendship is not null)

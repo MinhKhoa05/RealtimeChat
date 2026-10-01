@@ -22,7 +22,7 @@ public class GetFriendsUseCase
         var friends = await _context.Relationships
             .AsNoTracking()
             .Friends()
-            .Where(x => x.UserId == currentUserId || x.TargetUserId == currentUserId)
+            .OfUsers(currentUserId)
             .Select(x => x.UserId == currentUserId ? x.TargetUser : x.User)
             .Select(x => new FriendResponse
             {

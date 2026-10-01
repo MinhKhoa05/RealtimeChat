@@ -4,9 +4,9 @@ using RealtimeChat.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Api.Security;
 using Microsoft.OpenApi.Models;
+using RealtimeChat.Api;
+using RealtimeChat.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +58,25 @@ builder.Services
 
             ClockSkew = TimeSpan.Zero
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken =
+                    context.Request.Query["access_token"];
+
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs/chat"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -68,8 +87,7 @@ builder.Services.AddHttpContextAccessor();
 // DI
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-
-builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddApi();
 
 var app = builder.Build();
 
@@ -83,5 +101,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Chat Hub SignalR
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();

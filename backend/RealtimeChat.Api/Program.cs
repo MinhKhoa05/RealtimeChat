@@ -1,13 +1,18 @@
 using RealtimeChat.Api;
+using RealtimeChat.Api.Middleware;
 using RealtimeChat.Api.Hubs;
 using RealtimeChat.Api.Swagger;
 using RealtimeChat.Application;
 using RealtimeChat.Infrastructure;
 using RealtimeChat.Infrastructure.Persistence;
+using RealtimeChat.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ApiResponseFilter>();
+});
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwagger();
@@ -23,6 +28,9 @@ await app.Services.ApplyMigrationsAsync();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+// Middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

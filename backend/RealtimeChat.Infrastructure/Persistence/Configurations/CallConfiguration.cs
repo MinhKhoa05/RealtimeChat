@@ -21,11 +21,8 @@ public class CallConfiguration : IEntityTypeConfiguration<Call>
         builder.Property(x => x.Status)
             .IsRequired();
 
-        builder.Property(x => x.StartedAt)
+        builder.Property(x => x.CreatedAt)
             .IsRequired();
-
-        builder.Property(x => x.EndedAt)
-            .IsRequired(false);
 
         // Caller
         builder.HasOne(x => x.Caller)

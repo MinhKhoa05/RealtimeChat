@@ -17,7 +17,7 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.Property(x => x.CreatedAt)
             .IsRequired();
 
-        builder.Property(x => x.ExpiredAt)
+        builder.Property(x => x.ExpiresAt)
             .IsRequired();
 
         builder.Property(x => x.RevokedAt)

@@ -26,7 +26,7 @@ public class Message
 
     private Message() { }
 
-    public static Message CreateTextMessage(long conversationId, long senderId, string content)
+    public static Message CreateText(long conversationId, long senderId, string content)
     {
         return new Message
         {
@@ -39,7 +39,7 @@ public class Message
     }
 
     // Tạo MediaMessage hoặc CallMessage
-    public static Message CreateReferenceMessage(long conversationId, MessageType type, long senderId, long referenceId)
+    public static Message CreateReference(long conversationId, MessageType type, long senderId, long referenceId)
     {
         var message = new Message
         {
@@ -68,8 +68,8 @@ public class Message
 
         return message;
     }
-    
-    public static Message CreateSystemMessage(long conversationId, string content)
+
+    public static Message CreateSystem(long conversationId, string content)
     {
         return new Message
         {
@@ -78,6 +78,16 @@ public class Message
             Content = content,
             CreatedAt = DateTime.UtcNow,
         };
+    }
+
+    public void Recall()
+    {
+        if (RecalledAt != null)
+        {
+            throw new DomainException("Message has already been recalled.");
+        }
+
+        RecalledAt = DateTime.UtcNow;
     }
 
     public bool IsCallMessage() => Type == MessageType.Call && CallId != null;

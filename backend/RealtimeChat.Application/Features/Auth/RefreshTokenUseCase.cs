@@ -18,45 +18,33 @@ public class RefreshTokenUseCase
 
     public async Task<RefreshTokenResponse> ExecuteAsync(RefreshTokenRequest request, CancellationToken ct)
     {
-        var hash = _tokenService.HashRefreshToken(request.RefreshToken);
-        
+        var refreshTokenHash = _tokenService.HashRefreshToken(request.RefreshToken);
+
         var refreshToken = await _context.RefreshTokens
-            .Include(x=> x.User)
-            .FirstOrDefaultAsync(x => x.TokenHash == hash, ct)
-            ?? throw new UnauthorizedException("Invalid Refresh Token");
+            .FirstOrDefaultAsync(x => x.TokenHash == refreshTokenHash, ct)
+            ?? throw new UnauthorizedException("Invalid refresh token.");
 
-        if (refreshToken.RevokedAt != null)
+        if (!refreshToken.IsUsable())
         {
-            throw new UnauthorizedException("Token was Revoked");            
+            throw new UnauthorizedException("Invalid refresh token.");
         }
 
-        if (refreshToken.ExpiredAt < DateTime.UtcNow)
-        {
-            throw new UnauthorizedException("Token was expired");
-        }
+        refreshToken.Revoke();
 
-        refreshToken.RevokedAt = DateTime.UtcNow;
+        var accessToken = _tokenService.GenerateAccessToken(refreshToken.UserId);
 
-        var accessToken = _tokenService.GenerateAccessToken(refreshToken.User);
+        var rawRefreshToken = _tokenService.GenerateRefreshToken();
+        refreshTokenHash = _tokenService.HashRefreshToken(rawRefreshToken);
 
-        var token = _tokenService.GenerateRefreshToken();
-        var tokenHash = _tokenService.HashRefreshToken(token);
-
-        var newRefreshToken = new RefreshToken
-        {
-            UserId = refreshToken.User.Id,
-            TokenHash = tokenHash,
-            ExpiredAt = DateTime.UtcNow.AddDays(1),
-            CreatedAt = DateTime.UtcNow
-        };
-
+        var newRefreshToken = RefreshToken.Create(refreshToken.UserId, refreshTokenHash);
         _context.RefreshTokens.Add(newRefreshToken);
+
         await _context.SaveChangesAsync(ct);
 
         return new RefreshTokenResponse
         {
             AccessToken = accessToken,
-            RefreshToken = token
+            RefreshToken = rawRefreshToken
         };
     }
 }
@@ -68,6 +56,6 @@ public class RefreshTokenRequest
 
 public class RefreshTokenResponse
 {
-    public string AccessToken {get; set; } = null!;
-    public string RefreshToken {get; set;} = null!;
+    public string AccessToken { get; set; } = null!;
+    public string RefreshToken { get; set; } = null!;
 }

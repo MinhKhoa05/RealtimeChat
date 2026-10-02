@@ -18,17 +18,17 @@ public class ChangePasswordUseCase
 
     public async Task ExecuteAsync(ChangePasswordRequest request, CancellationToken ct)
     {
-        var user = await _context.Users
-            .FindAsync(_currentUser.UserId)
+        var user = await _context.Users.FindAsync(_currentUser.UserId)
             ?? throw new NotFoundException();
 
-        var isMatch = _passwordHasher.Verify(request.CurrentPassword, user.Password);
+        var isMatch = _passwordHasher.Verify(request.CurrentPassword, user.PasswordHash);
         if (!isMatch)
         {
             throw new BadRequestException("Invalid Current Password");
         }
 
-        user.Password = _passwordHasher.Hash(request.NewPassword);
+        var newPasswordHash = _passwordHasher.Hash(request.NewPassword);
+        user.ChangePassword(newPasswordHash);
 
         await _context.SaveChangesAsync(ct);
     }

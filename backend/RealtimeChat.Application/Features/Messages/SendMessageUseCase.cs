@@ -45,10 +45,10 @@ public class SendMessageUseCase
 
         var message = request.MessageType switch
         {
-            MessageType.Text => Message.CreateTextMessage(conversationId, senderId, request.Content!),
+            MessageType.Text => Message.CreateText(conversationId, senderId, request.Content!),
 
             // CreateReferenceMessage() đã kiểm tra và đảm bảo MessageType hợp lệ phù hợp cho ReferenceMessage
-            _ => Message.CreateReferenceMessage(conversationId, request.MessageType, senderId, request.ReferenceId!.Value),
+            _ => Message.CreateReference(conversationId, request.MessageType, senderId, request.ReferenceId!.Value),
         };
 
         Media? media = null;
@@ -90,26 +90,26 @@ public class SendMessageUseCase
             Content = message.Content,
             CreatedAt = message.CreatedAt,
 
-            Media = message.Media is null
+            Media = media is null
                 ? null
                 : new MediaResponse
                 {
-                    Id = message.Media.Id,
-                    OriginalName = message.Media.OriginalName,
-                    ContentType = message.Media.ContentType,
-                    Size = message.Media.Size,
+                    Id = media.Id,
+                    OriginalName = media.OriginalName,
+                    ContentType = media.ContentType,
+                    Size = media.Size,
                     Url = null! // Tạm thời để null đi
                 },
 
-            Call = message.Call is null
+            Call = call is null
                 ? null
                 : new CallResponse
                 {
-                    Id = message.Call.Id,
-                    Type = message.Call.Type,
-                    Status = message.Call.Status,
-                    StartedAt = message.Call.StartedAt,
-                    EndedAt = message.Call.EndedAt
+                    Id = call.Id,
+                    Type = call.Type,
+                    Status = call.Status,
+                    StartedAt = call.StartedAt,
+                    EndedAt = call.EndedAt
                 }
         };
     }
@@ -151,6 +151,6 @@ public class CallResponse
     public CallType Type { get; init; }
     public CallStatus Status { get; init; }
 
-    public DateTime StartedAt { get; init; }
+    public DateTime? StartedAt { get; init; }
     public DateTime? EndedAt { get; init; }
 }

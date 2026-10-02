@@ -2,10 +2,23 @@ namespace RealtimeChat.Domain.Entities;
 
 public class Media
 {
-    public long Id { get; set; }
-    public string OriginalName { get; set; } = null!;
-    public string ContentType { get; set; } = null!;
-    public long Size { get; set; }
-    public string StorageKey { get; set; } = null!;
-    public DateTime CreatedAt { get; set; }
+    public long Id { get; private set; }
+    public string OriginalName { get; private set; } = null!;
+    public string ContentType { get; private set; } = null!;
+    public long Size { get; private set; }
+    public string StorageKey { get; private set; } = null!;
+    public DateTime CreatedAt { get; private set; }
+
+    private Media() { }
+
+    public static Media Create(string originalName, string contentType, long size, string storageKey)
+    {
+        return new Media
+        {
+            OriginalName = originalName,
+            ContentType = contentType,
+            Size = size,
+            StorageKey = storageKey,
+        };
+    }
 }

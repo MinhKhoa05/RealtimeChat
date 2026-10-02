@@ -30,7 +30,6 @@ public class StartDirectConversationUseCase
         if (conversation is not null) return conversation.Id;
 
         var newConversation = Conversation.CreateDirect(currentUserId, userId);
-
         _context.Conversations.Add(newConversation);
 
         try

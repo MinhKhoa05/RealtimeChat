@@ -23,7 +23,7 @@ public class LoginUseCase
         var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == request.Email, ct)
             ?? throw new UnauthorizedException("Invalid Credentials");
 
-        var isMatch = _passwordHasher.Verify(request.Password, user.Password);
+        var isMatch = _passwordHasher.Verify(request.Password, user.PasswordHash);
         if (!isMatch)
         {
             throw new UnauthorizedException("Invalid Credentials");
@@ -32,18 +32,12 @@ public class LoginUseCase
         var token = _tokenService.GenerateRefreshToken();
         var tokenHash = _tokenService.HashRefreshToken(token);
 
-        var refreshToken = new RefreshToken
-        {
-            UserId = user.Id,
-            TokenHash = tokenHash,
-            ExpiredAt = DateTime.UtcNow.AddDays(1),
-            CreatedAt = DateTime.UtcNow
-        };
-
+        var refreshToken = RefreshToken.Create(user.Id, tokenHash);
         _context.RefreshTokens.Add(refreshToken);
+
         await _context.SaveChangesAsync(ct);
 
-        var accessToken = _tokenService.GenerateAccessToken(user);
+        var accessToken = _tokenService.GenerateAccessToken(user.Id);
 
         return new LoginResponse
         {

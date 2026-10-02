@@ -28,9 +28,9 @@ public class LogoutUseCase
             return;
         }
 
-        if (refreshToken.RevokedAt != null)
+        if (!refreshToken.IsRevoked())
         {
-            refreshToken.RevokedAt = DateTime.UtcNow;
+            refreshToken.Revoke();
             await _context.SaveChangesAsync(ct);
         }
     }

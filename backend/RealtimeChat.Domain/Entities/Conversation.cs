@@ -70,7 +70,7 @@ public class Conversation
         var member = FindMember(memberId);
         if (member is null)
         {
-            return;
+            throw new DomainException("User is not a member");
         }
 
         if (member.Role == ConversationMemberRole.Admin)
@@ -117,8 +117,8 @@ public class Conversation
         if (target is null)
             throw new DomainException("User is not a member.");
 
-        actor.Role = ConversationMemberRole.Member;
-        target.Role = ConversationMemberRole.Admin;
+        target.SetRole(ConversationMemberRole.Admin);
+        actor.SetRole(ConversationMemberRole.Member);
     }
 
     public void DisbandGroup(long actorId)
@@ -145,7 +145,7 @@ public class Conversation
             throw new DomainException("User is already a member of the conversation.");
         }
 
-        var member = ConversationMember.CreateMember(memberId, role);
+        var member = ConversationMember.Create(memberId, role);
         Members.Add(member);
     }
 

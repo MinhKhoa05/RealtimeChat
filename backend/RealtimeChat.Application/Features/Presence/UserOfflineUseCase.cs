@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
@@ -23,7 +22,7 @@ public class UserOfflineUseCase
         // Hub event nên bỏ qua nếu user không tồn tại.
         if (user is null) return;
 
-        user.LastSeenAt = DateTime.UtcNow;
+        user.MaskLastSeen();
         await _context.SaveChangesAsync(ct);
 
         var friendIds = await _context.Relationships

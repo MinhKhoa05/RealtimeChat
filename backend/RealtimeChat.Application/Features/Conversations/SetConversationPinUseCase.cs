@@ -17,17 +17,23 @@ public class SetConversationPinUseCase
 
     public async Task ExecuteAsync(long conversationId, SetConversationPinRequest request, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
-
         var member = await _context.ConversationMembers
             .FirstOrDefaultAsync(x =>
                 x.ConversationId == conversationId &&
-                x.MemberId == currentUserId &&
+                x.MemberId == _currentUser.UserId &&
                 x.Conversation.DisbandedAt == null,
                 ct)
             ?? throw new NotFoundException();
 
-        member.IsPinned = request.IsPinned;
+        if (request.IsPinned)
+        {
+            member.Pin();
+        }
+        else
+        {
+            member.Unpin();
+        }
+
         await _context.SaveChangesAsync(ct);
     }
 }

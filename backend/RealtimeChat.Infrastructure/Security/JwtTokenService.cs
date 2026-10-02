@@ -16,15 +16,14 @@ public class JwtTokenService : ITokenService
         _configuration = configuration;
     }
 
-    public string GenerateAccessToken(User user)
+    public string GenerateAccessToken(long userId)
     {
         var key = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("JWT key is not configured.");
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Name)
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
         };
 
         var credentials = new SigningCredentials(

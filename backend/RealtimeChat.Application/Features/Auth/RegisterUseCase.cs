@@ -26,21 +26,16 @@ public class RegisterUseCase
 
         var passwordHash = _passwordHasher.Hash(request.Password);
 
-        var user = new User
-        {
-            Name = request.Name,
-            Email = request.Email,
-            Password = passwordHash,
-        };
-
+        var user = User.Create(request.Name, request.Email, passwordHash);
         _context.Users.Add(user);
+
         await _context.SaveChangesAsync(ct);
     }
 }
 
 public class RegisterRequest
 {
-    public string Name {get; set;} = null!;
-    public string Email {get; set;} = null!;
-    public string Password {get; set;} = null!;
+    public string Name { get; set; } = null!;
+    public string Email { get; set; } = null!;
+    public string Password { get; set; } = null!;
 }

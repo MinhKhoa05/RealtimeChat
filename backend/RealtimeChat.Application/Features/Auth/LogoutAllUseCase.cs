@@ -16,13 +16,13 @@ public class LogoutAllUseCase
 
     public async Task ExecuteAsync(CancellationToken ct)
     {
-        var tokens = await _context.RefreshTokens
+        var refreshTokens = await _context.RefreshTokens
             .Where(x => x.UserId == _currentUser.UserId && x.RevokedAt == null)
             .ToListAsync(ct);
 
-        foreach (var token in tokens)
+        foreach (var refreshToken in refreshTokens)
         {
-            token.RevokedAt = DateTime.UtcNow;
+            refreshToken.Revoke();
         }
 
         await _context.SaveChangesAsync(ct);

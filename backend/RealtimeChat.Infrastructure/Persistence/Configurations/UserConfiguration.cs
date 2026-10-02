@@ -27,7 +27,7 @@ public class UserConfiguration
             .IsUnique();
 
         // Password
-        builder.Property(x => x.Password)
+        builder.Property(x => x.PasswordHash)
             .HasMaxLength(255)
             .IsRequired();
 

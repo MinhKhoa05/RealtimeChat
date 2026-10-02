@@ -10,17 +10,17 @@ public class ConversationMember
     public long MemberId { get; private set; }
     public User Member { get; private set; } = null!;
 
-    public ConversationMemberRole Role { get; set; }
+    public ConversationMemberRole Role { get; private set; }
 
-    public long? LastReadMessageId { get; set; }
-    public Message? LastReadMessage { get; set; }
+    public long? LastReadMessageId { get; private set; }
+    public Message? LastReadMessage { get; private set; }
 
-    public bool IsPinned { get; set; }
-    public DateTime JoinedAt { get; set; }
+    public bool IsPinned { get; private set; }
+    public DateTime JoinedAt { get; private set; }
 
     private ConversationMember() { }
 
-    public static ConversationMember CreateMember(long userId, ConversationMemberRole role)
+    public static ConversationMember Create(long userId, ConversationMemberRole role)
     {
         return new ConversationMember
         {
@@ -30,14 +30,23 @@ public class ConversationMember
         };
     }
 
-    public static ConversationMember CreateMember(long converstationId, long userId, ConversationMemberRole role)
+    public void SetRole(ConversationMemberRole role)
     {
-        return new ConversationMember
-        {
-            ConversationId = converstationId,
-            MemberId = userId,
-            Role = role,
-            JoinedAt = DateTime.UtcNow,
-        };
+        Role = role;
+    }
+
+    public void Pin()
+    {
+        IsPinned = true;
+    }
+
+    public void Unpin()
+    {
+        IsPinned = false;
+    }
+
+    public void MarkAsRead(long messageId)
+    {
+        LastReadMessageId = messageId;
     }
 }

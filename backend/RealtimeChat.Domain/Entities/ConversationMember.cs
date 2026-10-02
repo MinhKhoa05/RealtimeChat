@@ -30,7 +30,7 @@ public class ConversationMember
         };
     }
 
-    public void SetRole(ConversationMemberRole role)
+    internal void SetRole(ConversationMemberRole role)
     {
         Role = role;
     }

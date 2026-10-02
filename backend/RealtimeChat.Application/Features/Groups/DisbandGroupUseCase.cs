@@ -26,7 +26,12 @@ public class DisbandGroupUseCase
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        group.DisbandGroup(currentUserId);
+        if (!group.IsAdmin(currentUserId))
+        {
+            throw new ForbiddenException();
+        }
+
+        group.DisbandGroup();
 
         await _context.SaveChangesAsync(ct);
     }

@@ -26,7 +26,7 @@ public class LeaveGroupUseCase
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
         
-        group.LeaveGroup(currentUserId);
+        group.RemoveMember(currentUserId);
         await _context.SaveChangesAsync(ct);
     }
 }

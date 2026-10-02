@@ -63,74 +63,54 @@ public class Conversation
         AddMemberInternal(memberId, ConversationMemberRole.Member);
     }
 
-    public void LeaveGroup(long memberId)
+    public void RemoveMember(long memberId)
     {
         EnsureGroup();
 
-        var member = FindMember(memberId);
-        if (member is null)
-        {
-            throw new DomainException("User is not a member");
-        }
+        var member = FindMember(memberId)
+            ?? throw new DomainException("User is not a member.");
 
         if (member.Role == ConversationMemberRole.Admin)
         {
-            throw new DomainException("Admin cannot leave");
+            throw new DomainException("Cannot remove the admin.");
         }
 
         Members.Remove(member);
     }
 
-    public void KickMember(long actorId, long memberId)
+    public void TransferAdmin(long newAdminId)
     {
         EnsureGroup();
 
-        if (actorId == memberId)
+        var currentAdmin = Members.FirstOrDefault(x => x.Role == ConversationMemberRole.Admin)
+            ?? throw new DomainException("Group has no admin.");
+
+        var target = FindMember(newAdminId)
+            ?? throw new DomainException("User is not a member.");
+
+        if (currentAdmin.MemberId == newAdminId)
         {
-            throw new DomainException("Cannot kick");
+            return;
         }
 
-        var actor = FindMember(actorId);
-        if (actor is null || actor.Role != ConversationMemberRole.Admin)
-        {
-            throw new DomainException("Forbidden");
-        }
-
-        var targetMember = FindMember(memberId);
-        if (targetMember is not null)
-        {
-            Members.Remove(targetMember);
-        }
+        currentAdmin.SetRole(ConversationMemberRole.Admin);
+        target.SetRole(ConversationMemberRole.Member);
     }
 
-    public void TransferAdmin(long actorId, long newAdminId)
+    public void DisbandGroup()
     {
         EnsureGroup();
 
-        if (actorId == newAdminId) return;
-
-        var actor = FindMember(actorId);
-        if (actor is null || actor.Role != ConversationMemberRole.Admin)
-            throw new DomainException("Forbidden.");
-
-        var target = FindMember(newAdminId);
-        if (target is null)
-            throw new DomainException("User is not a member.");
-
-        target.SetRole(ConversationMemberRole.Admin);
-        actor.SetRole(ConversationMemberRole.Member);
-    }
-
-    public void DisbandGroup(long actorId)
-    {
-        EnsureGroup();
-
-        var actor = FindMember(actorId);
-        if (actor is null || actor.Role != ConversationMemberRole.Admin)
-            throw new DomainException("Forbidden.");
+        if (DisbandedAt.HasValue)
+        {
+            throw new DomainException("Group is already disbanded.");
+        }
 
         DisbandedAt = DateTime.UtcNow;
     }
+
+    public bool IsAdmin(long userId) => Members.Any(x => x.MemberId == userId && x.Role == ConversationMemberRole.Admin);
+    public bool IsMember(long userId) => Members.Any(x => x.MemberId == userId);
 
     private ConversationMember? FindMember(long memberId)
     {

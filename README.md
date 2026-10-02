@@ -296,7 +296,7 @@ RealtimeChat/
 │   │   ├── Security/        # JWT, current user
 │   │   ├── Responses/       # API response models
 │   │   ├── Swagger/
-│   |   └── DependencyInjection.cs
+│   │   ├── DependencyInjection.cs
 │   │   └── Program.cs
 │   │
 │   ├── RealtimeChat.Application/

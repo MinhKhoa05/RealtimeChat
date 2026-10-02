@@ -23,11 +23,16 @@ public class KickMemberUseCase
 
         var group = await _context.Conversations
             .FilterAccessibleGroup(groupId, currentUserId)
-            .WithMembers(currentUserId, userId) // Lấy member liên quan để thực hiện hành động ở Domain
+            .WithMembers(currentUserId, userId) // Lấy member liên quan để thực hiện hành động
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
-        
-        group.KickMember(currentUserId, userId);
+
+        if (!group.IsAdmin(currentUserId))
+        {
+            throw new ForbiddenException();
+        }
+
+        group.RemoveMember(userId);
         await _context.SaveChangesAsync(ct);
     }
 }

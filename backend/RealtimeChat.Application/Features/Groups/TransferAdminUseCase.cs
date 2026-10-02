@@ -23,11 +23,16 @@ public class TransferAdminUseCase
 
         var group = await _context.Conversations
             .FilterAccessibleGroup(groupId, currentUserId)
-            .WithMembers(currentUserId, newAdminId) // Lấy member liên quan để thực hiện action ở Domain
+            .WithMembers(currentUserId, newAdminId) // Lấy member liên quan để thực hiện action
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
-        
-        group.TransferAdmin(currentUserId, newAdminId);
+
+        if (!group.IsAdmin(currentUserId))
+        {
+            throw new ForbiddenException();
+        }
+
+        group.TransferAdmin(newAdminId);
         await _context.SaveChangesAsync(ct);
     }
 }

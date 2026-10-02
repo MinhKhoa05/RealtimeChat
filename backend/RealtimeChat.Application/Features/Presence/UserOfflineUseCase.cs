@@ -20,7 +20,7 @@ public class UserOfflineUseCase
     {
         var user = await _context.Users.FindAsync(userId, ct);
 
-        // Hub event nên bỏ qua nếu user không còn tồn tại.
+        // Hub event nên bỏ qua nếu user không tồn tại.
         if (user is null) return;
 
         user.LastSeenAt = DateTime.UtcNow;

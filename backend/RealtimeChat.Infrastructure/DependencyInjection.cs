@@ -5,6 +5,7 @@ using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Infrastructure.Persistence;
 using RealtimeChat.Infrastructure.Security;
 using RealtimeChat.Infrastructure.Presence;
+using RealtimeChat.Infrastructure.Caching;
 
 namespace RealtimeChat.Infrastructure;
 
@@ -30,6 +31,10 @@ public static class DependencyInjection
 
         // Presence
         services.AddSingleton<IPresenceTracker, InMemoryPresenceTracker>();
+
+        // Caching
+        services.AddMemoryCache();
+        services.AddSingleton<ICacheService, InMemoryCacheService>();
 
         return services;
     }

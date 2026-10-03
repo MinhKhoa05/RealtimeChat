@@ -9,11 +9,13 @@ public class RemoveFriendUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
+    private readonly IClientNotifier _notifier;
 
-    public RemoveFriendUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public RemoveFriendUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
     {
         _context = context;
         _currentUser = currentUser;
+        _notifier = notifier;
     }
 
     public async Task ExecuteAsync(long userId, CancellationToken ct)
@@ -33,5 +35,7 @@ public class RemoveFriendUseCase
 
         _context.Relationships.Remove(friendship);
         await _context.SaveChangesAsync(ct);
+
+        await _notifier.NotifyAsync(userId, "friend.removed", new { UserId = currentUserId }, ct);
     }
 }

@@ -9,11 +9,13 @@ public class RevokeFriendRequestUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
+    private readonly IClientNotifier _notifier;
 
-    public RevokeFriendRequestUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public RevokeFriendRequestUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
     {
         _context = context;
         _currentUser = currentUser;
+        _notifier = notifier;
     }
 
     public async Task ExecuteAsync(long requestId, CancellationToken ct)
@@ -30,5 +32,7 @@ public class RevokeFriendRequestUseCase
 
         _context.Relationships.Remove(friendRequest);
         await _context.SaveChangesAsync(ct);
+
+        await _notifier.NotifyAsync(friendRequest.TargetUserId, "friend.request.revoked", new { FriendRequestId = friendRequest.Id }, ct);
     }
 }

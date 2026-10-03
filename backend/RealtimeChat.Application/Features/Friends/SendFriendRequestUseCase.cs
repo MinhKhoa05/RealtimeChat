@@ -10,11 +10,13 @@ public class SendFriendRequestUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
+    private readonly IClientNotifier _notifier;
 
-    public SendFriendRequestUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public SendFriendRequestUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
     {
         _context = context;
         _currentUser = currentUser;
+        _notifier = notifier;
     }
 
     public async Task ExecuteAsync(SendFriendRequestRequest request, CancellationToken ct)
@@ -58,6 +60,8 @@ public class SendFriendRequestUseCase
 
         _context.Relationships.Add(friendRequest);
         await _context.SaveChangesAsync(ct);
+
+        await _notifier.NotifyAsync(friendRequest.TargetUserId, "friend.request.received", new { FriendRequestId = friendRequest.Id }, ct);
     }
 }
 

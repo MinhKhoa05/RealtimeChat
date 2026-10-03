@@ -10,11 +10,13 @@ public class AcceptFriendRequestUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
+    private readonly IClientNotifier _notifier;
 
-    public AcceptFriendRequestUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public AcceptFriendRequestUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
     {
         _context = context;
         _currentUser = currentUser;
+        _notifier = notifier;
     }
 
     public async Task ExecuteAsync(long requestId, CancellationToken ct)
@@ -35,5 +37,7 @@ public class AcceptFriendRequestUseCase
         _context.Relationships.Remove(friendRequest);
 
         await _context.SaveChangesAsync(ct);
+
+        await _notifier.NotifyAsync(friendRequest.UserId, "friend.request.accepted", new { RequestId = friendRequest.Id, UserId = _currentUser.UserId }, ct);
     }
 }

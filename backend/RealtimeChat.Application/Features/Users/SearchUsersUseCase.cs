@@ -17,61 +17,32 @@ public class SearchUsersUseCase
         _currentUser = currentUser;
     }
 
-    public async Task<List<SearchUsersResponse>> ExecuteAsync(string keyword, CancellationToken ct)
+    public async Task<List<SearchUsersResponse>> ExecuteAsync(
+    string keyword,
+    CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
 
-        var users = await _context.Users
+        var usersQuery = _context.Users
             .AsNoTracking()
-            .Where(x => x.Id != currentUserId && (x.Email.Contains(keyword) || x.Name.Contains(keyword)))
-            .ToListAsync(ct);
+            .Where(x =>
+                x.Id != currentUserId &&
+                (x.Email.Contains(keyword) ||
+                 x.Name.Contains(keyword)));
 
-        var userIds = users.Select(x => x.Id);
-
-        var relationships = await _context.Relationships
-            .AsNoTracking()
-            .WithUsers(currentUserId, userIds)
-            .ToListAsync(ct);
-
-        var relationshipMaps = relationships.ToDictionary(
-            x => x.UserId == currentUserId
-                ? x.TargetUserId
-                : x.UserId);
-
-        var results = users.Select(user =>
-        {
-            relationshipMaps.TryGetValue(user.Id, out var relationship);
-
-            return new SearchUsersResponse
+        var resultsQuery = usersQuery
+            .Select(user => new SearchUsersResponse
             {
                 UserId = user.Id,
                 Name = user.Name,
                 AvatarUrl = null,
-                Status = MapToRelationshipStatus(relationship, currentUserId)
-            };
-        }).ToList();
+                Status = _context.Relationships
+                    .Between(currentUserId, user.Id)
+                    .Select(x => (RelationshipStatus?)x.Type)
+                    .FirstOrDefault() ?? RelationshipStatus.None
+            });
 
-        return results;
-    }
-
-    private RelationshipStatus MapToRelationshipStatus(Relationship? relationship, long currentUserId)
-    {
-        return relationship?.Type switch
-        {
-            RelationshipType.Friend => RelationshipStatus.Friend,
-
-            RelationshipType.FriendRequest =>
-                relationship.UserId == currentUserId
-                    ? RelationshipStatus.SentRequest
-                    : RelationshipStatus.ReceivedRequest,
-
-            RelationshipType.Block =>
-                relationship.UserId == currentUserId
-                    ? RelationshipStatus.Blocked
-                    : RelationshipStatus.BlockedByUser,
-
-            _ => RelationshipStatus.None
-        };
+        return await resultsQuery.ToListAsync(ct);
     }
 }
 

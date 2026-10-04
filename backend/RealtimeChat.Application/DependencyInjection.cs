@@ -7,6 +7,7 @@ using RealtimeChat.Application.Features.Groups;
 using RealtimeChat.Application.Features.Conversations;
 using RealtimeChat.Application.Features.Presence;
 using RealtimeChat.Application.Features.Messages;
+using RealtimeChat.Application.Features.Recommendations;
 
 namespace RealtimeChat.Application;
 
@@ -66,6 +67,11 @@ public static class DependencyInjection
 
         // Messages
         services.AddScoped<SendMessageUseCase>();
+
+        // Recommendations
+        services.AddScoped<ICandidatePoolManager, CandidatePoolManager>();
+        services.AddScoped<IFriendRecommendationService, FriendRecommendationService>();
+        services.AddScoped<GetFriendRecommendationUseCase>();
 
         return services;
     }

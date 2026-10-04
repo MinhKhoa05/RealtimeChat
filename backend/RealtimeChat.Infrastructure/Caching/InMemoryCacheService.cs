@@ -31,6 +31,11 @@ public class InMemoryCacheService : ICacheService
         return Task.CompletedTask;
     }
 
+    public Task<bool> ExistsAsync(string key, CancellationToken ct = default)
+    {
+        return Task.FromResult(_cache.TryGetValue(key, out _));
+    }
+
     public Task RemoveAsync(string key, CancellationToken ct = default)
     {
         _cache.Remove(key);

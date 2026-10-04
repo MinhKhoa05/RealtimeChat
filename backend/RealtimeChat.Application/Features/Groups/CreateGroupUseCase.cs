@@ -29,7 +29,7 @@ public class CreateGroupUseCase
 
         var friendCount = await _context.Relationships
             .Friends()
-            .WithUsers(currentUserId, memberIds)
+            .BetweenUsers(currentUserId, memberIds)
             .CountAsync(ct);
 
         if (friendCount != memberIds.Count)

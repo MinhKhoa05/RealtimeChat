@@ -25,7 +25,7 @@ public static class RelationshipQueryExtensions
             (x.UserId == userId && x.TargetUserId == otherUserId) ||
             (x.UserId == otherUserId && x.TargetUserId == userId));
 
-    public static IQueryable<Relationship> WithUsers(this IQueryable<Relationship> query, long userId, IEnumerable<long> otherUserIds)
+    public static IQueryable<Relationship> BetweenUsers(this IQueryable<Relationship> query, long userId, IEnumerable<long> otherUserIds)
         => query.Where(x =>
             (x.UserId == userId && otherUserIds.Contains(x.TargetUserId)) ||
             (otherUserIds.Contains(x.UserId) && x.TargetUserId == userId));

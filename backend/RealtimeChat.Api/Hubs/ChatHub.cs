@@ -8,30 +8,18 @@ namespace RealtimeChat.Api.Hubs;
 [Authorize]
 public class ChatHub : Hub
 {
-    private readonly IPresenceTracker _presenceTracker;
-    private readonly UserOfflineUseCase _userOffline;
-    private readonly UserOnlineUseCase _userOnline;
+    private readonly IPresenceService _presenceService;
 
-    public ChatHub(
-        IPresenceTracker presenceTracker,
-        UserOfflineUseCase userOffline,
-        UserOnlineUseCase userOnline)
+    public ChatHub(IPresenceService presenceService)
     {
-        _presenceTracker = presenceTracker;
-        _userOffline = userOffline;
-        _userOnline = userOnline;
+        _presenceService = presenceService;
     }
 
     public override async Task OnConnectedAsync()
     {
         var userId = long.Parse(Context.UserIdentifier!);
 
-        var becameOnline = _presenceTracker.Connect(userId, Context.ConnectionId);
-
-        if (becameOnline)
-        {
-            await _userOnline.ExecuteAsync(userId, Context.ConnectionAborted);
-        }
+        await _presenceService.ConnectAsync(userId, Context.ConnectionId, Context.ConnectionAborted);
 
         await base.OnConnectedAsync();
     }
@@ -39,13 +27,8 @@ public class ChatHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = long.Parse(Context.UserIdentifier!);
-        
-        var becameOffline = _presenceTracker.Disconnect(userId, Context.ConnectionId);
 
-        if (becameOffline)
-        {
-            await _userOffline.ExecuteAsync(userId, Context.ConnectionAborted);
-        }
+        await _presenceService.DisconnectAsync(userId, Context.ConnectionId, Context.ConnectionAborted);
 
         await base.OnDisconnectedAsync(exception);
     }

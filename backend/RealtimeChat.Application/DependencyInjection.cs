@@ -64,8 +64,7 @@ public static class DependencyInjection
         services.AddScoped<SetConversationPinUseCase>();
 
         // Presence
-        services.AddScoped<UserOfflineUseCase>();
-        services.AddScoped<UserOnlineUseCase>();
+        services.AddScoped<IPresenceService, PresenceService>();
 
         // Messages
         services.AddScoped<SendMessageUseCase>();

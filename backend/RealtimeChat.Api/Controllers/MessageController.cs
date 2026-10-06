@@ -10,17 +10,27 @@ namespace RealtimeChat.Api.Controllers;
 public class MessageController : ControllerBase
 {
     private readonly SendMessageUseCase _sendMessage;
+    private readonly RecallMessageUseCase _recallMessage;
 
     public MessageController(
-        SendMessageUseCase sendMessage)
+        SendMessageUseCase sendMessage,
+        RecallMessageUseCase recallMessage)
     {
         _sendMessage = sendMessage;
+        _recallMessage = recallMessage;
     }
 
     [HttpPost]
     public async Task<IActionResult> SendMessage(long conversationId, SendMessageRequest request, CancellationToken ct)
     {
         await _sendMessage.ExecuteAsync(conversationId, request, ct);
+        return Ok();
+    }
+
+    [HttpPost("{messageId:long}/recall")]
+    public async Task<IActionResult> RecallMessage(long messageId, CancellationToken ct)
+    {
+        await _recallMessage.ExecuteAsync(messageId, ct);
         return Ok();
     }
 }

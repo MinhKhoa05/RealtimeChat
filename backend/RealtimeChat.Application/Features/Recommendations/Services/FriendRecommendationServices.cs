@@ -83,10 +83,7 @@ public class FriendRecommendationService : IFriendRecommendationService
     {
         var invalidCandidateIds = await _context.Relationships
             .BetweenUsers(userId, candidateIds)
-            .Select(x =>
-                x.UserId == userId
-                    ? x.TargetUserId
-                    : x.UserId)
+            .Select(x => x.UserId == userId ? x.TargetUserId : x.UserId)
             .ToListAsync(ct);
 
         var invalidCandidateIdsSet = invalidCandidateIds.ToHashSet();

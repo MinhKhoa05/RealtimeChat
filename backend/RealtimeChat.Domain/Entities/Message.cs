@@ -24,6 +24,8 @@ public class Message
     public DateTime CreatedAt { get; private set; }
     public DateTime? RecalledAt { get; private set; }
 
+    private static readonly TimeSpan RecallWindow = TimeSpan.FromMinutes(15);
+
     private Message() { }
 
     public static Message CreateText(long conversationId, long senderId, string content)
@@ -49,21 +51,17 @@ public class Message
             CreatedAt = DateTime.UtcNow,
         };
 
-        switch (type)
+        if (IsMediaType(type))
         {
-            case MessageType.Call:
-                message.CallId = referenceId;
-                break;
-
-            case MessageType.Image:
-            case MessageType.Video:
-            case MessageType.Audio:
-            case MessageType.File:
-                message.MediaId = referenceId;
-                break;
-
-            default:
-                throw new DomainException("Message type does not support reference.");
+            message.MediaId = referenceId;
+        }
+        else if (type == MessageType.Call)
+        {
+            message.CallId = referenceId;
+        }
+        else
+        {
+            throw new DomainException("Message type does not support reference.");
         }
 
         return message;
@@ -82,9 +80,14 @@ public class Message
 
     public void Recall()
     {
-        if (RecalledAt != null)
+        if (RecalledAt.HasValue)
         {
             throw new DomainException("Message has already been recalled.");
+        }
+
+        if (DateTime.UtcNow > CreatedAt.Add(RecallWindow))
+        {
+            throw new DomainException("Message can no longer be recalled.");
         }
 
         RecalledAt = DateTime.UtcNow;

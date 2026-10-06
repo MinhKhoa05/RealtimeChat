@@ -3,9 +3,8 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Message
+public class Message : BaseEntity
 {
-    public long Id { get; private set; }
     public MessageType Type { get; private set; }
     public string? Content { get; private set; }
 
@@ -21,7 +20,6 @@ public class Message
     public long? CallId { get; private set; }
     public Call? Call { get; private set; }
 
-    public DateTime CreatedAt { get; private set; }
     public DateTime? RecalledAt { get; private set; }
 
     private static readonly TimeSpan RecallWindow = TimeSpan.FromMinutes(15);
@@ -41,7 +39,6 @@ public class Message
             Type = MessageType.Text,
             SenderId = senderId,
             Content = content,
-            CreatedAt = DateTime.UtcNow,
         };
     }
 
@@ -54,7 +51,6 @@ public class Message
             SenderId = senderId,
             CallId = call.Id,
             Call = call,
-            CreatedAt = DateTime.UtcNow,
         };
     }
 
@@ -72,7 +68,6 @@ public class Message
             SenderId = senderId,
             MediaId = media.Id,
             Media = media,
-            CreatedAt = DateTime.UtcNow,
         };
     }
 
@@ -83,7 +78,6 @@ public class Message
             ConversationId = conversationId,
             Type = MessageType.System,
             Content = content,
-            CreatedAt = DateTime.UtcNow,
         };
     }
 

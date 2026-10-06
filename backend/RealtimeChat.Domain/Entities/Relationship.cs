@@ -2,9 +2,8 @@ using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Relationship
+public class Relationship : BaseEntity
 {
-    public long Id { get; private set; }
     public long UserId { get; private set; }
     public User User { get; private set; } = null!;
 
@@ -14,7 +13,6 @@ public class Relationship
     public RelationshipType Type { get; private set; }
 
     public string? Introduction { get; private set; }
-    public DateTime CreatedAt { get; private set; }
 
     private Relationship() { }
 
@@ -25,7 +23,6 @@ public class Relationship
             UserId = Math.Min(userId, friendId),
             TargetUserId = Math.Max(userId, friendId),
             Type = RelationshipType.Friend,
-            CreatedAt = DateTime.UtcNow
         };
     }
 
@@ -36,7 +33,6 @@ public class Relationship
             UserId = blockerId,
             TargetUserId = blockedId,
             Type = RelationshipType.Block,
-            CreatedAt = DateTime.UtcNow
         };
     }
 
@@ -48,7 +44,6 @@ public class Relationship
             TargetUserId = receiverId,
             Type = RelationshipType.FriendRequest,
             Introduction = introduction,
-            CreatedAt = DateTime.UtcNow
         };
     }
 }

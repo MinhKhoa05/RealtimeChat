@@ -2,15 +2,12 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class RefreshToken
+public class RefreshToken : BaseEntity
 {
-    public long Id { get; private set; }
-
     public long UserId { get; private set; }
     public User User { get; private set; } = null!;
 
     public string TokenHash { get; private set; } = null!;
-    public DateTime CreatedAt { get; private set; }
     public DateTime ExpiresAt { get; private set; }
     public DateTime? RevokedAt { get; private set; }
 
@@ -20,14 +17,12 @@ public class RefreshToken
 
     public static RefreshToken Create(long userId, string tokenHash)
     {
-        var now = DateTime.UtcNow;
 
         return new RefreshToken
         {
             UserId = userId,
             TokenHash = tokenHash,
-            CreatedAt = now,
-            ExpiresAt = now.AddDays(LifetimeDays),
+            ExpiresAt = DateTime.UtcNow.AddDays(LifetimeDays),
         };
     }
 

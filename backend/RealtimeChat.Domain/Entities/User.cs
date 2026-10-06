@@ -1,8 +1,7 @@
 namespace RealtimeChat.Domain.Entities;
 
-public class User
+public class User : BaseEntity
 {
-    public long Id { get; private set; }
     public string Name { get; private set; } = null!;
     public string Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
@@ -11,7 +10,6 @@ public class User
     public Media? AvatarMedia { get; private set; }
 
     public DateTime? LastSeenAt { get; private set; }
-    public DateTime CreatedAt { get; private set; }
 
     private User() { }
 
@@ -22,7 +20,6 @@ public class User
             Name = name,
             Email = email,
             PasswordHash = passwordHash,
-            CreatedAt = DateTime.UtcNow,
         };
     }
 

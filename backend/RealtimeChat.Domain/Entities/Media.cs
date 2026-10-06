@@ -1,13 +1,11 @@
 namespace RealtimeChat.Domain.Entities;
 
-public class Media
+public class Media : BaseEntity
 {
-    public long Id { get; private set; }
     public string OriginalName { get; private set; } = null!;
     public string ContentType { get; private set; } = null!;
     public long Size { get; private set; }
     public string StorageKey { get; private set; } = null!;
-    public DateTime CreatedAt { get; private set; }
 
     private Media() { }
 

@@ -3,10 +3,8 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Call
+public class Call : BaseEntity
 {
-    public long Id { get; private set; }
-
     public long CallerId { get; private set; }
     public User Caller { get; private set; } = null!;
 
@@ -15,8 +13,6 @@ public class Call
 
     public CallType Type { get; private set; }
     public CallStatus Status { get; private set; }
-
-    public DateTime CreatedAt { get; private set; }
 
     public DateTime? StartedAt { get; private set; }
     public DateTime? EndedAt { get; private set; }
@@ -36,7 +32,6 @@ public class Call
             ReceiverId = receiverId,
             Type = type,
             Status = CallStatus.Ringing,
-            CreatedAt = DateTime.UtcNow,
         };
     }
 

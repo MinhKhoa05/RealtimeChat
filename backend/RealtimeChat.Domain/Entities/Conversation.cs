@@ -3,16 +3,14 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Conversation
+public class Conversation : BaseEntity
 {
-    public long Id { get; private set; }
     public string? Name { get; private set; }
     public ConversationType Type { get; private set; }
 
     public long? AvatarMediaId { get; private set; }
     public Media? AvatarMedia { get; private set; }
 
-    public DateTime CreatedAt { get; private set; }
     public DateTime? DisbandedAt { get; private set; }
 
     public string? DirectKey { get; private set; }
@@ -32,7 +30,6 @@ public class Conversation
         var conversation = new Conversation
         {
             Type = ConversationType.Direct,
-            CreatedAt = DateTime.UtcNow,
             DirectKey = GenerateDirectKey(user1Id, user2Id)
         };
 
@@ -48,7 +45,6 @@ public class Conversation
         {
             Name = name,
             Type = ConversationType.Group,
-            CreatedAt = DateTime.UtcNow,
         };
 
         conversation.AddMemberInternal(creatorId, ConversationMemberRole.Admin);

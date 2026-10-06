@@ -4,8 +4,6 @@ using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Enums;
 using RealtimeChat.Domain.Entities;
-using RealtimeChat.Application.Features.Call;
-using RealtimeChat.Application.Features.Media;
 
 namespace RealtimeChat.Application.Features.Messages;
 
@@ -45,7 +43,7 @@ public class SendMessageUseCase
             .Select(x => x.MemberId)
             .ToListAsync(ct);
 
-        var response = MapToResponse(message);
+        var response = MessageMapper.ToResponse(message);
         await _notifier.NotifyAsync(receiverIds, "message.created", response, ct);
     }
 
@@ -77,41 +75,6 @@ public class SendMessageUseCase
 
         throw new BadRequestException($"Message type '{type}' is not supported.");
     }
-
-    private static MessageResponse MapToResponse(Message message)
-    {
-        return new MessageResponse
-        {
-            Id = message.Id,
-            ConversationId = message.ConversationId,
-            SenderId = message.SenderId,
-            Type = message.Type,
-            Content = message.Content,
-            CreatedAt = message.CreatedAt,
-
-            Media = message.Media is null
-                ? null
-                : new MediaResponse
-                {
-                    Id = message.Media.Id,
-                    OriginalName = message.Media.OriginalName,
-                    ContentType = message.Media.ContentType,
-                    Size = message.Media.Size,
-                    Url = null!, // Tạm thời để null đi
-                },
-
-            Call = message.Call is null
-                ? null
-                : new CallResponse
-                {
-                    Id = message.Call.Id,
-                    Type = message.Call.Type,
-                    Status = message.Call.Status,
-                    CreatedAt = message.Call.CreatedAt,
-                    Duration = message.Call.Duration,
-                }
-        };
-    }
 }
 
 public class SendMessageRequest
@@ -119,17 +82,4 @@ public class SendMessageRequest
     public string? Content { get; set; }
     public MessageType MessageType { get; set; }
     public long? ReferenceId { get; set; }
-}
-
-public class MessageResponse
-{
-    public long Id { get; set; }
-    public long ConversationId { get; set; }
-    public long? SenderId { get; set; }
-    public MessageType Type { get; set; }
-    public string? Content { get; set; }
-    public DateTime CreatedAt { get; set; }
-
-    public MediaResponse? Media { get; set; }
-    public CallResponse? Call { get; set; }
 }

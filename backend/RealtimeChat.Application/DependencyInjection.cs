@@ -69,6 +69,7 @@ public static class DependencyInjection
         // Messages
         services.AddScoped<SendMessageUseCase>();
         services.AddScoped<RecallMessageUseCase>();
+        services.AddScoped<GetMessagesUseCase>();
 
         // Recommendations
         services.AddScoped<IPoolCache, PoolCache>();

@@ -13,6 +13,9 @@ public class MediaConfiguration
 
         builder.HasKey(x => x.Id);
 
+        builder.HasIndex(x => x.PublicId)
+            .IsUnique();
+
         builder.Property(x => x.OriginalName)
             .HasMaxLength(255)
             .IsRequired();

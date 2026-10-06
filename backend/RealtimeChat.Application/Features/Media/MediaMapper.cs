@@ -1,0 +1,20 @@
+using MediaEntity = RealtimeChat.Domain.Entities.Media;
+
+namespace RealtimeChat.Application.Features.Media;
+
+public static class MediaMapper
+{
+    private static string MediaUrl(Guid publicId) => $"/api/media/{publicId}";
+
+    public static MediaResponse ToResponse(MediaEntity media)
+    {
+        return new MediaResponse
+        {
+            PublicId = media.PublicId,
+            OriginalName = media.OriginalName,
+            ContentType = media.ContentType,
+            Size = media.Size,
+            Url = MediaUrl(media.PublicId)
+        };
+    }
+}

@@ -19,13 +19,7 @@ public static class MessageMapper
 
             Media = message.Media is null
                 ? null
-                : new MediaResponse
-                {
-                    Id = message.Media.Id,
-                    OriginalName = message.Media.OriginalName,
-                    ContentType = message.Media.ContentType,
-                    Size = message.Media.Size
-                },
+                : MediaMapper.ToResponse(message.Media),
 
             Call = message.Call is null
                 ? null

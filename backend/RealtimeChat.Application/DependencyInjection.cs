@@ -10,6 +10,7 @@ using RealtimeChat.Application.Features.Messages;
 using RealtimeChat.Application.Features.Recommendations;
 using RealtimeChat.Application.Features.Recommendations.CandidatePool;
 using RealtimeChat.Application.Features.Recommendations.Services;
+using RealtimeChat.Application.Features.Media;
 
 namespace RealtimeChat.Application;
 
@@ -76,6 +77,10 @@ public static class DependencyInjection
         services.AddScoped<IPoolGenerator, PoolGenerator>();
         services.AddScoped<IFriendRecommendationService, FriendRecommendationService>();
         services.AddScoped<GetFriendRecommendationUseCase>();
+
+        // Media
+        services.AddScoped<UploadMediaUseCase>();
+        services.AddScoped<GetMediaUseCase>();
 
         return services;
     }

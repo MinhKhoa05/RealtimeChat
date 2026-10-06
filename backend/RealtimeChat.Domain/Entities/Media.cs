@@ -2,6 +2,7 @@ namespace RealtimeChat.Domain.Entities;
 
 public class Media : BaseEntity
 {
+    public Guid PublicId { get; private set; }
     public string OriginalName { get; private set; } = null!;
     public string ContentType { get; private set; } = null!;
     public long Size { get; private set; }
@@ -13,6 +14,7 @@ public class Media : BaseEntity
     {
         return new Media
         {
+            PublicId = Guid.NewGuid(),
             OriginalName = originalName,
             ContentType = contentType,
             Size = size,

@@ -4,6 +4,8 @@ using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Enums;
 using RealtimeChat.Domain.Entities;
+using RealtimeChat.Application.Features.Call;
+using RealtimeChat.Application.Features.Media;
 
 namespace RealtimeChat.Application.Features.Messages;
 
@@ -33,38 +35,7 @@ public class SendMessageUseCase
             throw new ForbiddenException();
         }
 
-        if (request.MessageType == MessageType.System)
-        {
-            throw new BadRequestException("Cannot send System Message.");
-        }
-
-        if (request.MessageType != MessageType.Text && !request.ReferenceId.HasValue)
-        {
-            throw new BadRequestException("ReferenceId is required.");
-        }
-
-        var message = request.MessageType switch
-        {
-            MessageType.Text => Message.CreateText(conversationId, senderId, request.Content!),
-
-            // CreateReferenceMessage() đã kiểm tra và đảm bảo MessageType hợp lệ phù hợp cho ReferenceMessage
-            _ => Message.CreateReference(conversationId, request.MessageType, senderId, request.ReferenceId!.Value),
-        };
-
-        Media? media = null;
-        Call? call = null;
-
-        // Check các Reference có tồn tại không
-        if (message.IsCallMessage())
-        {
-            call = await _context.Calls.FirstOrDefaultAsync(x => x.Id == message.CallId, ct)
-                ?? throw new NotFoundException("Call not found.");
-        }
-        else if (message.IsMediaMessage())
-        {
-            media = await _context.Medias.FirstOrDefaultAsync(x => x.Id == message.MediaId, ct)
-                ?? throw new NotFoundException("Media not found");
-        }
+        var message = await CreateMessage(conversationId, senderId, request, ct);
 
         _context.Messages.Add(message);
         await _context.SaveChangesAsync(ct);
@@ -74,12 +45,40 @@ public class SendMessageUseCase
             .Select(x => x.MemberId)
             .ToListAsync(ct);
 
-        var response = MapToResponse(message, media, call);
-
+        var response = MapToResponse(message);
         await _notifier.NotifyAsync(receiverIds, "message.created", response, ct);
     }
 
-    private static MessageResponse MapToResponse(Message message, Media? media, Call? call)
+    // Factory tạo message
+    private async Task<Message> CreateMessage(long conversationId, long senderId, SendMessageRequest request, CancellationToken ct)
+    {
+        var type = request.MessageType;
+
+        if (type == MessageType.Text)
+        {
+            return Message.CreateText(conversationId, senderId, request.Content!);
+        }
+
+        if (type == MessageType.Call)
+        {
+            var call = await _context.Calls.FindAsync(request.ReferenceId, ct)
+                ?? throw new NotFoundException("Call not found");
+
+            return Message.CreateCall(conversationId, senderId, call);
+        }
+
+        if (Message.IsMediaType(type))
+        {
+            var media = await _context.Medias.FindAsync(request.ReferenceId, ct)
+                ?? throw new NotFoundException("Media not found");
+
+            return Message.CreateMedia(conversationId, senderId, media, request.MessageType);
+        }
+
+        throw new BadRequestException($"Message type '{type}' is not supported.");
+    }
+
+    private static MessageResponse MapToResponse(Message message)
     {
         return new MessageResponse
         {
@@ -90,26 +89,26 @@ public class SendMessageUseCase
             Content = message.Content,
             CreatedAt = message.CreatedAt,
 
-            Media = media is null
+            Media = message.Media is null
                 ? null
                 : new MediaResponse
                 {
-                    Id = media.Id,
-                    OriginalName = media.OriginalName,
-                    ContentType = media.ContentType,
-                    Size = media.Size,
-                    Url = null! // Tạm thời để null đi
+                    Id = message.Media.Id,
+                    OriginalName = message.Media.OriginalName,
+                    ContentType = message.Media.ContentType,
+                    Size = message.Media.Size,
+                    Url = null!, // Tạm thời để null đi
                 },
 
-            Call = call is null
+            Call = message.Call is null
                 ? null
                 : new CallResponse
                 {
-                    Id = call.Id,
-                    Type = call.Type,
-                    Status = call.Status,
-                    StartedAt = call.StartedAt,
-                    EndedAt = call.EndedAt
+                    Id = message.Call.Id,
+                    Type = message.Call.Type,
+                    Status = message.Call.Status,
+                    CreatedAt = message.Call.CreatedAt,
+                    Duration = message.Call.Duration,
                 }
         };
     }
@@ -124,33 +123,13 @@ public class SendMessageRequest
 
 public class MessageResponse
 {
-    public long Id { get; init; }
-    public long ConversationId { get; init; }
-    public long? SenderId { get; init; }
-    public MessageType Type { get; init; }
-    public string? Content { get; init; }
-    public DateTime CreatedAt { get; init; }
+    public long Id { get; set; }
+    public long ConversationId { get; set; }
+    public long? SenderId { get; set; }
+    public MessageType Type { get; set; }
+    public string? Content { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public MediaResponse? Media { get; init; }
-    public CallResponse? Call { get; init; }
-}
-
-// Tạm thời để 2 cái Media với Call Response này ở đây, mốt refactor sau
-public class MediaResponse
-{
-    public long Id { get; init; }
-    public string OriginalName { get; init; } = null!;
-    public string ContentType { get; init; } = null!;
-    public long Size { get; init; }
-    public string Url { get; init; } = null!;
-}
-
-public class CallResponse
-{
-    public long Id { get; init; }
-    public CallType Type { get; init; }
-    public CallStatus Status { get; init; }
-
-    public DateTime? StartedAt { get; init; }
-    public DateTime? EndedAt { get; init; }
+    public MediaResponse? Media { get; set; }
+    public CallResponse? Call { get; set; }
 }

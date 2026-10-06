@@ -30,6 +30,11 @@ public class Message
 
     public static Message CreateText(long conversationId, long senderId, string content)
     {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            throw new DomainException("Message content cannot be empty.");
+        }
+
         return new Message
         {
             ConversationId = conversationId,
@@ -40,31 +45,35 @@ public class Message
         };
     }
 
-    // Tạo MediaMessage hoặc CallMessage
-    public static Message CreateReference(long conversationId, MessageType type, long senderId, long referenceId)
+    public static Message CreateCall(long conversationId, long senderId, Call call)
     {
-        var message = new Message
+        return new Message
+        {
+            ConversationId = conversationId,
+            Type = MessageType.Call,
+            SenderId = senderId,
+            CallId = call.Id,
+            Call = call,
+            CreatedAt = DateTime.UtcNow,
+        };
+    }
+
+    public static Message CreateMedia(long conversationId, long senderId, Media media, MessageType type)
+    {
+        if (!IsMediaType(type))
+        {
+            throw new DomainException("Message type must be a media type.");
+        }
+
+        return new Message
         {
             ConversationId = conversationId,
             Type = type,
             SenderId = senderId,
+            MediaId = media.Id,
+            Media = media,
             CreatedAt = DateTime.UtcNow,
         };
-
-        if (IsMediaType(type))
-        {
-            message.MediaId = referenceId;
-        }
-        else if (type == MessageType.Call)
-        {
-            message.CallId = referenceId;
-        }
-        else
-        {
-            throw new DomainException("Message type does not support reference.");
-        }
-
-        return message;
     }
 
     public static Message CreateSystem(long conversationId, string content)
@@ -97,7 +106,7 @@ public class Message
 
     public bool IsMediaMessage() => IsMediaType(Type) && MediaId != null;
 
-    private static bool IsMediaType(MessageType type)
+    public static bool IsMediaType(MessageType type)
     {
         return type == MessageType.Image ||
             type == MessageType.Video ||

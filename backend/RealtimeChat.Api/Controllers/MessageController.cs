@@ -27,7 +27,7 @@ public class MessageController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("{messageId:long}/recall")]
+    [HttpPost("/api/messages/{messageId:long}/recall")]
     public async Task<IActionResult> RecallMessage(long messageId, CancellationToken ct)
     {
         await _recallMessage.ExecuteAsync(messageId, ct);

@@ -6,6 +6,7 @@ using RealtimeChat.Infrastructure.Persistence;
 using RealtimeChat.Infrastructure.Security;
 using RealtimeChat.Infrastructure.Presence;
 using RealtimeChat.Infrastructure.Caching;
+using RealtimeChat.Infrastructure.Storage;
 
 namespace RealtimeChat.Infrastructure;
 
@@ -35,6 +36,9 @@ public static class DependencyInjection
         // Caching
         services.AddMemoryCache();
         services.AddSingleton<ICacheService, InMemoryCacheService>();
+
+        // Storage
+        services.AddScoped<IFileStorage>(_ => new LocalFileStorage("storage"));
 
         return services;
     }

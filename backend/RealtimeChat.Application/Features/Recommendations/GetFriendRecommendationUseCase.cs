@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Features.Users;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.Features.Recommendations.Services;
 
 namespace RealtimeChat.Application.Features.Recommendations;
 

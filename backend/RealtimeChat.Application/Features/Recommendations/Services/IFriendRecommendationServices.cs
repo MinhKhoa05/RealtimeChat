@@ -1,4 +1,4 @@
-namespace RealtimeChat.Application.Features.Recommendations;
+namespace RealtimeChat.Application.Features.Recommendations.Services;
 
 public interface IFriendRecommendationService
 {

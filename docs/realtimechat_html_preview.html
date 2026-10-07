@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RealtimeChat UI Preview</title>
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg:#f7f5f1;--panel:#fffdf9;--line:#e7e2da;--text:#171717;--muted:#6f6b65;
+    --accent:#c5a16b;--accent-soft:#f2e8d7;--danger:#e33d32;--green:#2daf68;
+  }
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  button,input{font:inherit}
+  button{border:0;background:none;color:inherit;cursor:pointer}
+  .app{min-height:100vh;padding:12px;display:grid;grid-template-rows:64px 1fr;gap:12px}
+  .topbar,.panel{background:rgba(255,253,249,.94);border:1px solid var(--line);box-shadow:0 2px 12px rgba(30,25,18,.035)}
+  .topbar{border-radius:16px;display:grid;grid-template-columns:330px minmax(280px,1fr) 330px;align-items:center;padding:0 16px}
+  .brand{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:750}
+  .brand-mark{width:32px;height:32px;border-radius:10px;background:#2189e8;color:white;display:grid;place-items:center;font-size:17px}
+  .icon-btn{width:44px;height:44px;border:1px solid var(--line);border-radius:12px;display:grid;place-items:center;font-size:22px;background:#fffdfa}
+  .menu{display:flex;align-items:center;gap:14px}
+  .global-search{height:44px;max-width:680px;margin:auto;width:100%;border:1px solid var(--line);background:#f8f6f2;border-radius:13px;display:flex;align-items:center;padding:0 14px;gap:10px;color:var(--muted)}
+  .global-search input,.search input{border:0;outline:0;background:transparent;width:100%;color:var(--text)}
+  .top-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+  .profile{display:flex;align-items:center;gap:10px;padding-left:12px;border-left:1px solid var(--line)}
+  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(145deg,#efd0aa,#8d6548);display:grid;place-items:center;font-size:24px;position:relative;flex:none}
+  .avatar::after{content:"";position:absolute;width:9px;height:9px;background:var(--green);border:2px solid white;border-radius:50%;right:-1px;bottom:2px}
+  .avatar.group{background:#f0e4d1}
+  .avatar.small{width:40px;height:40px;font-size:21px}
+  .profile-text b{display:block}.profile-text span{font-size:13px;color:var(--muted)}
+  .online-dot{color:var(--green);font-size:11px}
+  .layout{min-height:0;display:grid;grid-template-columns:390px minmax(440px,1fr) 400px;gap:10px}
+  .panel{border-radius:15px;overflow:hidden;min-height:0}
+  .sidebar{display:flex;flex-direction:column}
+  .section-head{height:64px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+  .section-title{font-size:20px;font-weight:750;display:flex;align-items:center;gap:10px}
+  .head-actions{display:flex;gap:7px}
+  .head-actions .icon-btn{width:42px;height:42px}
+  .plus{background:var(--accent);color:white;border-color:var(--accent)}
+  .sidebar-body{padding:10px 16px 0;overflow:auto}
+  .search{height:44px;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;padding:0 13px;gap:10px;color:var(--muted);background:#fff}
+  .tabs{display:flex;gap:7px;padding:10px 0 7px;overflow:hidden}
+  .tab{padding:8px 14px;border-radius:9px;color:#555;font-size:14px;white-space:nowrap}
+  .tab.active{background:var(--accent-soft);color:#222;font-weight:650}
+  .badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:20px;background:#df4038;color:#fff;font-size:12px}
+  .conversation{display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid #eeeae4;min-height:76px}
+  .conversation.active{background:#f4eadb;border:1px solid #dcc39f;border-radius:12px;margin:0 -2px}
+  .conversation-main{min-width:0;flex:1}
+  .conversation-row{display:flex;justify-content:space-between;gap:8px}
+  .conversation-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .time{font-size:12px;color:var(--muted);white-space:nowrap}
+  .preview{font-size:13px;color:#555;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .conv-end{display:flex;align-items:center;gap:7px}
+  .unread{width:20px;height:20px;border-radius:50%;background:#17191b;color:white;display:grid;place-items:center;font-size:11px}
+  .pin{font-size:14px;color:#444}
+  .chat{display:grid;grid-template-rows:70px 1fr 76px}
+  .chat-head{border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+  .person{display:flex;align-items:center;gap:12px}
+  .person h2{font-size:18px;margin:0 0 3px}.person p{font-size:13px;color:var(--muted);margin:0}
+  .chat-actions{display:flex;gap:7px}
+  .chat-actions .icon-btn{width:43px;height:43px}
+  .messages{padding:20px 20px 14px;overflow:auto;background:linear-gradient(180deg,#fffefa,#fbfaf7)}
+  .date{display:flex;align-items:center;gap:12px;color:#777;font-size:12px;margin:2px 55px 20px}
+  .date:before,.date:after{content:"";height:1px;background:#e6e1d9;flex:1}
+  .date span{border:1px solid var(--line);border-radius:9px;padding:6px 12px;background:#fff}
+  .msg{display:flex;gap:10px;margin:13px 0;max-width:75%}
+  .msg.mine{margin-left:auto;justify-content:flex-end}
+  .msg-content{display:flex;flex-direction:column;gap:4px}
+  .bubble{padding:10px 13px;border:1px solid #e6e0d8;border-radius:14px;background:#fff;font-size:15px;line-height:1.35;box-shadow:0 1px 3px rgba(0,0,0,.025)}
+  .mine .bubble{background:#f2e7d6;border-color:#e6d6bc}
+  .msg-meta{font-size:11px;color:#777;padding:0 2px}
+  .mine .msg-meta{text-align:right}
+  .image-msg{width:270px;border-radius:13px;display:block;border:1px solid var(--line)}
+  .reaction{display:flex;gap:8px;margin-top:-1px}.reaction span{border:1px solid var(--line);border-radius:20px;padding:4px 8px;background:white;font-size:12px}
+  .composer{padding:10px 16px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);background:#fffdf9}
+  .composer .icon-btn{width:45px;height:45px}
+  .composer-input{height:46px;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;padding:0 13px;flex:1;color:#777}
+  .composer-input input{border:0;outline:0;width:100%;background:transparent}
+  .send{background:var(--accent);color:white;border-color:var(--accent)}
+  .details{display:flex;flex-direction:column}
+  .details-body{padding:15px 18px;overflow:auto}
+  .detail-profile{display:flex;align-items:center;gap:12px;padding:4px 0 14px}
+  .detail-profile .avatar{width:58px;height:58px;font-size:29px}
+  .detail-name{font-size:18px;font-weight:750}.detail-status{font-size:13px;color:var(--muted);margin-top:4px}
+  .star{margin-left:auto}
+  .bio{border:1px solid var(--line);border-radius:11px;padding:11px 12px;font-size:13px;color:#3f3b36;display:flex;justify-content:space-between}
+  .quick-actions{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0 18px}
+  .quick{border:1px solid var(--line);border-radius:11px;padding:9px 4px;text-align:center;background:#fffdfa;font-size:12px}
+  .quick .qicon{font-size:19px;display:block;margin-bottom:5px}
+  .detail-section{border-top:1px solid var(--line);padding:15px 0}
+  .detail-section h3{font-size:15px;margin:0 0 12px;display:flex;justify-content:space-between}
+  .link{font-size:12px;color:#5d5952;font-weight:500}
+  .media-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+  .media{aspect-ratio:1;border-radius:9px;overflow:hidden;background:#e8e3dc;display:grid;place-items:center;font-size:19px;color:#777}
+  .media:nth-child(1){background:linear-gradient(145deg,#a9c4d4,#3c6873)}
+  .media:nth-child(2){background:linear-gradient(145deg,#ddd0bf,#8a765e)}
+  .media:nth-child(3){background:linear-gradient(145deg,#d7d2ca,#8b8378)}
+  .media.more{background:#686663;color:#fff;font-size:16px}
+  .file{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-bottom:0;background:#fff}
+  .file:first-of-type{border-radius:10px 10px 0 0}.file:last-of-type{border-bottom:1px solid var(--line);border-radius:0 0 10px 10px}
+  .file-icon{font-size:21px;width:27px;text-align:center}.file-main{flex:1;min-width:0}.file-name{font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.file-meta{font-size:11px;color:#777;margin-top:2px}
+  .download{width:30px;height:30px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center}
+  .setting-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #eeeae4;font-size:14px}
+  .setting-row:last-child{border-bottom:0}.setting-icon{width:23px;text-align:center}.setting-row span:nth-child(2){flex:1}
+  .toggle{width:42px;height:24px;border-radius:20px;background:#ddd;position:relative}.toggle:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:white;top:2px;left:2px;box-shadow:0 1px 3px #aaa}.toggle.on{background:#b99869}.toggle.on:after{left:20px}
+  .leave{color:#e13a34!important}
+  @media(max-width:1250px){.layout{grid-template-columns:330px minmax(400px,1fr) 340px}.topbar{grid-template-columns:280px 1fr 280px}}
+  @media(max-width:1000px){.layout{grid-template-columns:300px 1fr}.details{display:none}.topbar{grid-template-columns:250px 1fr 230px}.profile-text{display:none}}
+  @media(max-width:720px){.app{padding:6px;grid-template-rows:58px 1fr}.topbar{grid-template-columns:50px 1fr 50px;padding:0 6px}.brand{font-size:0}.brand-mark{margin:auto}.global-search{max-width:none}.profile{border:0;padding:0}.profile .avatar{width:38px;height:38px}.top-actions .icon-btn:first-child,.top-actions .icon-btn:nth-child(2){display:none}.layout{grid-template-columns:1fr}.sidebar{display:none}.chat{border-radius:12px}.chat-head{padding:0 10px}.chat-actions .icon-btn:nth-child(1){display:none}.messages{padding:14px 10px}.msg{max-width:88%}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="menu">
+      <button class="icon-btn">☰</button>
+      <div class="brand"><span class="brand-mark">●</span>RealtimeChat</div>
+    </div>
+    <label class="global-search">⌕ <input placeholder="Search messages, conversations, users..."><small>Ctrl K</small></label>
+    <div class="top-actions">
+      <button class="icon-btn">♧</button>
+      <button class="icon-btn">☾</button>
+      <div class="profile"><div class="avatar small">👨🏻</div><div class="profile-text"><b>Minh Khoa</b><span><span class="online-dot">●</span> Online</span></div><span>⌄</span></div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel sidebar">
+      <div class="section-head">
+        <div class="section-title">◌ <span>Chats</span></div>
+        <div class="head-actions"><button class="icon-btn">☷</button><button class="icon-btn plus">＋</button></div>
+      </div>
+      <div class="sidebar-body">
+        <label class="search">⌕ <input placeholder="Search conversations..."></label>
+        <div class="tabs"><button class="tab active">All</button><button class="tab">Unread <span class="badge">3</span></button><button class="tab">Groups</button><button class="tab">Pinned</button></div>
+
+        <div class="conversation active"><div class="avatar">👩🏻</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">Alice Nguyen</b><span class="time">02:28 PM</span></div><div class="preview">You: See you tomorrow!</div></div><div class="conv-end"><span class="pin">⚑</span><span class="unread">2</span></div></div>
+        <div class="conversation"><div class="avatar group">👥</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">Design Team</b><span class="time">01:45 PM</span></div><div class="preview">Alice: Let’s review the UI</div></div><span class="unread">3</span></div>
+        <div class="conversation"><div class="avatar">👨🏻</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">Bob Tran</b><span class="time">11:30 AM</span></div><div class="preview">Bob: Thanks so much! 🙏</div></div><span class="unread">1</span></div>
+        <div class="conversation"><div class="avatar">🧑🏻</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">Charlie Pham</b><span class="time">10:15 AM</span></div><div class="preview">You sent an image</div></div></div>
+        <div class="conversation"><div class="avatar">👨🏻</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">Duy Le</b><span class="time">Yesterday</span></div><div class="preview">Duy: Ok, sounds good</div></div></div>
+        <div class="conversation"><div class="avatar group">👥</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">Project Discussion</b><span class="time">Yesterday</span></div><div class="preview">Khoa: Updated the document</div></div><span class="pin">⚑</span></div>
+        <div class="conversation"><div class="avatar group">♧</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">System Notifications</b><span class="time">Mon</span></div><div class="preview">Your messages are synced</div></div><span class="unread">1</span></div>
+        <div class="conversation"><div class="avatar">👨🏻</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">Anh Hoang</b><span class="time">Mon</span></div><div class="preview">You: 👍</div></div></div>
+        <div class="conversation"><div class="avatar">👨🏽</div><div class="conversation-main"><div class="conversation-row"><b class="conversation-name">Khanh Vu</b><span class="time">Mon</span></div><div class="preview">Khanh: Nice!</div></div></div>
+      </div>
+    </aside>
+
+    <section class="panel chat">
+      <div class="chat-head">
+        <div class="person"><div class="avatar">👩🏻</div><div><h2>Alice Nguyen</h2><p><span class="online-dot">●</span> Online</p></div></div>
+        <div class="chat-actions"><button class="icon-btn">⌕</button><button class="icon-btn">⌕</button><button class="icon-btn">▣</button><button class="icon-btn">⋮</button></div>
+      </div>
+      <div class="messages">
+        <div class="date"><span>Today</span></div>
+        <div class="msg"><div class="avatar small">👩🏻</div><div class="msg-content"><div class="bubble">Hey Khoa! 👋</div><div class="msg-meta">02:20 PM</div></div></div>
+        <div class="msg mine"><div class="msg-content"><div class="bubble">Hi Alice! How are you?</div><div class="msg-meta">02:21 PM　✓✓</div></div></div>
+        <div class="msg"><div class="avatar small">👩🏻</div><div class="msg-content"><div class="bubble">I’m good! Just working on the<br>project you shared.</div><div class="msg-meta">02:22 PM</div></div></div>
+        <div class="msg mine"><div class="msg-content"><div class="bubble">Awesome! Let me know if you<br>need anything.</div><div class="msg-meta">02:23 PM　✓✓</div></div></div>
+        <div class="msg"><div class="avatar small">👩🏻</div><div class="msg-content"><div class="bubble">Will do! Thanks 😊</div><div class="msg-meta">02:24 PM</div></div></div>
+        <div class="msg"><div class="avatar small">👩🏻</div><div class="msg-content"><div class="bubble" style="padding:5px"><div class="image-msg" style="height:135px;background:linear-gradient(145deg,#9bb8c9,#345c66);display:grid;place-items:center;font-size:38px">🏔️</div></div><div class="msg-meta">02:24 PM</div><div class="reaction"><span>❤️ 1</span><span>＋</span></div></div></div>
+        <div class="msg mine"><div class="msg-content"><div class="bubble">See you tomorrow!</div><div class="msg-meta">02:28 PM　✓✓</div></div></div>
+      </div>
+      <div class="composer">
+        <button class="icon-btn">⌕</button>
+        <label class="composer-input"><input placeholder="Type a message..."><span>☺</span></label>
+        <button class="icon-btn">♩</button>
+        <button class="icon-btn send">➤</button>
+      </div>
+    </section>
+
+    <aside class="panel details">
+      <div class="section-head"><div class="section-title">ⓘ <span>Conversation Details</span></div><button class="icon-btn">×</button></div>
+      <div class="details-body">
+        <div class="detail-profile"><div class="avatar">👩🏻</div><div><div class="detail-name">Alice Nguyen</div><div class="detail-status"><span class="online-dot">●</span> Online</div></div><button class="icon-btn star">☆</button></div>
+        <div class="bio">Stay positive, work hard, make it happen. ✨ <span>✎</span></div>
+        <div class="quick-actions">
+          <button class="quick"><span class="qicon">⌕</span>Call</button>
+          <button class="quick"><span class="qicon">▣</span>Video</button>
+          <button class="quick"><span class="qicon">⌕</span>Search</button>
+          <button class="quick"><span class="qicon">♧</span>Mute</button>
+          <button class="quick"><span class="qicon">•••</span>More</button>
+        </div>
+        <div class="detail-section"><h3>◌ Media <span class="link">View all ›</span></h3><div class="media-grid"><div class="media">🏔️</div><div class="media">💻</div><div class="media">🐱</div><div class="media more">+12</div></div></div>
+        <div class="detail-section"><h3>▧ Files <span class="link">View all ›</span></h3>
+          <div class="file"><div class="file-icon">📄</div><div class="file-main"><div class="file-name">project_requirements.pdf</div><div class="file-meta">1.2 MB · PDF</div></div><button class="download">↓</button></div>
+          <div class="file"><div class="file-icon">🔴</div><div class="file-main"><div class="file-name">design_mockup.fig</div><div class="file-meta">4.5 MB · FIG</div></div><button class="download">↓</button></div>
+          <div class="file"><div class="file-icon">📗</div><div class="file-main"><div class="file-name">timeline.xlsx</div><div class="file-meta">895 KB · XLSX</div></div><button class="download">↓</button></div>
+        </div>
+        <div class="detail-section">
+          <div class="setting-row"><span class="setting-icon">🔗</span><span>Shared Links</span><span>View all ›</span></div>
+          <div class="setting-row"><span class="setting-icon">♙</span><span>Members</span><span>2 members ›</span></div>
+          <div class="setting-row"><span class="setting-icon">♧</span><span>Notifications</span><span class="toggle on"></span></div>
+          <div class="setting-row"><span class="setting-icon">⚑</span><span>Pin Conversation</span><span class="toggle"></span></div>
+          <div class="setting-row leave"><span class="setting-icon">⇥</span><span>Leave Conversation</span></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>
+</body>
+</html>

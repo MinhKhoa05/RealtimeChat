@@ -59,7 +59,9 @@ public class SendMessageUseCase
 
         if (type == MessageType.Sticker)
         {
-            var sticker = await _context.Stickers.FirstOrDefaultAsync(x => x.PublicId == request.ReferenceId, ct)
+            var sticker = await _context.Stickers
+                .Include(x => x.Media)
+                .FirstOrDefaultAsync(x => x.PublicId == request.ReferenceId, ct)
                 ?? throw new NotFoundException("Sticker not found");
 
             return Message.CreateSticker(conversationId, senderId, sticker);

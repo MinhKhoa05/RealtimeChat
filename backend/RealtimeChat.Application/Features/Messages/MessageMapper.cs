@@ -1,5 +1,6 @@
 using RealtimeChat.Application.Features.Call;
 using RealtimeChat.Application.Features.Media;
+using RealtimeChat.Application.Features.Stickers;
 using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Application.Features.Messages;
@@ -20,6 +21,10 @@ public static class MessageMapper
             Media = message.Media is null
                 ? null
                 : MediaMapper.ToResponse(message.Media),
+            
+            Sticker = message.Sticker is null
+                ? null
+                : StickerMapper.ToResponse(message.Sticker),
 
             Call = message.Call is null
                 ? null

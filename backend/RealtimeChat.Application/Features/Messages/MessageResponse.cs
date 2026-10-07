@@ -1,6 +1,7 @@
 using RealtimeChat.Domain.Enums;
 using RealtimeChat.Application.Features.Call;
 using RealtimeChat.Application.Features.Media;
+using RealtimeChat.Application.Features.Stickers;
 
 public class MessageResponse
 {
@@ -12,5 +13,6 @@ public class MessageResponse
     public DateTime CreatedAt { get; set; }
 
     public MediaResponse? Media { get; set; }
+    public StickerResponse? Sticker { get; set; }
     public CallResponse? Call { get; set; }
 }

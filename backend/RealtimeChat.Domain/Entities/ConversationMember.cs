@@ -20,7 +20,7 @@ public class ConversationMember
 
     private ConversationMember() { }
 
-    public static ConversationMember Create(long userId, ConversationMemberRole role)
+    internal static ConversationMember Create(long userId, ConversationMemberRole role)
     {
         return new ConversationMember
         {

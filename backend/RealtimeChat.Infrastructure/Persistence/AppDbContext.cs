@@ -16,6 +16,9 @@ namespace RealtimeChat.Infrastructure.Persistence
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<Relationship> Relationships => Set<Relationship>();
         public DbSet<User> Users => Set<User>();
+        public DbSet<Sticker> Stickers => Set<Sticker>();
+        public DbSet<StickerCollection> StickerCollections => Set<StickerCollection>();
+        public DbSet<UserStickerCollection> UserStickerCollections => Set<UserStickerCollection>();
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

@@ -45,6 +45,12 @@ public class MessageConfiguration
             .HasForeignKey(x => x.CallId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        // Sticker
+        builder.HasOne(x => x.Sticker)
+            .WithMany()
+            .HasForeignKey(x => x.StickerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // CreatedAt
         builder.Property(x => x.CreatedAt)
             .IsRequired();

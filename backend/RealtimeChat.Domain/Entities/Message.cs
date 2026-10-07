@@ -20,6 +20,9 @@ public class Message : BaseEntity
     public long? CallId { get; private set; }
     public Call? Call { get; private set; }
 
+    public long? StickerId { get; private set; }
+    public Sticker? Sticker { get; private set; }
+
     public DateTime? RecalledAt { get; private set; }
 
     private static readonly TimeSpan RecallWindow = TimeSpan.FromMinutes(15);
@@ -39,6 +42,18 @@ public class Message : BaseEntity
             Type = MessageType.Text,
             SenderId = senderId,
             Content = content,
+        };
+    }
+
+    public static Message CreateSticker(long conversationId, long senderId, Sticker sticker)
+    {
+        return new Message
+        {
+            ConversationId = conversationId,
+            Type = MessageType.Sticker,
+            SenderId = senderId,
+            StickerId = sticker.Id,
+            Sticker = sticker,
         };
     }
 

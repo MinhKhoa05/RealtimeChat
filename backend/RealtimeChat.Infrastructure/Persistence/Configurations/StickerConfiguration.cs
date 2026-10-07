@@ -21,6 +21,12 @@ public class StickerConfiguration : IEntityTypeConfiguration<Sticker>
             .HasForeignKey(x => x.CollectionId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Property(x => x.PublicId)
+            .IsRequired();
+
+        builder.HasIndex(x => x.PublicId)
+            .IsUnique();
+
         builder.HasOne(x => x.Media)
             .WithMany()
             .HasForeignKey(x => x.MediaId)

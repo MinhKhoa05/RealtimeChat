@@ -8,10 +8,12 @@ public class Sticker : BaseEntity
     public StickerCollection Collection { get; private set; } = null!;
 
     public string Label { get; private set; } = null!;
+    public Guid PublicId { get; private set; }
 
     public long MediaId { get; private set; }
     public Media Media { get; private set; } = null!;
 
+    
     private Sticker() { }
 
     public static Sticker Create(long collectionId, string label, long mediaId)
@@ -25,6 +27,7 @@ public class Sticker : BaseEntity
         {
             CollectionId = collectionId,
             Label = label.Trim(),
+            PublicId = Guid.NewGuid(),
             MediaId = mediaId,
         };
     }

@@ -57,17 +57,17 @@ public class SendMessageUseCase
             return Message.CreateText(conversationId, senderId, request.Content!);
         }
 
-        if (type == MessageType.Call)
+        if (type == MessageType.Sticker)
         {
-            var call = await _context.Calls.FindAsync(request.ReferenceId, ct)
-                ?? throw new NotFoundException("Call not found");
+            var sticker = await _context.Stickers.FirstOrDefaultAsync(x => x.PublicId == request.ReferenceId, ct)
+                ?? throw new NotFoundException("Sticker not found");
 
-            return Message.CreateCall(conversationId, senderId, call);
+            return Message.CreateSticker(conversationId, senderId, sticker);
         }
 
         if (Message.IsMediaType(type))
         {
-            var media = await _context.Medias.FindAsync(request.ReferenceId, ct)
+            var media = await _context.Medias.FirstOrDefaultAsync(x => x.PublicId == request.ReferenceId, ct)
                 ?? throw new NotFoundException("Media not found");
 
             return Message.CreateMedia(conversationId, senderId, media, request.MessageType);
@@ -81,5 +81,5 @@ public class SendMessageRequest
 {
     public string? Content { get; set; }
     public MessageType MessageType { get; set; }
-    public long? ReferenceId { get; set; }
+    public Guid? ReferenceId { get; set; }
 }

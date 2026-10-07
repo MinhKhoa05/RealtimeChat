@@ -38,7 +38,7 @@ public static class DependencyInjection
         services.AddSingleton<ICacheService, InMemoryCacheService>();
 
         // Storage
-        services.AddScoped<IFileStorage>(_ => new LocalFileStorage("storage"));
+        services.AddScoped<IFileStorage>(_ => new LocalFileStorage("/data/media"));
 
         return services;
     }

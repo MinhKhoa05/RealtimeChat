@@ -14,16 +14,31 @@ public class UploadMediaUseCase
         _storage = storage;
     }
 
-    public async Task<Guid> ExecuteAsync(UploadMediaRequest request, CancellationToken ct)
+    public async Task<MediaResponse> ExecuteAsync(UploadMediaRequest request, CancellationToken ct)
     {
-        var storageKey = await _storage.SaveAsync(request.Content, request.ContentType, ct);
+        var extension = GetExtension(request.ContentType);
 
-        var media = MediaEntity.Create(request.OriginalName, request.ContentType, request.Size, storageKey);
+        var media = MediaEntity.Create(request.OriginalName, request.ContentType, request.Size, extension);
+
+        await _storage.SaveAsync(request.Content, media.StorageKey, ct);
 
         _context.Medias.Add(media);
         await _context.SaveChangesAsync(ct);
 
-        return media.PublicId;
+        return MediaMapper.ToResponse(media);
+    }
+
+    private static string GetExtension(string contentType)
+    {
+        return contentType switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            "image/webp" => ".webp",
+            "image/gif" => ".gif",
+            _ => throw new InvalidOperationException(
+                $"Unsupported content type: {contentType}")
+        };
     }
 }
 

@@ -80,7 +80,6 @@ public static class DependencyInjection
 
         // Media
         services.AddScoped<UploadMediaUseCase>();
-        services.AddScoped<GetMediaUseCase>();
 
         return services;
     }

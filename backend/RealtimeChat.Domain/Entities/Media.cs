@@ -10,15 +10,17 @@ public class Media : BaseEntity
 
     private Media() { }
 
-    public static Media Create(string originalName, string contentType, long size, string storageKey)
+    public static Media Create(string originalName, string contentType, long size, string extension)
     {
+        var publicId = Guid.NewGuid();
+
         return new Media
         {
-            PublicId = Guid.NewGuid(),
+            PublicId = publicId,
             OriginalName = originalName,
             ContentType = contentType,
             Size = size,
-            StorageKey = storageKey,
+            StorageKey = $"{publicId:N}{extension}",
         };
     }
 }

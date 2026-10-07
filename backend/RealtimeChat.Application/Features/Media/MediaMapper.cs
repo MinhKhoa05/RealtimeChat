@@ -4,7 +4,7 @@ namespace RealtimeChat.Application.Features.Media;
 
 public static class MediaMapper
 {
-    private static string MediaUrl(Guid publicId) => $"/api/media/{publicId}";
+    private static string MediaUrl(MediaEntity media) => $"/media/{media.StorageKey}";
 
     public static MediaResponse ToResponse(MediaEntity media)
     {
@@ -14,7 +14,7 @@ public static class MediaMapper
             OriginalName = media.OriginalName,
             ContentType = media.ContentType,
             Size = media.Size,
-            Url = MediaUrl(media.PublicId)
+            Url = MediaUrl(media)
         };
     }
 }

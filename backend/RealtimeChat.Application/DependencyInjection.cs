@@ -11,6 +11,7 @@ using RealtimeChat.Application.Features.Recommendations;
 using RealtimeChat.Application.Features.Recommendations.CandidatePool;
 using RealtimeChat.Application.Features.Recommendations.Services;
 using RealtimeChat.Application.Features.Media;
+using RealtimeChat.Application.Features.Stickers;
 
 namespace RealtimeChat.Application;
 
@@ -80,6 +81,19 @@ public static class DependencyInjection
 
         // Media
         services.AddScoped<UploadMediaUseCase>();
+
+        // Sticker
+        services.AddScoped<AddCollectionUseCase>();
+        services.AddScoped<CreateCollectionUseCase>();
+        services.AddScoped<CreateStickerUseCase>();
+
+        services.AddScoped<GetAvailableCollectionsUseCase>();
+        services.AddScoped<GetMyCollectionsUseCase>();
+        services.AddScoped<GetSavedCollectionsUseCase>();
+
+        services.AddScoped<RegenerateSharedKeyUseCase>();
+        services.AddScoped<UpdateCollectionUseCase>();
+        services.AddScoped<UpdateStickerUseCase>();
 
         return services;
     }

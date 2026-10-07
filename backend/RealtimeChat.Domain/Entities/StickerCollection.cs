@@ -30,14 +30,9 @@ public class StickerCollection : BaseEntity
         };
     }
 
-    public void Publish()
+    public void SetVisibility(StickerCollectionVisibility visibility)
     {
-        Visibility = StickerCollectionVisibility.Public;
-    }
-
-    public void Unpublish()
-    {
-        Visibility = StickerCollectionVisibility.Private;
+        Visibility = visibility;
     }
 
     public void RegenerateSharedKey()
@@ -45,7 +40,7 @@ public class StickerCollection : BaseEntity
         SharedKey = Guid.NewGuid();
     }
 
-    public void UpdateLable(string newLabel)
+    public void UpdateLabel(string newLabel)
     {
         ValidateLabel(newLabel);
 

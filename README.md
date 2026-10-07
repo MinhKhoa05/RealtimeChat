@@ -10,22 +10,83 @@ Project tập trung vào nhắn tin thời gian thực, hội thoại 1-1 và nh
 
 Project được xây dựng với **Clean Architecture**, kết hợp mô hình **Domain-centric Entity**, UseCase-oriented Application Layer và cơ chế realtime communication thông qua SignalR.
 
-## Tính năng
+## Phạm vi project
 
-- Authentication & Authorization
-- Nhắn tin 1-1
-- Hội thoại nhóm
-- Kết bạn và quản lý quan hệ giữa người dùng
-- Chặn người dùng
-- Lịch sử tin nhắn
-- Trạng thái đã đọc
-- Thu hồi tin nhắn
-- Gửi hình ảnh và file
-- Online / Offline Presence
-- Typing Indicator
-- Gọi thoại / video 1-1
-- WebRTC Signaling
-- Horizontal Scalability
+RealtimeChat là nền tảng giao tiếp trực tuyến, tập trung vào nhắn tin thời gian thực, quản lý quan hệ người dùng, chia sẻ đa phương tiện và Audio/Video Call.
+
+1. Người dùng & Xác thực
+
+- Authentication: Đăng ký, đăng nhập và xác thực bằng JWT.
+- User Profile: Quản lý thông tin cá nhân và avatar.
+- Multi-Connection: Hỗ trợ nhiều kết nối trên cùng một tài khoản.
+- Presence: Theo dõi trạng thái Online / Offline theo thời gian thực.
+
+2. Nhắn tin
+
+- Private Chat: Nhắn tin 1-1 theo thời gian thực.
+- Group Chat: Nhắn tin trong các cuộc trò chuyện nhóm.
+- Message History: Lưu trữ và truy xuất lịch sử tin nhắn.
+- Message Pagination: Phân trang lịch sử tin nhắn.
+- Read Status: Theo dõi trạng thái đã đọc, chưa đọc
+- Reply: Trả lời tin nhắn.
+- Reaction: Bày tỏ cảm xúc với tin nhắn.
+- Mention: Mention người dùng trong cuộc trò chuyện.
+- Recall: Thu hồi tin nhắn.
+- Message Types: Hỗ trợ Text, Image, Video, Audio, File và Sticker.
+- Call History: Lưu lịch sử cuộc gọi dưới dạng tin nhắn trong conversation.
+
+3. Bạn bè & Quan hệ
+
+- Friend Request: Gửi, chấp nhận và từ chối lời mời kết bạn.
+- Friend List: Quản lý danh sách bạn bè.
+- Block: Chặn và bỏ chặn người dùng.
+- Friend Recommendation: Gợi ý bạn bè dựa trên các conversation chung và mối quan hệ gián tiếp.
+
+4. Quản lý nhóm
+
+- Group Management: Tạo và quản lý thông tin nhóm.
+- Member Management: Thêm, xóa thành viên và quản lý thành viên.
+- Role Management: Chuyển quyền quản trị nhóm.
+- Group Disband: Giải tán nhóm.
+
+5. Sticker System
+
+- Sticker Collection: Tạo và quản lý bộ sưu tập Sticker.
+- Visibility: Hỗ trợ bộ sưu tập Public / Private.
+- Sharing: Chia sẻ bộ sưu tập thông qua mã chia sẻ.
+- Collection Management: Thêm / lưu bộ sưu tập và quản lý Sticker.
+- Sticker Message: Gửi Sticker trực tiếp trong cuộc trò chuyện.
+
+6. Media & File Sharing
+
+- Media Upload: Tải lên hình ảnh, video, audio và file.
+- Media Metadata: Quản lý metadata của các Media.
+- File Sharing: Chia sẻ Media trực tiếp trong cuộc trò chuyện.
+- Static Media Delivery: Phân phối Media thông qua static file storage.
+
+7. Realtime Communication
+
+- Realtime Messaging: Đồng bộ tin nhắn theo thời gian thực.
+- Presence: Cập nhật Online / Offline.
+- Typing Indicator: Hiển thị trạng thái đang soạn tin.
+- Realtime Events: Đồng bộ các sự kiện trong conversation theo thời gian thực.
+
+8. Audio / Video Call
+
+- Audio Call: Gọi thoại 1-1.
+- Video Call: Gọi video 1-1.
+- WebRTC: Truyền tải Audio / Video giữa các client.
+- Signaling: Trao đổi signaling thông qua hệ thống realtime.
+- Call Lifecycle: Quản lý trạng thái và vòng đời cuộc gọi.
+- Call History: Lưu lại thông tin cuộc gọi sau khi kết thúc.
+
+9. Scalability & Infrastructure
+
+- Redis: Caching và hỗ trợ đồng bộ realtime giữa các instance.
+- Horizontal Scaling: Hỗ trợ chạy nhiều Backend instance.
+- Nginx: Reverse Proxy và Load Balancing.
+- Docker: Container hóa các thành phần của hệ thống.
+- Docker Compose: Quản lý và triển khai toàn bộ hệ thống.
 
 ## Công nghệ sử dụng
 
@@ -300,6 +361,7 @@ RealtimeChat/
 │   │   └── Program.cs
 │   │
 │   ├── RealtimeChat.Application/
+│   │   ├── Common/          # Shared models and utilities
 │   │   ├── Features/        # Use cases by feature
 │   │   ├── Interfaces/      # Application abstractions
 │   │   ├── QueryExtensions/ # EF Core queries
@@ -328,30 +390,6 @@ RealtimeChat/
 ├── docker-compose.yml
 └── README.md
 ```
-
-## Phạm vi Project
-
-Project tập trung vào:
-
-- Authentication & Authorization
-- Real-time Messaging
-- 1-1 Conversations
-- Group Conversations
-- Friend Requests & Relationships
-- User Blocking
-- Message History
-- Read Status
-- Message Recall
-- Multimedia Messages
-- Online / Offline Presence
-- Typing Indicator
-- Audio / Video Calls
-- WebRTC Signaling
-- SignalR Real-time Communication
-- Redis
-- Dockerized Deployment
-- Nginx Reverse Proxy
-- Horizontal Scalability
 
 ## Trạng thái
 

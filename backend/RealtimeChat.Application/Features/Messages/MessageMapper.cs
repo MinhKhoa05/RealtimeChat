@@ -9,6 +9,19 @@ public static class MessageMapper
 {
     public static MessageResponse ToResponse(Message message)
     {
+        if (message.IsRecalled())
+        {
+            return new MessageResponse
+            {
+                Id = message.Id,
+                ConversationId = message.ConversationId,
+                SenderId = message.SenderId,
+                Type = message.Type,
+                CreatedAt = message.CreatedAt,
+                IsRecalled = true,
+            };
+        }
+
         return new MessageResponse
         {
             Id = message.Id,
@@ -45,6 +58,8 @@ public static class MessageMapper
                     Length = x.Length
                 })
                 .ToList(),
+
+            IsRecalled = false
         };
     }
 }

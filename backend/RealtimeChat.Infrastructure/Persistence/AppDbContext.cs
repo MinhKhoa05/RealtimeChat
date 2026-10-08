@@ -19,6 +19,7 @@ namespace RealtimeChat.Infrastructure.Persistence
         public DbSet<Sticker> Stickers => Set<Sticker>();
         public DbSet<StickerCollection> StickerCollections => Set<StickerCollection>();
         public DbSet<UserStickerCollection> UserStickerCollections => Set<UserStickerCollection>();
+        public DbSet<Mention> Mentions => Set<Mention>();
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {

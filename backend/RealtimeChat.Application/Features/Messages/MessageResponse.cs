@@ -19,4 +19,6 @@ public class MessageResponse
     public CallResponse? Call { get; set; }
 
     public IReadOnlyList<MentionDto>? Mentions { get; set; }
+
+    public bool IsRecalled { get; set; }
 }

@@ -115,9 +115,14 @@ public class Message : BaseEntity
 
     public void Recall()
     {
-        if (RecalledAt.HasValue)
+        if (IsRecalled())
         {
             throw new DomainException("Message has already been recalled.");
+        }
+
+        if (!CanRecall())
+        {
+            throw new DomainException("This message type cannot be recalled.");
         }
 
         if (DateTime.UtcNow > CreatedAt.Add(RecallWindow))
@@ -139,4 +144,19 @@ public class Message : BaseEntity
             type == MessageType.Audio ||
             type == MessageType.File;
     }
+
+    public bool IsRecalled()
+    {
+        return RecalledAt.HasValue;
+    }
+
+    private bool CanRecall()
+    {
+        if (IsMediaType(Type)) return true;
+
+        return Type is
+            MessageType.Text or
+            MessageType.Sticker;
+    }
+
 }

@@ -16,6 +16,7 @@ namespace RealtimeChat.Application.Interfaces
         DbSet<Sticker> Stickers { get; }
         DbSet<StickerCollection> StickerCollections { get; }
         DbSet<UserStickerCollection> UserStickerCollections { get; }
+        DbSet<Mention> Mentions { get; }
 
         Task<int> SaveChangesAsync(CancellationToken ct);
     }

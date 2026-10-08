@@ -33,6 +33,8 @@ public class GetMessagesUseCase
             .Where(x => x.ConversationId == conversationId)
             .Include(x => x.Media)
             .Include(x => x.Call)
+            .Include(x => x.Sticker)
+            .Include(x => x.Mentions)
             .ToCursorPageAsync(request, ct);
 
         return result.Map(MessageMapper.ToResponse);

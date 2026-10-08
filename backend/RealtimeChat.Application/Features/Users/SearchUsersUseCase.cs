@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
-using RealtimeChat.Domain.Entities;
-using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Users;
 

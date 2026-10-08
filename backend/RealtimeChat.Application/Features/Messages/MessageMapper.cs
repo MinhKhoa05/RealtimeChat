@@ -21,7 +21,7 @@ public static class MessageMapper
             Media = message.Media is null
                 ? null
                 : MediaMapper.ToResponse(message.Media),
-            
+
             Sticker = message.Sticker is null
                 ? null
                 : StickerMapper.ToResponse(message.Sticker),
@@ -35,7 +35,16 @@ public static class MessageMapper
                     Status = message.Call.Status,
                     CreatedAt = message.Call.CreatedAt,
                     Duration = message.Call.Duration
-                }
+                },
+
+            Mentions = message.Mentions
+                .Select(x => new MentionDto
+                {
+                    UserId = x.UserId,
+                    Start = x.Start,
+                    Length = x.Length
+                })
+                .ToList(),
         };
     }
 }

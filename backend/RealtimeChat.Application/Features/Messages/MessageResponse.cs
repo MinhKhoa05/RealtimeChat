@@ -3,6 +3,8 @@ using RealtimeChat.Application.Features.Call;
 using RealtimeChat.Application.Features.Media;
 using RealtimeChat.Application.Features.Stickers;
 
+namespace RealtimeChat.Application.Features.Messages;
+
 public class MessageResponse
 {
     public long Id { get; set; }
@@ -15,4 +17,6 @@ public class MessageResponse
     public MediaResponse? Media { get; set; }
     public StickerResponse? Sticker { get; set; }
     public CallResponse? Call { get; set; }
+
+    public IReadOnlyList<MentionDto>? Mentions { get; set; }
 }

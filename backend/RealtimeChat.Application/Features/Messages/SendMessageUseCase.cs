@@ -35,6 +35,11 @@ public class SendMessageUseCase
 
         var message = await CreateMessage(conversationId, senderId, request, ct);
 
+        if (request.Mentions.Count != 0)
+        {
+            await AddValidMentions(message, request.Mentions, ct);
+        }
+
         _context.Messages.Add(message);
         await _context.SaveChangesAsync(ct);
 
@@ -77,11 +82,54 @@ public class SendMessageUseCase
 
         throw new BadRequestException($"Message type '{type}' is not supported.");
     }
+
+    private async Task AddValidMentions(Message message, IReadOnlyCollection<MentionDto> mentions, CancellationToken ct)
+    {
+        if (message.Content is null)
+            return;
+
+        var userIds = mentions.Select(x => x.UserId).Distinct().ToList();
+
+        var users = await _context.ConversationMembers
+            .Where(x => x.ConversationId == message.ConversationId && userIds.Contains(x.MemberId))
+            .Select(x => new
+            {
+                x.Member.Id,
+                x.Member.Name
+            })
+            .ToDictionaryAsync(x => x.Id, ct);
+
+        // Chỉ tạo Mention khi dữ liệu hợp lệ.
+        // Nếu Mention không hợp lệ, bỏ qua và vẫn lưu Message bình thường.
+        foreach (var mention in mentions)
+        {
+            if (!users.TryGetValue(mention.UserId, out var user))
+                continue;
+
+            if (mention.Start < 0 || mention.Length <= 0 || mention.Start > message.Content!.Length - mention.Length)
+                continue;
+
+            var mentionedText = message.Content.Substring(mention.Start, mention.Length);
+
+            if (mentionedText != $"@{user.Name}")
+                continue;
+
+            message.AddMention(mention.UserId, mention.Start, mention.Length);
+        }
+    }
 }
 
 public class SendMessageRequest
 {
     public string? Content { get; set; }
     public MessageType MessageType { get; set; }
-    public Guid? ReferenceId { get; set; }
+    public Guid? ReferenceId { get; set; } // Dùng cho loại Sticker / Media
+    public List<MentionDto> Mentions { get; set; } = [];
+}
+
+public class MentionDto
+{
+    public long UserId { get; init; }
+    public int Start { get; init; }
+    public int Length { get; init; }
 }

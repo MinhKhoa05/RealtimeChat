@@ -25,10 +25,13 @@ public class Message : BaseEntity
 
     public DateTime? RecalledAt { get; private set; }
 
+    public ICollection<Mention> Mentions { get; private set; } = new List<Mention>();
+
     private static readonly TimeSpan RecallWindow = TimeSpan.FromMinutes(15);
 
     private Message() { }
 
+    # region Create
     public static Message CreateText(long conversationId, long senderId, string content)
     {
         if (string.IsNullOrWhiteSpace(content))
@@ -94,6 +97,20 @@ public class Message : BaseEntity
             Type = MessageType.System,
             Content = content,
         };
+    }
+
+    # endregion
+
+    public void AddMention(long userId, int start, int length)
+    {
+        if (Type is not (MessageType.Text or MessageType.System))
+        {
+            throw new DomainException("This message type does not support mentions.");
+        }
+
+        var mention = Mention.Create(userId, start, length);
+
+        Mentions.Add(mention);
     }
 
     public void Recall()

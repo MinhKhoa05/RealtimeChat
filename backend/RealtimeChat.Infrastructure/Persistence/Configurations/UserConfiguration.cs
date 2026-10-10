@@ -4,41 +4,30 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class UserConfiguration
-    : IEntityTypeConfiguration<User>
+public class UserConfiguration : BaseEntityConfiguration<User>
 {
-    public void Configure(EntityTypeBuilder<User> builder)
+    public override void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.ToTable("users");
+        base.Configure(builder);
 
-        builder.HasKey(x => x.Id);
-
-        // Name
         builder.Property(x => x.Name)
             .HasMaxLength(100)
             .IsRequired();
 
-        // Email
         builder.Property(x => x.Email)
             .HasMaxLength(255)
             .IsRequired();
 
-        builder.HasIndex(x => x.Email)
-            .IsUnique();
-
-        // Password
         builder.Property(x => x.PasswordHash)
             .HasMaxLength(255)
             .IsRequired();
 
-        // Avatar
         builder.HasOne(x => x.AvatarMedia)
             .WithMany()
             .HasForeignKey(x => x.AvatarMediaId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // CreatedAt
-        builder.Property(x => x.CreatedAt)
-            .IsRequired();
+        builder.HasIndex(x => x.Email)
+           .IsUnique();
     }
 }

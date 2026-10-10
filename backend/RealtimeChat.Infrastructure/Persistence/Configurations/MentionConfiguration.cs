@@ -4,15 +4,11 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class MentionConfiguration : IEntityTypeConfiguration<Mention>
+public class MentionConfiguration : BaseEntityConfiguration<Mention>
 {
-    public void Configure(EntityTypeBuilder<Mention> builder)
+    public override void Configure(EntityTypeBuilder<Mention> builder)
     {
-        builder.HasKey(x => new
-        {
-            x.MessageId,
-            x.UserId
-        });
+        base.Configure(builder);
 
         builder.HasOne(x => x.Message)
             .WithMany(x => x.Mentions)

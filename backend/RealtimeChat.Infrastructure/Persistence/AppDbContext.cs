@@ -23,9 +23,11 @@ namespace RealtimeChat.Infrastructure.Persistence
         public DbSet<ShareTripSession> ShareTripSessions => Set<ShareTripSession>();
         public DbSet<UserLiveLocation> UserLiveLocations => Set<UserLiveLocation>();
 
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-        {
+        private readonly TimeProvider _timeProvider;
 
+        public AppDbContext(DbContextOptions<AppDbContext> options, TimeProvider timeProvider) : base(options)
+        {
+            _timeProvider = timeProvider;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,16 +35,38 @@ namespace RealtimeChat.Infrastructure.Persistence
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         }
 
-        public override async Task<int> SaveChangesAsync(
-            CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             try
             {
+                ApplyTimestamps();
                 return await base.SaveChangesAsync(cancellationToken);
             }
             catch (DbUpdateException ex) when (IsDuplicateKey(ex))
             {
                 throw new DuplicateKeyException(ex);
+            }
+        }
+
+        private void ApplyTimestamps()
+        {
+            var entries = ChangeTracker.Entries<BaseEntity>()
+                .Where(e => e.State is EntityState.Added or EntityState.Modified);
+
+            var now = _timeProvider.GetUtcNow().UtcDateTime;
+
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Property(e => e.CreatedAt).CurrentValue = now;
+                    entry.Property(e => e.UpdatedAt).CurrentValue = null;
+                }
+                else
+                {
+                    entry.Property(e => e.CreatedAt).IsModified = false;
+                    entry.Property(e => e.UpdatedAt).CurrentValue = now;
+                }
             }
         }
 

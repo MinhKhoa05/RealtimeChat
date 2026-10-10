@@ -32,6 +32,7 @@ public class Message : BaseEntity
     private Message() { }
 
     # region Create
+
     public static Message CreateText(long conversationId, long senderId, string content)
     {
         if (string.IsNullOrWhiteSpace(content))

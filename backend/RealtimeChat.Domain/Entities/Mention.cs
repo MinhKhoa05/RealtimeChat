@@ -2,7 +2,7 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Mention
+public class Mention : BaseEntity
 {
     public long MessageId { get; private set; }
     public Message Message { get; private set; } = null!;

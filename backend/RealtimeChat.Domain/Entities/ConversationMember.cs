@@ -2,7 +2,7 @@ using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class ConversationMember
+public class ConversationMember : BaseEntity
 {
     public long ConversationId { get; private set; }
     public Conversation Conversation { get; private set; } = null!;
@@ -16,7 +16,6 @@ public class ConversationMember
     public Message? LastReadMessage { get; private set; }
 
     public bool IsPinned { get; private set; }
-    public DateTime JoinedAt { get; private set; }
 
     private ConversationMember() { }
 
@@ -26,7 +25,6 @@ public class ConversationMember
         {
             MemberId = userId,
             Role = role,
-            JoinedAt = DateTime.UtcNow,
         };
     }
 

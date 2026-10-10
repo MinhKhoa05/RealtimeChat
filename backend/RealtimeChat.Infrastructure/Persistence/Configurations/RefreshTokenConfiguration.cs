@@ -4,24 +4,18 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
+public class RefreshTokenConfiguration : BaseEntityConfiguration<RefreshToken>
 {
-    public void Configure(EntityTypeBuilder<RefreshToken> builder)
+    public override void Configure(EntityTypeBuilder<RefreshToken> builder)
     {
-        builder.HasKey(x => x.Id);
+        base.Configure(builder);
 
         builder.Property(x => x.TokenHash)
             .IsRequired()
             .HasMaxLength(44);
 
-        builder.Property(x => x.CreatedAt)
-            .IsRequired();
-
         builder.Property(x => x.ExpiresAt)
             .IsRequired();
-
-        builder.Property(x => x.RevokedAt)
-            .IsRequired(false);
 
         builder.HasOne(x => x.User)
             .WithMany()

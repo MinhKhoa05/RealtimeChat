@@ -4,22 +4,14 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class RelationshipConfiguration : IEntityTypeConfiguration<Relationship>
+public class RelationshipConfiguration : BaseEntityConfiguration<Relationship>
 {
-    public void Configure(EntityTypeBuilder<Relationship> builder)
+    public override void Configure(EntityTypeBuilder<Relationship> builder)
     {
-        builder.ToTable("relationships");
-
-        builder.HasKey(x => x.Id);
-
-        builder.Property(x => x.Type)
-            .IsRequired();
+        base.Configure(builder);
 
         builder.Property(x => x.Introduction)
             .HasMaxLength(500);
-
-        builder.Property(x => x.CreatedAt)
-            .IsRequired();
 
         builder.HasOne(x => x.User)
             .WithMany()

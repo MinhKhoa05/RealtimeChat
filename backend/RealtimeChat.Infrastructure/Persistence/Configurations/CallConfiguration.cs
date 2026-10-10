@@ -4,33 +4,17 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class CallConfiguration : IEntityTypeConfiguration<Call>
+public class CallConfiguration : BaseEntityConfiguration<Call>
 {
-    public void Configure(EntityTypeBuilder<Call> builder)
+    public override void Configure(EntityTypeBuilder<Call> builder)
     {
-        builder.ToTable("calls");
+        base.Configure(builder);
 
-        builder.HasKey(x => x.Id);
-
-        builder.Property(x => x.Id)
-            .ValueGeneratedOnAdd();
-
-        builder.Property(x => x.Type)
-            .IsRequired();
-
-        builder.Property(x => x.Status)
-            .IsRequired();
-
-        builder.Property(x => x.CreatedAt)
-            .IsRequired();
-
-        // Caller
         builder.HasOne(x => x.Caller)
             .WithMany()
             .HasForeignKey(x => x.CallerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Receiver
         builder.HasOne(x => x.Receiver)
             .WithMany()
             .HasForeignKey(x => x.ReceiverId)

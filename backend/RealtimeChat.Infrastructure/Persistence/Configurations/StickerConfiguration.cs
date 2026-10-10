@@ -4,13 +4,11 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class StickerConfiguration : IEntityTypeConfiguration<Sticker>
+public class StickerConfiguration : BaseEntityConfiguration<Sticker>
 {
-    public void Configure(EntityTypeBuilder<Sticker> builder)
+    public override void Configure(EntityTypeBuilder<Sticker> builder)
     {
-        builder.ToTable("stickers");
-
-        builder.HasKey(x => x.Id);
+        base.Configure(builder);
 
         builder.Property(x => x.Label)
             .HasMaxLength(100)
@@ -24,9 +22,6 @@ public class StickerConfiguration : IEntityTypeConfiguration<Sticker>
         builder.Property(x => x.PublicId)
             .IsRequired();
 
-        builder.HasIndex(x => x.PublicId)
-            .IsUnique();
-
         builder.HasOne(x => x.Media)
             .WithMany()
             .HasForeignKey(x => x.MediaId)
@@ -34,5 +29,7 @@ public class StickerConfiguration : IEntityTypeConfiguration<Sticker>
 
         builder.HasIndex(x => x.CollectionId);
         builder.HasIndex(x => x.MediaId);
+        builder.HasIndex(x => x.PublicId)
+            .IsUnique();
     }
 }

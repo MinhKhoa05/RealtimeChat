@@ -4,22 +4,17 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class UserStickerCollectionConfiguration
-    : IEntityTypeConfiguration<UserStickerCollection>
+public class UserStickerCollectionConfiguration : BaseEntityConfiguration<UserStickerCollection>
 {
-    public void Configure(
-        EntityTypeBuilder<UserStickerCollection> builder)
+    public override void Configure(EntityTypeBuilder<UserStickerCollection> builder)
     {
-        builder.ToTable("user_sticker_collections");
+        base.Configure(builder);
 
-        builder.HasKey(x => new
+        builder.HasIndex(x => new
         {
             x.UserId,
             x.CollectionId
-        });
-
-        builder.Property(x => x.CreatedAt)
-            .IsRequired();
+        }).IsUnique();
 
         builder.HasOne(x => x.User)
             .WithMany()

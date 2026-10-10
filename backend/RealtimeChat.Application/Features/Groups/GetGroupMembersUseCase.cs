@@ -39,7 +39,7 @@ public class GetGroupMembersUseCase
                 Name = x.Member.Name,
                 AvatarUrl = null,
                 Role = x.Role,
-                JoinedAt = x.JoinedAt,
+                JoinedAt = x.CreatedAt,
             })
             .ToListAsync(ct);
 

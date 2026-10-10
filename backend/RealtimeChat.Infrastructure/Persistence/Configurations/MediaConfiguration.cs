@@ -1,17 +1,13 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class MediaConfiguration
-    : IEntityTypeConfiguration<Media>
+public class MediaConfiguration : BaseEntityConfiguration<Media>
 {
-    public void Configure(EntityTypeBuilder<Media> builder)
+    public override void Configure(EntityTypeBuilder<Media> builder)
     {
-        builder.ToTable("media");
-
-        builder.HasKey(x => x.Id);
+        base.Configure(builder);
 
         builder.Property(x => x.PublicId)
             .IsRequired();
@@ -32,9 +28,6 @@ public class MediaConfiguration
 
         builder.Property(x => x.StorageKey)
             .HasMaxLength(500)
-            .IsRequired();
-
-        builder.Property(x => x.CreatedAt)
             .IsRequired();
 
         builder.HasIndex(x => x.StorageKey)

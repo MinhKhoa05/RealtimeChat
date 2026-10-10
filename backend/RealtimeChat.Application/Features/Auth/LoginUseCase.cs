@@ -11,11 +11,14 @@ public class LoginUseCase
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
 
-    public LoginUseCase(IAppDbContext context, IPasswordHasher passwordHasher, ITokenService tokenService)
+    private readonly TimeProvider _timeProvider;
+
+    public LoginUseCase(IAppDbContext context, IPasswordHasher passwordHasher, ITokenService tokenService, TimeProvider timeProvider)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
+        _timeProvider = timeProvider;
     }
 
     public async Task<LoginResponse> ExecuteAsync(LoginRequest request, CancellationToken ct)
@@ -32,7 +35,7 @@ public class LoginUseCase
         var token = _tokenService.GenerateRefreshToken();
         var tokenHash = _tokenService.HashRefreshToken(token);
 
-        var refreshToken = RefreshToken.Create(user.Id, tokenHash);
+        var refreshToken = RefreshToken.Create(user.Id, tokenHash, _timeProvider.GetUtcNow().UtcDateTime);
         _context.RefreshTokens.Add(refreshToken);
 
         await _context.SaveChangesAsync(ct);

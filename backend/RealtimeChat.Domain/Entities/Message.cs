@@ -25,7 +25,8 @@ public class Message : BaseEntity
 
     public DateTime? RecalledAt { get; private set; }
 
-    public ICollection<Mention> Mentions { get; private set; } = new List<Mention>();
+    private ICollection<Mention> _mentions = new List<Mention>();
+    public ICollection<Mention> Mentions => _mentions;
 
     private static readonly TimeSpan RecallWindow = TimeSpan.FromMinutes(15);
 
@@ -111,10 +112,10 @@ public class Message : BaseEntity
 
         var mention = Mention.Create(userId, start, length);
 
-        Mentions.Add(mention);
+        _mentions.Add(mention);
     }
 
-    public void Recall()
+    public void Recall(DateTime now)
     {
         if (IsRecalled())
         {
@@ -126,12 +127,12 @@ public class Message : BaseEntity
             throw new DomainException("This message type cannot be recalled.");
         }
 
-        if (DateTime.UtcNow > CreatedAt.Add(RecallWindow))
+        if (now > CreatedAt.Add(RecallWindow))
         {
             throw new DomainException("Message can no longer be recalled.");
         }
 
-        RecalledAt = DateTime.UtcNow;
+        RecalledAt = now;
     }
 
     public bool IsCallMessage() => Type == MessageType.Call && CallId != null;

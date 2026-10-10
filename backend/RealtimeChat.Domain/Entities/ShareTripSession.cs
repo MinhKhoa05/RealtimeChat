@@ -29,7 +29,8 @@ public class ShareTripSession : BaseEntity
 
     private ShareTripSession() { }
 
-    public static ShareTripSession Create(long ownerId, long conversationId, string tripTitle, decimal destinationLatitude, decimal destinationLongitude)
+    public static ShareTripSession Create(long ownerId, long conversationId, string tripTitle,
+        decimal destinationLatitude, decimal destinationLongitude, DateTime now)
     {
         if (string.IsNullOrWhiteSpace(tripTitle))
         {
@@ -54,13 +55,13 @@ public class ShareTripSession : BaseEntity
             DestinationLongitude = destinationLongitude,
             TripTitle = tripTitle,
             Status = ShareTripStatus.Active,
-            ExpiresAt = DateTime.UtcNow.Add(DefaultSessionDuration),
+            ExpiresAt = now.Add(DefaultSessionDuration),
         };
     }
 
-    public void UpdateEta(int etaMinutes, decimal baseLatitude, decimal baseLongitude)
+    public void UpdateEta(int etaMinutes, decimal baseLatitude, decimal baseLongitude, DateTime now)
     {
-        if (!IsActive())
+        if (!IsActive(now))
         {
             throw new DomainException("Session is not active");
         }
@@ -77,17 +78,17 @@ public class ShareTripSession : BaseEntity
         EtaMinutes = etaMinutes;
         EtaBaseLatitude = baseLatitude;
         EtaBaseLongitude = baseLongitude;
-        EtaCalculatedAt = DateTime.UtcNow;
+        EtaCalculatedAt = now;
     }
 
-    public void Extend(TimeSpan duration)
+    public void Extend(TimeSpan duration, DateTime now)
     {
         if (Status != ShareTripStatus.Active)
         {
             throw new DomainException("Only active trips can be extended.");
         }
 
-        if (ExpiresAt is null || ExpiresAt <= DateTime.UtcNow)
+        if (ExpiresAt is null || ExpiresAt <= now)
         {
             throw new DomainException("Trip session has expired.");
         }
@@ -100,11 +101,11 @@ public class ShareTripSession : BaseEntity
         ExpiresAt = ExpiresAt.Value.Add(duration);
     }
 
-    public bool IsActive() => Status == ShareTripStatus.Active && DateTime.UtcNow < ExpiresAt;
+    public bool IsActive(DateTime now) => Status == ShareTripStatus.Active && now < ExpiresAt;
 
-    public void End()
+    public void End(DateTime now)
     {
-        if (!IsActive())
+        if (!IsActive(now))
         {
             throw new DomainException("Session is not active");
         }

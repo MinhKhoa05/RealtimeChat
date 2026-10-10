@@ -11,12 +11,15 @@ public class CreateShareTripUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
+    private readonly TimeProvider _timeProvider;
 
-    public CreateShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
+
+    public CreateShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
+        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(long conversationId, CreateShareTripRequest request, CancellationToken ct)
@@ -42,8 +45,10 @@ public class CreateShareTripUseCase
             throw new ConflictException();
         }
 
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+
         var shareTripSession = ShareTripSession.Create(currentUserId, conversationId, request.TripTitle,
-            request.DestinationLatitude, request.DestinationLongitude);
+            request.DestinationLatitude, request.DestinationLongitude, now);
 
         _context.ShareTripSessions.Add(shareTripSession);
 
@@ -54,13 +59,13 @@ public class CreateShareTripUseCase
         if (userLiveLocation is null)
         {
             userLiveLocation = UserLiveLocation.Create(currentUserId, request.CurrentLatitude,
-                request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt);
+                request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt, now);
 
             _context.UserLiveLocations.Add(userLiveLocation);
         }
         else
         {
-            userLiveLocation.UpdateLocation(request.CurrentLatitude, request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt);
+            userLiveLocation.UpdateLocation(request.CurrentLatitude, request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt, now);
         }
 
         await _context.SaveChangesAsync(ct);

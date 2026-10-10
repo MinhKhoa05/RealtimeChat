@@ -9,12 +9,14 @@ public class UpdateUserLiveLocationUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
+    private readonly TimeProvider _timeProvider;
 
-    public UpdateUserLiveLocationUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
+    public UpdateUserLiveLocationUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
+        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(CreateShareTripRequest request, CancellationToken ct)
@@ -36,7 +38,7 @@ public class UpdateUserLiveLocationUseCase
             .FindAsync(currentUserId, ct)
             ?? throw new NotFoundException();
 
-        userLiveLocation.UpdateLocation(request.CurrentLatitude, request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt);
+        userLiveLocation.UpdateLocation(request.CurrentLatitude, request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt, _timeProvider.GetUtcNow().UtcDateTime);
         await _context.SaveChangesAsync(ct);
 
         foreach (var shareTripSession in shareTripSessions)

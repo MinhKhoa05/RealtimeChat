@@ -9,12 +9,14 @@ public class RecallMessageUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
+    private readonly TimeProvider _timeProvider;
 
-    public RecallMessageUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
+    public RecallMessageUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
+        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(long messageId, CancellationToken ct)
@@ -27,7 +29,7 @@ public class RecallMessageUseCase
             throw new ForbiddenException();
         }
 
-        message.Recall();
+        message.Recall(_timeProvider.GetUtcNow().UtcDateTime);
         await _context.SaveChangesAsync(ct);
 
         var memberIds = await _context.ConversationMembers

@@ -35,7 +35,7 @@ public class Call : BaseEntity
         };
     }
 
-    public void Accept()
+    public void Accept(DateTime now)
     {
         if (Status != CallStatus.Ringing)
         {
@@ -43,7 +43,7 @@ public class Call : BaseEntity
         }
 
         Status = CallStatus.Accepted;
-        StartedAt = DateTime.UtcNow;
+        StartedAt = now;
     }
 
     public void Reject()
@@ -66,7 +66,7 @@ public class Call : BaseEntity
         Status = CallStatus.Missed;
     }
 
-    public void End()
+    public void End(DateTime now)
     {
         if (Status != CallStatus.Accepted)
         {
@@ -74,6 +74,6 @@ public class Call : BaseEntity
         }
 
         Status = CallStatus.Ended;
-        EndedAt = DateTime.UtcNow;
+        EndedAt = now;
     }
 }

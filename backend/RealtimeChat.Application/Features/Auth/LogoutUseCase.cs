@@ -9,12 +9,14 @@ public class LogoutUseCase
     private readonly IAppDbContext _context;
     private readonly ITokenService _tokenService;
     private readonly ICurrentUser _currentUser;
+    private readonly TimeProvider _timeProvider;
 
-    public LogoutUseCase(IAppDbContext context, ITokenService tokenService, ICurrentUser currentUser)
+    public LogoutUseCase(IAppDbContext context, ITokenService tokenService, ICurrentUser currentUser, TimeProvider timeProvider)
     {
         _context = context;
         _tokenService = tokenService;
         _currentUser = currentUser;
+        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(LogoutRequest request, CancellationToken ct)
@@ -30,7 +32,7 @@ public class LogoutUseCase
 
         if (!refreshToken.IsRevoked())
         {
-            refreshToken.Revoke();
+            refreshToken.Revoke(_timeProvider.GetUtcNow().UtcDateTime);
             await _context.SaveChangesAsync(ct);
         }
     }

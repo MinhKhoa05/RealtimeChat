@@ -9,11 +9,13 @@ public class DisbandGroupUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
+    private readonly TimeProvider _timeProvider;
 
-    public DisbandGroupUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public DisbandGroupUseCase(IAppDbContext context, ICurrentUser currentUser, TimeProvider timeProvider)
     {
         _context = context;
         _currentUser = currentUser;
+        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(long groupId, CancellationToken ct)
@@ -31,7 +33,7 @@ public class DisbandGroupUseCase
             throw new ForbiddenException();
         }
 
-        group.DisbandGroup();
+        group.DisbandGroup(_timeProvider.GetUtcNow().UtcDateTime);
 
         await _context.SaveChangesAsync(ct);
     }

@@ -17,7 +17,7 @@ public class UserLiveLocation
 
     private UserLiveLocation() { }
 
-    public static UserLiveLocation Create(long userId, decimal latitude, decimal longitude, float? accuracyMeters, DateTime recordedAt)
+    public static UserLiveLocation Create(long userId, decimal latitude, decimal longitude, float? accuracyMeters, DateTime recordedAt, DateTime now)
     {
         if (userId <= 0)
             throw new DomainException("User ID must be positive.");
@@ -38,11 +38,11 @@ public class UserLiveLocation
             Longitude = longitude,
             AccuracyMeters = accuracyMeters,
             RecordedAt = recordedAt,
-            ReceivedAt = DateTime.UtcNow,
+            ReceivedAt = now,
         };
     }
 
-    public void UpdateLocation(decimal latitude, decimal longitude, float? accuracyMeters, DateTime recordedAt)
+    public void UpdateLocation(decimal latitude, decimal longitude, float? accuracyMeters, DateTime recordedAt, DateTime now)
     {
         if (latitude is < -90 or > 90)
             throw new DomainException("Latitude must be between -90 and 90.");
@@ -57,6 +57,6 @@ public class UserLiveLocation
         Longitude = longitude;
         AccuracyMeters = accuracyMeters;
         RecordedAt = recordedAt;
-        ReceivedAt = DateTime.UtcNow;
+        ReceivedAt = now;
     }
 }

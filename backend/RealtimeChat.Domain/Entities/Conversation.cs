@@ -93,7 +93,7 @@ public class Conversation : BaseEntity
         target.SetRole(ConversationMemberRole.Member);
     }
 
-    public void DisbandGroup()
+    public void DisbandGroup(DateTime now)
     {
         EnsureGroup();
 
@@ -102,7 +102,7 @@ public class Conversation : BaseEntity
             throw new DomainException("Group is already disbanded.");
         }
 
-        DisbandedAt = DateTime.UtcNow;
+        DisbandedAt = now;
     }
 
     public bool IsAdmin(long userId) => Members.Any(x => x.MemberId == userId && x.Role == ConversationMemberRole.Admin);

@@ -23,9 +23,12 @@ public class User : BaseEntity
         };
     }
 
-    public void MaskLastSeen()
+    public void MaskLastSeen(DateTime now)
     {
-        LastSeenAt = DateTime.UtcNow;
+        if (LastSeenAt.HasValue && now <= LastSeenAt.Value)
+            return;
+            
+        LastSeenAt = now;
     }
 
     public void ChangePassword(string passwordHash)

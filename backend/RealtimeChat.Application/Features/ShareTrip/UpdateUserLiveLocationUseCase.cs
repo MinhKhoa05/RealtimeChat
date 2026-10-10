@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Domain.ValueObjects;
 
 namespace RealtimeChat.Application.Features.ShareTrip;
 
@@ -38,7 +39,9 @@ public class UpdateUserLiveLocationUseCase
             .FindAsync(currentUserId, ct)
             ?? throw new NotFoundException();
 
-        userLiveLocation.UpdateLocation(request.CurrentLatitude, request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt, _timeProvider.GetUtcNow().UtcDateTime);
+        var currentLocation = new GeoCoordinate(request.CurrentLocation.Latitude, request.CurrentLocation.Longitude);
+
+        userLiveLocation.UpdateLocation(currentLocation, request.AccuracyMeters, request.RecordedAt, _timeProvider.GetUtcNow().UtcDateTime);
         await _context.SaveChangesAsync(ct);
 
         foreach (var shareTripSession in shareTripSessions)

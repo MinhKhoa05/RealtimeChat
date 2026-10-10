@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RealtimeChat.Domain.Entities;
+using RealtimeChat.Infrastructure.Persistence.Configurations.ValueObjectConfigs;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
@@ -14,17 +15,15 @@ public class ShareTripSessionConfiguration : BaseEntityConfiguration<ShareTripSe
             .HasMaxLength(150)
             .IsRequired();
 
-        builder.Property(x => x.DestinationLatitude)
-            .HasPrecision(9, 6);
+        builder.OwnsOne(x => x.Destination, geo =>
+        {
+            geo.ConfigureGeoCoordinate();
+        });
 
-        builder.Property(x => x.DestinationLongitude)
-            .HasPrecision(9, 6);
-
-        builder.Property(x => x.EtaBaseLatitude)
-            .HasPrecision(9, 6);
-
-        builder.Property(x => x.EtaBaseLongitude)
-            .HasPrecision(9, 6);
+        builder.OwnsOne(x => x.LastEtaLocation, geo =>
+        {
+            geo.ConfigureGeoCoordinate();
+        });
 
         builder.HasOne(x => x.Owner)
             .WithMany()

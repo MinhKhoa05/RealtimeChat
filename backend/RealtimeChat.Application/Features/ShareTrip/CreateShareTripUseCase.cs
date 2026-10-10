@@ -3,6 +3,7 @@ using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Entities;
+using RealtimeChat.Domain.ValueObjects;
 
 namespace RealtimeChat.Application.Features.ShareTrip;
 
@@ -12,7 +13,6 @@ public class CreateShareTripUseCase
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
     private readonly TimeProvider _timeProvider;
-
 
     public CreateShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
     {
@@ -47,8 +47,9 @@ public class CreateShareTripUseCase
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;
 
-        var shareTripSession = ShareTripSession.Create(currentUserId, conversationId, request.TripTitle,
-            request.DestinationLatitude, request.DestinationLongitude, now);
+        var destination = new GeoCoordinate(request.Destination.Latitude, request.Destination.Longitude);
+
+        var shareTripSession = ShareTripSession.Create(currentUserId, conversationId, request.TripTitle, destination, now);
 
         _context.ShareTripSessions.Add(shareTripSession);
 
@@ -56,16 +57,17 @@ public class CreateShareTripUseCase
         var userLiveLocation = await _context.UserLiveLocations
             .FindAsync(currentUserId, ct);
 
+        var currentLocation = new GeoCoordinate(request.CurrentLocation.Latitude, request.CurrentLocation.Longitude);
+
         if (userLiveLocation is null)
         {
-            userLiveLocation = UserLiveLocation.Create(currentUserId, request.CurrentLatitude,
-                request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt, now);
+            userLiveLocation = UserLiveLocation.Create(currentUserId, currentLocation, request.AccuracyMeters, request.RecordedAt, now);
 
             _context.UserLiveLocations.Add(userLiveLocation);
         }
         else
         {
-            userLiveLocation.UpdateLocation(request.CurrentLatitude, request.CurrentLongitude, request.AccuracyMeters, request.RecordedAt, now);
+            userLiveLocation.UpdateLocation(currentLocation, request.AccuracyMeters, request.RecordedAt, now);
         }
 
         await _context.SaveChangesAsync(ct);
@@ -81,12 +83,11 @@ public class CreateShareTripUseCase
 public class CreateShareTripRequest
 {
     public string TripTitle { get; set; } = string.Empty;
-    public decimal DestinationLatitude { get; set; }
-    public decimal DestinationLongitude { get; set; }
-
-    public decimal CurrentLatitude { get; set; }
-    public decimal CurrentLongitude { get; set; }
-    public DateTime RecordedAt { get; set; }
+    public GeoCordinateDto Destination { get; set; } = null!;
+    public GeoCordinateDto CurrentLocation { get; set; } = null!;
 
     public float? AccuracyMeters { get; set; }
+    public DateTime RecordedAt { get; set; }
 }
+
+public record GeoCordinateDto(decimal Latitude, decimal Longitude);

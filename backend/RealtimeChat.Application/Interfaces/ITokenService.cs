@@ -1,5 +1,3 @@
-using RealtimeChat.Domain.Entities;
-
 namespace RealtimeChat.Application.Interfaces;
 
 public interface ITokenService

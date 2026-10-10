@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RealtimeChat.Domain.Entities;
+using RealtimeChat.Infrastructure.Persistence.Configurations.ValueObjectConfigs;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
@@ -10,11 +11,10 @@ public class UserLiveLocationConfiguration : IEntityTypeConfiguration<UserLiveLo
     {
         builder.HasKey(x => x.UserId);
 
-        builder.Property(x => x.Latitude)
-            .HasPrecision(9, 6);
-
-        builder.Property(x => x.Longitude)
-            .HasPrecision(9, 6);
+        builder.OwnsOne(x => x.Coordinate, geo =>
+        {
+            geo.ConfigureGeoCoordinate();
+        });
 
         builder.HasOne(x => x.User)
             .WithOne()

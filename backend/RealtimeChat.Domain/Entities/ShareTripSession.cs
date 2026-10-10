@@ -1,5 +1,6 @@
 using RealtimeChat.Domain.Enums;
 using RealtimeChat.Domain.Exceptions;
+using RealtimeChat.Domain.ValueObjects;
 
 namespace RealtimeChat.Domain.Entities;
 
@@ -12,14 +13,12 @@ public class ShareTripSession : BaseEntity
 
     // Thông tin chuyển đi và điểm đến
     public string TripTitle { get; private set; } = null!;
-    public decimal DestinationLatitude { get; private set; }
-    public decimal DestinationLongitude { get; private set; }
+    public GeoCoordinate Destination { get; private set; } = null!;
 
     // ETA gần nhất và vị trí dùng để kiểm soát tần suất tính ETA.
     public int? EtaMinutes { get; private set; }
     public DateTime? EtaCalculatedAt { get; private set; }
-    public decimal? EtaBaseLatitude { get; private set; }
-    public decimal? EtaBaseLongitude { get; private set; }
+    public GeoCoordinate? LastEtaLocation { get; private set; }
 
     public ShareTripStatus Status { get; private set; }
     public DateTime? ExpiresAt { get; private set; }
@@ -29,37 +28,25 @@ public class ShareTripSession : BaseEntity
 
     private ShareTripSession() { }
 
-    public static ShareTripSession Create(long ownerId, long conversationId, string tripTitle,
-        decimal destinationLatitude, decimal destinationLongitude, DateTime now)
+    public static ShareTripSession Create(long ownerId, long conversationId, string tripTitle, GeoCoordinate destination, DateTime now)
     {
         if (string.IsNullOrWhiteSpace(tripTitle))
         {
             throw new DomainException("Trip title is required");
         }
 
-        if (destinationLatitude is < -90 or > 90)
-        {
-            throw new DomainException("Latitude must be between -90 and 90.");
-        }
-
-        if (destinationLongitude is < -180 or > 180)
-        {
-            throw new DomainException("Longitude must be between -180 and 180.");
-        }
-
         return new ShareTripSession
         {
             OwnerId = ownerId,
             ConversationId = conversationId,
-            DestinationLatitude = destinationLatitude,
-            DestinationLongitude = destinationLongitude,
             TripTitle = tripTitle,
+            Destination = destination,
             Status = ShareTripStatus.Active,
             ExpiresAt = now.Add(DefaultSessionDuration),
         };
     }
 
-    public void UpdateEta(int etaMinutes, decimal baseLatitude, decimal baseLongitude, DateTime now)
+    public void UpdateEta(int etaMinutes, GeoCoordinate etaLocation, DateTime now)
     {
         if (!IsActive(now))
         {
@@ -67,17 +54,12 @@ public class ShareTripSession : BaseEntity
         }
 
         if (etaMinutes < 0)
+        {
             throw new DomainException("ETA must be non-negative.");
-
-        if (baseLatitude is < -90 or > 90)
-            throw new DomainException("Latitude must be between -90 and 90.");
-
-        if (baseLongitude is < -180 or > 180)
-            throw new DomainException("Longitude must be between -180 and 180.");
+        }
 
         EtaMinutes = etaMinutes;
-        EtaBaseLatitude = baseLatitude;
-        EtaBaseLongitude = baseLongitude;
+        LastEtaLocation = etaLocation;
         EtaCalculatedAt = now;
     }
 

@@ -12,6 +12,7 @@ using RealtimeChat.Application.Features.Recommendations.CandidatePool;
 using RealtimeChat.Application.Features.Recommendations.Services;
 using RealtimeChat.Application.Features.Media;
 using RealtimeChat.Application.Features.Stickers;
+using RealtimeChat.Application.Features.ShareTrip;
 
 namespace RealtimeChat.Application;
 
@@ -95,6 +96,14 @@ public static class DependencyInjection
         services.AddScoped<UpdateCollectionUseCase>();
         services.AddScoped<UpdateStickerUseCase>();
 
+        // ShareTrip
+        services.AddScoped<CreateShareTripUseCase>();
+        services.AddScoped<EndShareTripUseCase>();
+        services.AddScoped<UpdateUserLiveLocationUseCase>();
+
+        services.AddScoped<GetConversationShareTripsUseCase>();
+        services.AddScoped<GetShareTripByIdUseCase>();
+        services.AddScoped<GetUserShareTripsUseCase>();
         return services;
     }
 }

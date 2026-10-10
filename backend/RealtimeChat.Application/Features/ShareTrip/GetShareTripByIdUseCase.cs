@@ -21,18 +21,18 @@ public class GetShareTripByIdUseCase
     {
         var currentUserId = _currentUser.UserId;
 
-        var session = await _context.ShareTripSessions.FindAsync(shareTripId, ct)
+        var trip = await _context.ShareTripSessions.FindAsync(shareTripId, ct)
             ?? throw new NotFoundException();
 
         var canAccessConversation = await _context.Conversations
-            .FilterAccessible(session.ConversationId, currentUserId)
+            .FilterAccessible(trip.ConversationId, currentUserId)
             .AnyAsync(ct);
-        
+
         if (!canAccessConversation)
         {
             throw new ForbiddenException();
         }
 
-        return session;
+        return trip;
     }
 }

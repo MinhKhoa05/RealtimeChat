@@ -7,6 +7,7 @@ using RealtimeChat.Infrastructure.Security;
 using RealtimeChat.Infrastructure.Presence;
 using RealtimeChat.Infrastructure.Caching;
 using RealtimeChat.Infrastructure.Storage;
+using RealtimeChat.Infrastructure.Routings;
 
 namespace RealtimeChat.Infrastructure;
 
@@ -37,6 +38,9 @@ public static class DependencyInjection
 
         // Storage
         services.AddScoped<IFileStorage>(_ => new LocalFileStorage("/data/media"));
+
+        // Routings
+        services.AddScoped<IRoutingService, RoutingService>();
 
         return services;
     }

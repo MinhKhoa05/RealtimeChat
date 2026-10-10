@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
+using RealtimeChat.Application.Features.ShareTrip.Services;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Entities;
@@ -13,13 +14,15 @@ public class CreateShareTripUseCase
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
     private readonly TimeProvider _timeProvider;
+    private readonly IShareTripService _shareTripService;
 
-    public CreateShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
+    public CreateShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider, IShareTripService shareTripService)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
         _timeProvider = timeProvider;
+        _shareTripService = shareTripService;
     }
 
     public async Task ExecuteAsync(long conversationId, CreateShareTripRequest request, CancellationToken ct)
@@ -47,47 +50,23 @@ public class CreateShareTripUseCase
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;
 
-        var destination = new GeoCoordinate(request.Destination.Latitude, request.Destination.Longitude);
-
-        var shareTripSession = ShareTripSession.Create(currentUserId, conversationId, request.TripTitle, destination, now);
-
-        _context.ShareTripSessions.Add(shareTripSession);
-
-        // Tạo mới hoặc cập nhật vị trí mới nhất
-        var userLiveLocation = await _context.UserLiveLocations
-            .FindAsync(currentUserId, ct);
-
-        var currentLocation = new GeoCoordinate(request.CurrentLocation.Latitude, request.CurrentLocation.Longitude);
-
-        if (userLiveLocation is null)
-        {
-            userLiveLocation = UserLiveLocation.Create(currentUserId, currentLocation, request.AccuracyMeters, request.RecordedAt, now);
-
-            _context.UserLiveLocations.Add(userLiveLocation);
-        }
-        else
-        {
-            userLiveLocation.UpdateLocation(currentLocation, request.AccuracyMeters, request.RecordedAt, now);
-        }
+        var trip = ShareTripSession.Create(currentUserId, conversationId, request.TripTitle, request.Destination, now);
+        _context.ShareTripSessions.Add(trip);
 
         await _context.SaveChangesAsync(ct);
-        await _notifier.NotifyToConversationAsync(conversationId, "share_trip", shareTripSession, ct);
 
-        // Gọi Routing API để tính ETA.
-        // session.UpdateEta(etaMinutes, latitude, longitude, now);
-        // await _context.SaveChangesAsync(ct);
-        // await _notifier.NotifyToConversationAsync(conversationId, "share_trip_eta_updated", response, ct);
+        var userLiveLocation = await _shareTripService.UpsertUserLocationAsync(currentUserId, request.CurrentLocationData, ct);
+
+        await _notifier.NotifyToConversationAsync(conversationId, "share_trip", trip, ct);
+
+        await _shareTripService.UpdateEtaIfNeededAsync(trip, userLiveLocation.Coordinate, ct);
+        await _notifier.NotifyToConversationAsync(trip.ConversationId, "eta.update", trip, ct);
     }
 }
 
 public class CreateShareTripRequest
 {
     public string TripTitle { get; set; } = string.Empty;
-    public GeoCordinateDto Destination { get; set; } = null!;
-    public GeoCordinateDto CurrentLocation { get; set; } = null!;
-
-    public float? AccuracyMeters { get; set; }
-    public DateTime RecordedAt { get; set; }
+    public GeoCoordinate Destination { get; set; } = null!;
+    public LocationData CurrentLocationData { get; set; } = null!;
 }
-
-public record GeoCordinateDto(decimal Latitude, decimal Longitude);

@@ -30,11 +30,11 @@ public class GetConversationShareTripsUseCase
             throw new ForbiddenException();
         }
 
-        var session = await _context.ShareTripSessions
+        var trips = await _context.ShareTripSessions
             .Where(x => x.ConversationId == conversationId)
             .Where(x => x.Status == Domain.Enums.ShareTripStatus.Active)
             .ToListAsync(ct);
         
-        return session;
+        return trips;
     }
 }

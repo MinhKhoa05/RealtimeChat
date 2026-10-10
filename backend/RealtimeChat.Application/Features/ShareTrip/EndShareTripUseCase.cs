@@ -22,25 +22,25 @@ public class EndShareTripUseCase
     {
         var currentUserId = _currentUser.UserId;
 
-        var shareTripSession = await _context.ShareTripSessions
+        var trip = await _context.ShareTripSessions
             .FindAsync(shareTripId, ct)
             ?? throw new NotFoundException();
 
-        if (shareTripSession.OwnerId != currentUserId)
+        if (trip.OwnerId != currentUserId)
         {
             throw new ForbiddenException();
         }
 
         var now = _timeProvider.GetUtcNow().UtcDateTime;
 
-        if (!shareTripSession.IsActive(now))
+        if (!trip.IsActive(now))
         {
             throw new BadRequestException("Session is not active");
         }
 
-        shareTripSession.End(now);
+        trip.End(now);
         await _context.SaveChangesAsync(ct);
 
-        await _notifier.NotifyToConversationAsync(shareTripSession.ConversationId, "share_trip.end", shareTripId, ct);
+        await _notifier.NotifyToConversationAsync(trip.ConversationId, "share_trip.end", shareTripId, ct);
     }
 }

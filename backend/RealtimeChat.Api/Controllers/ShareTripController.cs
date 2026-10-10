@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealtimeChat.Application.Features.ShareTrip;
+using RealtimeChat.Application.Features.ShareTrip.Services;
 
 namespace RealtimeChat.Api.Controllers;
 
@@ -47,9 +48,9 @@ public class ShareTripsController : ControllerBase
     }
 
     [HttpPut("me/location")]
-    public async Task<IActionResult> UpdateLiveLocation([FromBody] CreateShareTripRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateLiveLocation([FromBody] LocationData data, CancellationToken ct)
     {
-        await _updateUserLiveLocation.ExecuteAsync(request, ct);
+        await _updateUserLiveLocation.ExecuteAsync(data, ct);
         return NoContent();
     }
 

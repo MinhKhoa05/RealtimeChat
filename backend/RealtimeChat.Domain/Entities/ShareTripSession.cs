@@ -93,5 +93,13 @@ public class ShareTripSession : BaseEntity
         }
 
         Status = ShareTripStatus.Ended;
+        EndedAt = now;
+    }
+
+    public bool HasEta()
+    {
+        return EtaMinutes.HasValue &&
+            EtaCalculatedAt.HasValue &&
+            LastEtaLocation is not null;
     }
 }

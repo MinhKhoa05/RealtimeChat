@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using RealtimeChat.Application.Exceptions;
+using RealtimeChat.Application.Features.ShareTrip.Services;
 using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Domain.ValueObjects;
 
 namespace RealtimeChat.Application.Features.ShareTrip;
 
@@ -10,84 +9,36 @@ public class UpdateUserLiveLocationUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
-    private readonly TimeProvider _timeProvider;
+    private readonly IShareTripService _shareTripService;
 
-    public UpdateUserLiveLocationUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
+    public UpdateUserLiveLocationUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, IShareTripService shareTripService)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
-        _timeProvider = timeProvider;
+        _shareTripService = shareTripService;
     }
 
-    public async Task ExecuteAsync(CreateShareTripRequest request, CancellationToken ct)
+    public async Task ExecuteAsync(LocationData data, CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
 
-        var shareTripSessions = await _context.ShareTripSessions
+        var userLiveLocation = await _shareTripService.UpsertUserLocationAsync(currentUserId, data, ct);
+
+        // Side effect: cập nhật ETA các chuyến đi đang chia sẻ và thông báo nếu ETA thay đổi.
+        var trips = await _context.ShareTripSessions
+            .AsNoTracking()
             .Where(x => x.Status == Domain.Enums.ShareTripStatus.Active)
             .Where(x => x.OwnerId == currentUserId)
             .ToListAsync(ct);
 
-        if (shareTripSessions.Count == 0)
+        foreach (var trip in trips)
         {
-            throw new NotFoundException("Không có trip session nào đang hoạt động");
+            var hasChanged = await _shareTripService.UpdateEtaIfNeededAsync(trip, userLiveLocation.Coordinate, ct);
+
+            if (!hasChanged) continue;
+
+            await _notifier.NotifyToConversationAsync(trip.ConversationId, "eta.update", trip, ct);
         }
-
-        // Cập nhật location hiện tại
-        var userLiveLocation = await _context.UserLiveLocations
-            .FindAsync(currentUserId, ct)
-            ?? throw new NotFoundException();
-
-        var currentLocation = new GeoCoordinate(request.CurrentLocation.Latitude, request.CurrentLocation.Longitude);
-
-        userLiveLocation.UpdateLocation(currentLocation, request.AccuracyMeters, request.RecordedAt, _timeProvider.GetUtcNow().UtcDateTime);
-        await _context.SaveChangesAsync(ct);
-
-        foreach (var shareTripSession in shareTripSessions)
-        {
-            await _notifier.NotifyToConversationAsync(shareTripSession.ConversationId, "location_update", userLiveLocation, ct);
-        }
-
-        // Tính toán ETA.
-        // foreach (var session in shareTripSessions)
-        // {
-        //     // Kiểm tra có đến lúc tính lại ETA chưa.
-        //     if (!_tripEtaPolicy.ShouldRecalculateEta(session, latitude, longitude, now))
-        //     {
-        //         continue;
-        //     }
-
-        //     try
-        //     {
-        //         // Gọi Routing API để tính ETA.
-        //         var etaMinutes = await _tripEtaProvider.GetEtaMinutesAsync(latitude, longitude, session.DestinationLatitude, session.DestinationLongitude, ct);
-
-        //         // Chỉ cập nhật khi Routing API trả về kết quả hợp lệ.
-        //         if (etaMinutes is null)
-        //             continue;
-
-        //         session.UpdateEta(etaMinutes.Value, latitude, longitude, _timeProvider.GetUtcNow().UtcDateTime);
-
-        //         await _context.SaveChangesAsync(ct);
-
-        //         // Chỉ thông báo ETA sau khi đã lưu thành công.
-        //         await _notifier.NotifyToConversationAsync(session.ConversationId, "share_trip_eta_updated",
-        //             new ShareTripEtaUpdatedResponse
-        //             {
-        //                 SessionId = session.Id,
-        //                 EtaMinutes = session.EtaMinutes,
-        //                 EtaCalculatedAt = session.EtaCalculatedAt
-        //             },
-        //             ct);
-        //     }
-        //     catch (RoutingApiException ex)
-        //     {
-        //         // Ghi log lỗi, giữ nguyên ETA gần nhất.
-        //         // Không cập nhật EtaBaseLatitude/Longitude
-        //         // hoặc EtaCalculatedAt nếu tính ETA thất bại.
-        //         _logger.LogWarning(ex, "Failed to calculate ETA for session {SessionId}", session.Id);
-        //     }
-        // }
     }
 }

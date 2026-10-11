@@ -40,6 +40,14 @@ public class SendMessageUseCase
             await AddValidMentions(message, request.Mentions, ct);
         }
 
+        if (request.ReplyToMessageId.HasValue)
+        {
+            var replyMessage = await _context.Messages.FindAsync(request.ReplyToMessageId, ct)
+                ?? throw new NotFoundException("Message reply not found");
+
+            message.SetReplyTo(replyMessage);
+        }
+
         _context.Messages.Add(message);
         await _context.SaveChangesAsync(ct);
 
@@ -125,6 +133,7 @@ public class SendMessageRequest
     public MessageType MessageType { get; set; }
     public Guid? ReferenceId { get; set; } // Dùng cho loại Sticker / Media
     public List<MentionDto> Mentions { get; set; } = [];
+    public long? ReplyToMessageId { get; set; }
 }
 
 public class MentionDto

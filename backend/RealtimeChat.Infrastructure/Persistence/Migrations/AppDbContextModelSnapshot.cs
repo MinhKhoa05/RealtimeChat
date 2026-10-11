@@ -251,6 +251,9 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("RecalledAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<long?>("ReplyToMessageId")
+                        .HasColumnType("bigint");
+
                     b.Property<long?>("SenderId")
                         .HasColumnType("bigint");
 
@@ -268,6 +271,8 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.HasIndex("CallId");
 
                     b.HasIndex("MediaId");
+
+                    b.HasIndex("ReplyToMessageId");
 
                     b.HasIndex("SenderId");
 
@@ -666,6 +671,11 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                         .HasForeignKey("MediaId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("RealtimeChat.Domain.Entities.Message", "ReplyToMessage")
+                        .WithMany()
+                        .HasForeignKey("ReplyToMessageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("RealtimeChat.Domain.Entities.User", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
@@ -681,6 +691,8 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.Navigation("Conversation");
 
                     b.Navigation("Media");
+
+                    b.Navigation("ReplyToMessage");
 
                     b.Navigation("Sender");
 

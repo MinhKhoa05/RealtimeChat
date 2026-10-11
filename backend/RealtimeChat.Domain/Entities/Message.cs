@@ -14,6 +14,7 @@ public class Message : BaseEntity
     public long? SenderId { get; private set; }
     public User? Sender { get; private set; }
 
+    // Các payload cho từng loại message
     public long? MediaId { get; private set; }
     public Media? Media { get; private set; }
 
@@ -22,6 +23,10 @@ public class Message : BaseEntity
 
     public long? StickerId { get; private set; }
     public Sticker? Sticker { get; private set; }
+    //
+
+    public long? ReplyToMessageId { get; private set; }
+    public Message? ReplyToMessage { get; private set; }
 
     public DateTime? RecalledAt { get; private set; }
 
@@ -113,6 +118,22 @@ public class Message : BaseEntity
         var mention = Mention.Create(userId, start, length);
 
         _mentions.Add(mention);
+    }
+
+    public void SetReplyTo(Message message)
+    {
+        if (ReplyToMessageId != null)
+        {
+            throw new DomainException("Message has already been set to reply.");
+        }
+
+        if (ConversationId != message.ConversationId)
+        {
+            throw new DomainException("Cannot reply to a message in another conversation.");
+        }
+
+        ReplyToMessageId = message.Id;
+        ReplyToMessage = message;
     }
 
     public void Recall(DateTime now)

@@ -20,5 +20,7 @@ public class MessageResponse
 
     public IReadOnlyList<MentionDto>? Mentions { get; set; }
 
+    public MessageResponse? ReplyToMessage { get; set; }
+
     public bool IsRecalled { get; set; }
 }

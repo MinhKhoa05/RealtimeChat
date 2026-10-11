@@ -59,6 +59,16 @@ public static class MessageMapper
                 })
                 .ToList(),
 
+            ReplyToMessage = message.ReplyToMessage is null
+                ? null
+                : new MessageResponse
+                {
+                    Id = message.Id,
+                    SenderId = message.SenderId,
+                    Type = message.Type,
+                    IsRecalled = message.IsRecalled(),
+                },
+
             IsRecalled = false
         };
     }

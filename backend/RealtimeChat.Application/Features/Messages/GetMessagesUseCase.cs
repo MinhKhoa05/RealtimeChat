@@ -35,6 +35,7 @@ public class GetMessagesUseCase
             .Include(x => x.Call)
             .Include(x => x.Sticker)
             .Include(x => x.Mentions)
+            .Include(x => x.ReplyToMessage)
             .ToCursorPageAsync(request, ct);
 
         return result.Map(MessageMapper.ToResponse);

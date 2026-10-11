@@ -9,7 +9,7 @@ public class MessageConfiguration : BaseEntityConfiguration<Message>
     public override void Configure(EntityTypeBuilder<Message> builder)
     {
         base.Configure(builder);
-        
+
         builder.HasOne(x => x.Conversation)
             .WithMany()
             .HasForeignKey(x => x.ConversationId)
@@ -33,6 +33,11 @@ public class MessageConfiguration : BaseEntityConfiguration<Message>
         builder.HasOne(x => x.Sticker)
             .WithMany()
             .HasForeignKey(x => x.StickerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.ReplyToMessage)
+            .WithMany()
+            .HasForeignKey(x => x.ReplyToMessageId)
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(x => new

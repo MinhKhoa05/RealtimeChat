@@ -80,7 +80,16 @@ RealtimeChat là nền tảng giao tiếp trực tuyến, tập trung vào nhắ
 - Call Lifecycle: Quản lý trạng thái và vòng đời cuộc gọi.
 - Call History: Lưu lại thông tin cuộc gọi sau khi kết thúc.
 
-9. Scalability & Infrastructure
+9. Live Trip Sharing
+
+- Trip Session: Bắt đầu và kết thúc phiên chia sẻ chuyến đi.
+- Live Location: Cập nhật vị trí người dùng trong quá trình di chuyển.
+- Realtime Location: Đồng bộ vị trí chuyến đi theo thời gian thực thông qua SignalR.
+- Trip Status: Quản lý trạng thái và vòng đời của phiên chia sẻ.
+- Map Integration: Hiển thị vị trí và hành trình trên bản đồ.
+- ETA: Hỗ trợ hiển thị thời gian dự kiến đến nơi khi tích hợp dịch vụ định tuyến.
+
+10. Scalability & Infrastructure
 
 - Redis: Caching và hỗ trợ đồng bộ realtime giữa các instance.
 - Horizontal Scaling: Hỗ trợ chạy nhiều Backend instance.

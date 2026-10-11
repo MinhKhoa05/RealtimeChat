@@ -3,14 +3,14 @@ using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
-namespace RealtimeChat.Application.Features.Groups;
+namespace RealtimeChat.Application.Features.Conversations;
 
-public class AddMemberUseCase
+public class KickMemberUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
 
-    public AddMemberUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public KickMemberUseCase(IAppDbContext context, ICurrentUser currentUser)
     {
         _context = context;
         _currentUser = currentUser;
@@ -20,28 +20,18 @@ public class AddMemberUseCase
     {
         var currentUserId = _currentUser.UserId;
 
-        if (userId == currentUserId)
-        {
-            throw new BadRequestException("Cannot add yourself.");
-        }
-
-        var isFriend = await _context.Relationships
-            .Friends()
-            .Between(userId, currentUserId)
-            .AnyAsync(ct);
-        
-        if (!isFriend)
-        {
-            throw new ForbiddenException("Users must be friends");
-        }
-
         var group = await _context.Conversations
             .FilterAccessibleGroup(groupId, currentUserId)
-            .WithMembers(userId) // Lấy member để kiểm tra đã tham gia nhóm chưa
+            .WithMembers(currentUserId, userId) // Lấy member liên quan để thực hiện hành động
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        group.AddMember(userId);
+        if (!group.IsAdmin(currentUserId))
+        {
+            throw new ForbiddenException();
+        }
+
+        group.RemoveMember(userId);
         await _context.SaveChangesAsync(ct);
     }
 }

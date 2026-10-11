@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using RealtimeChat.Application.Features.Auth;
 using RealtimeChat.Application.Features.Relationships;
 using RealtimeChat.Application.Features.Users;
-using RealtimeChat.Application.Features.Groups;
 using RealtimeChat.Application.Features.Conversations;
 using RealtimeChat.Application.Features.Presence;
 using RealtimeChat.Application.Features.Messages;
@@ -21,7 +20,6 @@ public static class DependencyInjection
         services.AddAuth();
         services.AddCall();
         services.AddConversations();
-        services.AddGroups();
         services.AddMedia();
         services.AddMessages();
         services.AddPresence();

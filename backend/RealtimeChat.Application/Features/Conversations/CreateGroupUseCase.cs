@@ -4,7 +4,7 @@ using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Entities;
 
-namespace RealtimeChat.Application.Features.Groups;
+namespace RealtimeChat.Application.Features.Conversations;
 
 public class CreateGroupUseCase
 {

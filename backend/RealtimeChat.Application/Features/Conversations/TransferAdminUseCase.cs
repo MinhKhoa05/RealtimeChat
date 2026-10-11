@@ -2,28 +2,28 @@ using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
-using RealtimeChat.Domain.Enums;
 
-namespace RealtimeChat.Application.Features.Groups;
+namespace RealtimeChat.Application.Features.Conversations;
 
-public class KickMemberUseCase
+public class TransferAdminUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
 
-    public KickMemberUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public TransferAdminUseCase(IAppDbContext context, ICurrentUser currentUser)
     {
         _context = context;
         _currentUser = currentUser;
     }
 
-    public async Task ExecuteAsync(long groupId, long userId, CancellationToken ct)
+    public async Task ExecuteAsync(long groupId, TransferAdminRequest request, CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
+        var newAdminId = request.NewAdminId;
 
         var group = await _context.Conversations
             .FilterAccessibleGroup(groupId, currentUserId)
-            .WithMembers(currentUserId, userId) // Lấy member liên quan để thực hiện hành động
+            .WithMembers(currentUserId, newAdminId) // Lấy member liên quan để thực hiện action
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
@@ -32,7 +32,12 @@ public class KickMemberUseCase
             throw new ForbiddenException();
         }
 
-        group.RemoveMember(userId);
+        group.TransferAdmin(newAdminId);
         await _context.SaveChangesAsync(ct);
     }
+}
+
+public class TransferAdminRequest
+{
+    public long NewAdminId { get; set; }
 }

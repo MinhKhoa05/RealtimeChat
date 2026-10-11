@@ -29,7 +29,7 @@ public class FriendRecommendationService : IFriendRecommendationService
             pool = await RebuildPoolAsync(userId, limit, ct);
         }
 
-        // Rebuild xong mà vẫn không có, dừng lun
+        // Rebuild xong mà vẫn không có, dừng luôn, để tránh xử lý không cần thiết
         if (pool.Count == 0)
             return [];
 

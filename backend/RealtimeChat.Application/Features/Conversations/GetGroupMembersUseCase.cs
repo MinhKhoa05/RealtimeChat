@@ -4,7 +4,7 @@ using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Domain.Enums;
 
-namespace RealtimeChat.Application.Features.Groups;
+namespace RealtimeChat.Application.Features.Conversations;
 
 public class GetGroupMembersUseCase
 {

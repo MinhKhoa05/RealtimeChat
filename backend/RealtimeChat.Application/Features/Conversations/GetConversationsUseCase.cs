@@ -5,25 +5,32 @@ using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Conversations;
 
-public class GetListConversationUseCase
+public class GetConversationsUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
 
-    public GetListConversationUseCase(IAppDbContext context, ICurrentUser currentUser)
+    public GetConversationsUseCase(IAppDbContext context, ICurrentUser currentUser)
     {
         _context = context;
         _currentUser = currentUser;
     }
 
-    public async Task<List<ConversationItem>> ExecuteAsync(CancellationToken ct)
+    public async Task<List<ConversationItem>> ExecuteAsync(ConversationType? type, CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
 
-        var conversations = await _context.Conversations
+        var query = _context.Conversations
             .AsNoTracking()
             .AccessibleBy(currentUserId)
-            .Active()
+            .Active();
+
+        if (type.HasValue)
+        {
+            query = query.Where(x => x.Type == type.Value);
+        }
+
+        return await query
             .Select(x => new ConversationItem
             {
                 Id = x.Id,
@@ -31,15 +38,19 @@ public class GetListConversationUseCase
                 AvatarUrl = null,
 
                 Name = x.Type == ConversationType.Direct
-                    ? x.Members.First(m => m.MemberId != currentUserId).Member.Name
+                    ? x.Members
+                        .Where(m => m.MemberId != currentUserId)
+                        .Select(m => m.Member.Name)
+                        .FirstOrDefault()
                     : x.Name,
 
-                IsPinned = x.Members.First(m => m.MemberId != currentUserId).IsPinned,
+                IsPinned = x.Members
+                    .Where(m => m.MemberId == currentUserId)
+                    .Select(m => m.IsPinned)
+                    .FirstOrDefault(),
             })
             .OrderByDescending(x => x.IsPinned)
             .ToListAsync(ct);
-
-        return conversations;
     }
 }
 

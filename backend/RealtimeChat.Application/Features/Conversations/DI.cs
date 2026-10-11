@@ -8,8 +8,16 @@ public static class DependencyInjection
     {
         services.AddScoped<StartDirectConversationUseCase>();
         services.AddScoped<GetConversationUseCase>();
-        services.AddScoped<GetListConversationUseCase>();
+        services.AddScoped<GetConversationsUseCase>();
         services.AddScoped<SetConversationPinUseCase>();
+
+        services.AddScoped<AddMemberUseCase>();
+        services.AddScoped<CreateGroupUseCase>();
+        services.AddScoped<GetGroupMembersUseCase>();
+        services.AddScoped<KickMemberUseCase>();
+        services.AddScoped<LeaveGroupUseCase>();
+        services.AddScoped<TransferAdminUseCase>();
+        services.AddScoped<DisbandGroupUseCase>();
 
         return services;
     }

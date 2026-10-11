@@ -8,7 +8,7 @@ using RealtimeChat.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace RealtimeChat.Infrastructure.Persistence.Migrations
+namespace RealtimeChat.Infrastructure.Migrations.Persistence
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot

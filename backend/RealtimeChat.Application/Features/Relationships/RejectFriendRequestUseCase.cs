@@ -3,15 +3,15 @@ using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
-namespace RealtimeChat.Application.Features.Friends;
+namespace RealtimeChat.Application.Features.Relationships;
 
-public class RevokeFriendRequestUseCase
+public class RejectFriendRequestUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
 
-    public RevokeFriendRequestUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
+    public RejectFriendRequestUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
     {
         _context = context;
         _currentUser = currentUser;
@@ -25,7 +25,7 @@ public class RevokeFriendRequestUseCase
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        if (_currentUser.UserId != friendRequest.UserId)
+        if (_currentUser.UserId != friendRequest.TargetUserId)
         {
             throw new ForbiddenException();
         }
@@ -33,6 +33,6 @@ public class RevokeFriendRequestUseCase
         _context.Relationships.Remove(friendRequest);
         await _context.SaveChangesAsync(ct);
 
-        await _notifier.NotifyAsync(friendRequest.TargetUserId, "friend.request.revoked", new { FriendRequestId = friendRequest.Id }, ct);
+        await _notifier.NotifyAsync(friendRequest.UserId, "friend.request.rejected", new { FriendRequestId = friendRequest.Id }, ct);
     }
 }

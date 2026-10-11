@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
-namespace RealtimeChat.Application.Features.Blocks;
+namespace RealtimeChat.Application.Features.Relationships;
 
 public class GetBlockedUsersUseCase
 {

@@ -3,7 +3,7 @@ using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 
-namespace RealtimeChat.Application.Features.Friends;
+namespace RealtimeChat.Application.Features.Relationships;
 
 public class RemoveFriendUseCase
 {

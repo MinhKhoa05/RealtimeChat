@@ -4,7 +4,7 @@ using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Entities;
 
-namespace RealtimeChat.Application.Features.Friends;
+namespace RealtimeChat.Application.Features.Relationships;
 
 public class SendFriendRequestUseCase
 {

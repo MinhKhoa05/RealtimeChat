@@ -140,6 +140,20 @@ Infrastructure cung cấp implementation cho các abstraction này.
 
 ## Một số quyết định thiết kế
 
+### Quản lý dữ liệu dùng chung ở Frontend
+
+Thiết kế các query và shared cache tập trung cho những dữ liệu có khả năng được sử dụng ở nhiều feature, chẳng hạn như User Profile, nhằm tái sử dụng dữ liệu và phân tách trách nhiệm giữa BE và FE.
+
+Thay vì mỗi API như Members, Friends,... đều phải trả kèm thông tin User như tên, avatar chỉ để phục vụ việc hiển thị, BE chỉ cần trả về các thông tin liên quan đến nghiệp vụ và `userId`, không cần quan tâm FE sẽ sử dụng thông tin User như thế nào.
+
+Ở phía FE, khi cần hiển thị danh sách thành viên của một nhóm chat, FE sẽ query danh sách members từ BE. Response chỉ bao gồm `userId` và các thông tin liên quan đến membership như role, ngày tham gia,...
+
+Để hiển thị thêm thông tin User, FE sẽ lấy profile từ shared cache và kết hợp với dữ liệu membership để render UI. Nếu profile của một số User chưa có trong cache, FE sẽ gọi batch API để lấy thông tin của những User còn thiếu, cập nhật lại cache và tái sử dụng cho các feature khác.
+
+Cách tiếp cận này giúp tập trung quản lý dữ liệu dùng chung, hạn chế trùng lặp thông tin giữa các response và tránh truy vấn lại dữ liệu đã có trong cache. Batch API cũng giúp lấy thông tin nhiều User trong một request, tránh N+1 request. Đổi lại, FE có thể cần thêm một request khi cache chưa có dữ liệu.
+
+Thiết kế tương tự cũng có thể áp dụng cho những dữ liệu có khả năng tái sử dụng ở nhiều feature khác, chẳng hạn như trạng thái quan hệ bạn bè (Relationship), phục vụ việc hiển thị trong danh sách bạn bè, thành viên nhóm hoặc các tính năng như tìm kiếm và gợi ý bạn bè. Những dữ liệu này có thể được quản lý tập trung ở FE để tái sử dụng khi cần, thay vì lặp lại trong nhiều response của các API nghiệp vụ.
+
 ### Domain-centric Entity
 
 Entity không chỉ là nơi chứa dữ liệu mà còn chịu trách nhiệm bảo vệ các

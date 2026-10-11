@@ -26,11 +26,16 @@ public class GetReceivedFriendRequestsUseCase
                 RequestId = x.Id,
                 UserId = x.User.Id,
                 Introduction = x.Introduction,
-                Name = x.User.Name,
-                AvatarUrl = null
             })
             .ToListAsync(ct);
 
         return friendRequests;
     }
+}
+
+public class FriendRequestResponse
+{
+    public long RequestId { get; set; }
+    public long UserId { get; set; }
+    public string? Introduction { get; set; }
 }

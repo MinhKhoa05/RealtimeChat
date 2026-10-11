@@ -26,21 +26,9 @@ public class GetSentFriendRequestsUseCase
                 RequestId = x.Id,
                 UserId = x.TargetUser.Id,
                 Introduction = x.Introduction,
-                Name = x.TargetUser.Name,
-                AvatarUrl = null
             })
             .ToListAsync(ct);
 
         return friendRequests;
     }
-
-}
-
-public class FriendRequestResponse
-{
-    public long RequestId { get; set; }
-    public long UserId { get; set; }
-    public string? Introduction { get; set; }
-    public string Name { get; set; } = null!;
-    public string? AvatarUrl { get; set; }
 }

@@ -15,49 +15,17 @@ public class SearchUsersUseCase
         _currentUser = currentUser;
     }
 
-    public async Task<List<SearchUsersResponse>> ExecuteAsync(
-    string keyword,
-    CancellationToken ct)
+    public async Task<List<long>> ExecuteAsync(string keyword, CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
 
-        var usersQuery = _context.Users
+        return await _context.Users
             .AsNoTracking()
             .Where(x =>
                 x.Id != currentUserId &&
                 (x.Email.Contains(keyword) ||
-                 x.Name.Contains(keyword)));
-
-        var resultsQuery = usersQuery
-            .Select(user => new SearchUsersResponse
-            {
-                UserId = user.Id,
-                Name = user.Name,
-                AvatarUrl = null,
-                Status = _context.Relationships
-                    .Between(currentUserId, user.Id)
-                    .Select(x => (RelationshipStatus?)x.Type)
-                    .FirstOrDefault() ?? RelationshipStatus.None
-            });
-
-        return await resultsQuery.ToListAsync(ct);
+                 x.Name.Contains(keyword)))
+            .Select(x => x.Id)
+            .ToListAsync(ct);
     }
-}
-
-public class SearchUsersResponse
-{
-    public long UserId { get; set; }
-    public string Name { get; set; } = null!;
-    public string? AvatarUrl { get; set; }
-    public RelationshipStatus Status { get; set; }
-}
-
-public enum RelationshipStatus
-{
-    None,
-    Friend,
-    SentRequest,
-    ReceivedRequest,
-    Blocked,
-    BlockedByUser
 }

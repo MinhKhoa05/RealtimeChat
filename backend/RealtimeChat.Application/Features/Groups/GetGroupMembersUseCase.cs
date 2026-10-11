@@ -21,7 +21,7 @@ public class GetGroupMembersUseCase
     {
         var currentUserId = _currentUser.UserId;
 
-        var hasAccess  = await _context.Conversations
+        var hasAccess = await _context.Conversations
             .FilterAccessibleGroup(groupId, currentUserId)
             .AnyAsync(ct);
 
@@ -36,8 +36,6 @@ public class GetGroupMembersUseCase
             .Select(x => new GroupMemberResponse
             {
                 MemberId = x.MemberId,
-                Name = x.Member.Name,
-                AvatarUrl = null,
                 Role = x.Role,
                 JoinedAt = x.CreatedAt,
             })
@@ -50,8 +48,6 @@ public class GetGroupMembersUseCase
 public class GroupMemberResponse
 {
     public long MemberId { get; set; }
-    public string Name { get; set; } = null!;
-    public string? AvatarUrl { get; set; }
     public ConversationMemberRole Role { get; set; }
     public DateTime JoinedAt { get; set; }
 }

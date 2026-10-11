@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
-using RealtimeChat.Application.Features.Users;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.Features.Recommendations.Services;
 
@@ -19,7 +17,7 @@ public class GetFriendRecommendationUseCase
         _friendRecommendation = friendRecommendation;
     }
 
-    public async Task<List<UserResposne>> ExecuteAsync(int limit, CancellationToken ct)
+    public async Task<IReadOnlyList<long>> ExecuteAsync(int limit, CancellationToken ct)
     {
         if (limit < 1 || limit > 15)
         {
@@ -27,21 +25,6 @@ public class GetFriendRecommendationUseCase
         }
 
         var userIds = await _friendRecommendation.GetRecommendationsAsync(_currentUser.UserId, limit, ct);
-
-        if (userIds.Count == 0) return [];
-
-        var users = await _context.Users
-            .AsNoTracking()
-            .Where(x => userIds.Contains(x.Id))
-            .Select(x => new UserResposne
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Email = x.Email,
-                AvatarUrl = null
-            })
-            .ToListAsync(ct);
-
-        return users;
+        return userIds;
     }
 }

@@ -15,31 +15,17 @@ public class GetFriendsUseCase
         _currentUser = currentUser;
     }
 
-    public async Task<List<FriendResponse>> ExecuteAsync(CancellationToken ct)
+    public async Task<List<long>> ExecuteAsync(CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
 
-        var friends = await _context.Relationships
+        var friendIds = await _context.Relationships
             .AsNoTracking()
             .Friends()
             .OfUsers(currentUserId)
-            .Select(x => x.UserId == currentUserId ? x.TargetUser : x.User)
-            .Select(x => new FriendResponse
-            {
-                UserId = x.Id,
-                Name = x.Name,
-                AvatarUrl = null,
-            })
+            .Select(x => x.UserId == currentUserId ? x.TargetUserId : x.UserId)
             .ToListAsync(ct);
 
-        return friends;
+        return friendIds;
     }
-
-}
-
-public class FriendResponse
-{
-    public long UserId { get; set; }
-    public string Name { get; set; } = null!;
-    public string? AvatarUrl { get; set; }
 }

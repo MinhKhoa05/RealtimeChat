@@ -10,16 +10,19 @@ namespace RealtimeChat.Api.Controllers;
 public class UserController : ControllerBase
 {
     private readonly GetCurrentUserUseCase _getCurrentUser;
-    private readonly GetUserProfileUseCase _getUserProfile;
+    private readonly GetUserDetailUseCase _getUserDetail;
+    private readonly GetUserSummariesUseCase _getUserSummaries;
     private readonly SearchUsersUseCase _searchUsers;
 
     public UserController(
         GetCurrentUserUseCase getCurrentUser,
-        GetUserProfileUseCase getUserProfile,
+        GetUserDetailUseCase getUserDetail,
+        GetUserSummariesUseCase getUserSummaries,
         SearchUsersUseCase searchUsers)
     {
         _getCurrentUser = getCurrentUser;
-        _getUserProfile = getUserProfile;
+        _getUserDetail = getUserDetail;
+        _getUserSummaries = getUserSummaries;
         _searchUsers = searchUsers;
     }
 
@@ -38,9 +41,16 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("{userId:long}")]
-    public async Task<IActionResult> GetUserProfile(long userId, CancellationToken ct)
+    public async Task<IActionResult> GetUserDetail(long userId, CancellationToken ct)
     {
-        var result = await _getUserProfile.ExecuteAsync(userId, ct);
+        var result = await _getUserDetail.ExecuteAsync(userId, ct);
+        return Ok(result);
+    }
+
+    [HttpGet("batch")]
+    public async Task<IActionResult> GetUserSummaries(IReadOnlyList<long> userIds, CancellationToken ct)
+    {
+        var result = await _getUserSummaries.ExecuteAsync(userIds, ct);
         return Ok(result);
     }
 }

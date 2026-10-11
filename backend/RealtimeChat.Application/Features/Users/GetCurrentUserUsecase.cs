@@ -14,12 +14,12 @@ public class GetCurrentUserUseCase
         _currentUser = currentUser;
     }
 
-    public async Task<UserResposne> ExecuteAsync(CancellationToken ct)
+    public async Task<UserDetailResponse> ExecuteAsync(CancellationToken ct)
     {
         var user = await _context.Users.FindAsync(_currentUser.UserId, ct)
             ?? throw new NotFoundException();
 
-        return new UserResposne
+        return new UserDetailResponse
         {
             Id = user.Id,
             Name = user.Name,
@@ -29,11 +29,10 @@ public class GetCurrentUserUseCase
     }
 }
 
-public class UserResposne
+public class UserDetailResponse
 {
     public long Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-
+    public string Name { get; set; } = null!;
     public string? AvatarUrl { get; set; }
+    public string Email { get; set; } = null!;
 }

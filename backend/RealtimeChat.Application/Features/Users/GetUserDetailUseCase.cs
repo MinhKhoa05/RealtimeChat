@@ -3,21 +3,21 @@ using RealtimeChat.Application.Exceptions;
 
 namespace RealtimeChat.Application.Features.Users;
 
-public class GetUserProfileUseCase
+public class GetUserDetailUseCase
 {
     private readonly IAppDbContext _context;
 
-    public GetUserProfileUseCase(IAppDbContext context)
+    public GetUserDetailUseCase(IAppDbContext context)
     {
         _context = context;
     }
 
-    public async Task<UserResposne> ExecuteAsync(long userId, CancellationToken ct)
+    public async Task<UserDetailResponse> ExecuteAsync(long userId, CancellationToken ct)
     {
         var user = await _context.Users.FindAsync(userId, ct)
             ?? throw new NotFoundException();
 
-        return new UserResposne
+        return new UserDetailResponse
         {
             Id = user.Id,
             Name = user.Name,

@@ -18,6 +18,8 @@ public static class DependencyInjection
         services.AddScoped<LeaveGroupUseCase>();
         services.AddScoped<TransferAdminUseCase>();
         services.AddScoped<DisbandGroupUseCase>();
+        services.AddScoped<JoinGroupByInviteUseCase>();
+        services.AddScoped<GetGroupByInviteCodeUseCase>();
 
         return services;
     }

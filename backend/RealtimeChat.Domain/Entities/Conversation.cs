@@ -13,7 +13,8 @@ public class Conversation : BaseEntity
 
     public DateTime? DisbandedAt { get; private set; }
 
-    public string? DirectKey { get; private set; }
+    public string? DirectKey { get; private set; } // Ngăn tạo trùng Direct chat khi có request đồng thời.
+    public Guid? InviteCode { get; private set; } // Cho phép người dùng tham gia nhóm qua link mời.
 
     public ICollection<ConversationMember> Members { get; private set; }
         = new List<ConversationMember>();
@@ -45,18 +46,19 @@ public class Conversation : BaseEntity
         {
             Name = name,
             Type = ConversationType.Group,
+            InviteCode = Guid.NewGuid(),
         };
 
-        conversation.AddMemberInternal(creatorId, ConversationMemberRole.Admin);
+        conversation.AddMemberInternal(creatorId, ConversationMemberRole.Admin, creatorId);
 
         return conversation;
     }
 
-    public void AddMember(long memberId)
+    public void AddMember(long memberId, long? invitedById = null)
     {
         EnsureGroup();
 
-        AddMemberInternal(memberId, ConversationMemberRole.Member);
+        AddMemberInternal(memberId, ConversationMemberRole.Member, invitedById);
     }
 
     public void RemoveMember(long memberId)
@@ -113,15 +115,20 @@ public class Conversation : BaseEntity
         return Members.FirstOrDefault(x => x.MemberId == memberId);
     }
 
-    private void AddMemberInternal(long memberId, ConversationMemberRole role)
+    private void AddMemberInternal(long memberId, ConversationMemberRole role, long? invitedById = null)
     {
         var exist = FindMember(memberId);
         if (exist is not null)
         {
             throw new DomainException("User is already a member of the conversation.");
         }
+        
+        if (DisbandedAt.HasValue)
+        {
+            throw new DomainException("The group has been disbanded.");
+        }
 
-        var member = ConversationMember.Create(memberId, role);
+        var member = ConversationMember.Create(memberId, role, invitedById);
         Members.Add(member);
     }
 

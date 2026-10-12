@@ -41,7 +41,7 @@ public class AddMemberUseCase
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        group.AddMember(userId);
+        group.AddMember(userId, currentUserId);
         await _context.SaveChangesAsync(ct);
     }
 }

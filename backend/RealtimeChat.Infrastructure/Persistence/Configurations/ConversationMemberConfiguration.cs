@@ -30,5 +30,10 @@ public class ConversationMemberConfiguration : BaseEntityConfiguration<Conversat
             .WithMany()
             .HasForeignKey(x => x.LastReadMessageId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.InvitedBy)
+            .WithMany()
+            .HasForeignKey(x => x.InvitedById)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

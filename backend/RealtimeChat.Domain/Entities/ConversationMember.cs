@@ -17,14 +17,18 @@ public class ConversationMember : BaseEntity
 
     public bool IsPinned { get; private set; }
 
+    public long? InvitedById { get; private set; } // Null nếu tham gia qua link nhóm.
+    public User? InvitedBy { get; private set; }
+
     private ConversationMember() { }
 
-    internal static ConversationMember Create(long userId, ConversationMemberRole role)
+    internal static ConversationMember Create(long userId, ConversationMemberRole role, long? invitedById = null)
     {
         return new ConversationMember
         {
             MemberId = userId,
             Role = role,
+            InvitedById = invitedById,
         };
     }
 

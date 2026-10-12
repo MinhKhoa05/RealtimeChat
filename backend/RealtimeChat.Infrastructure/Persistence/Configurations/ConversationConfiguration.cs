@@ -21,6 +21,9 @@ public class ConversationConfiguration : BaseEntityConfiguration<Conversation>
         builder.HasIndex(x => x.DirectKey)
             .IsUnique();
 
+        builder.HasIndex(x => x.InviteCode)
+            .IsUnique();
+
         builder.HasMany(x => x.Members)
             .WithOne(x => x.Conversation)
             .HasForeignKey(x => x.ConversationId);

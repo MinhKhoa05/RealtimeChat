@@ -83,6 +83,9 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                     b.Property<DateTime?>("DisbandedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<Guid?>("InviteCode")
+                        .HasColumnType("char(36)");
+
                     b.Property<string>("Name")
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
@@ -98,6 +101,9 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                     b.HasIndex("AvatarMediaId");
 
                     b.HasIndex("DirectKey")
+                        .IsUnique();
+
+                    b.HasIndex("InviteCode")
                         .IsUnique();
 
                     b.ToTable("Conversations");
@@ -117,6 +123,9 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<long?>("InvitedById")
+                        .HasColumnType("bigint");
+
                     b.Property<bool>("IsPinned")
                         .HasColumnType("tinyint(1)");
 
@@ -133,6 +142,8 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("InvitedById");
 
                     b.HasIndex("LastReadMessageId");
 
@@ -616,6 +627,11 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("RealtimeChat.Domain.Entities.User", "InvitedBy")
+                        .WithMany()
+                        .HasForeignKey("InvitedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("RealtimeChat.Domain.Entities.Message", "LastReadMessage")
                         .WithMany()
                         .HasForeignKey("LastReadMessageId")
@@ -628,6 +644,8 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                         .IsRequired();
 
                     b.Navigation("Conversation");
+
+                    b.Navigation("InvitedBy");
 
                     b.Navigation("LastReadMessage");
 

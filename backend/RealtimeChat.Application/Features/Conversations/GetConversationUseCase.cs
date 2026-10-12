@@ -37,6 +37,8 @@ public class GetConversationUseCase
                 OtherUserId = x.Type == ConversationType.Direct
                     ? x.Members.First(m => m.MemberId != currentUserId).MemberId
                     : null,
+
+                InviteCode = x.InviteCode,
             })
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
@@ -54,4 +56,5 @@ public class ConversationResponse
     public string? AvatarUrl { get; set; }
 
     public long? OtherUserId { get; set; } // Type == Direct
+    public Guid? InviteCode { get; set; }
 }

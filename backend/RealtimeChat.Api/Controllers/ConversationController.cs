@@ -23,6 +23,8 @@ public class ConversationController : ControllerBase
     private readonly LeaveGroupUseCase _leaveGroup;
     private readonly TransferAdminUseCase _transferAdmin;
     private readonly DisbandGroupUseCase _disbandGroup;
+    private readonly JoinGroupByInviteUseCase _joinGroupByInvite;
+    private readonly GetGroupByInviteCodeUseCase _getGroupByInviteCode;
 
     public ConversationController(
         StartDirectConversationUseCase startDirectConversation,
@@ -35,7 +37,9 @@ public class ConversationController : ControllerBase
         KickMemberUseCase kickMember,
         LeaveGroupUseCase leaveGroup,
         TransferAdminUseCase transferAdmin,
-        DisbandGroupUseCase disbandGroup)
+        DisbandGroupUseCase disbandGroup,
+        JoinGroupByInviteUseCase joinGroupByInvite,
+        GetGroupByInviteCodeUseCase getGroupByInviteCode)
     {
         _startDirectConversation = startDirectConversation;
         _getConversation = getConversation;
@@ -49,6 +53,8 @@ public class ConversationController : ControllerBase
         _leaveGroup = leaveGroup;
         _transferAdmin = transferAdmin;
         _disbandGroup = disbandGroup;
+        _joinGroupByInvite = joinGroupByInvite;
+        _getGroupByInviteCode = getGroupByInviteCode;
     }
 
     // Conversations
@@ -133,10 +139,17 @@ public class ConversationController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("groups/{groupId:long}")]
-    public async Task<IActionResult> DisbandGroup(long groupId, CancellationToken ct)
+    [HttpPost("groups/join/{inviteCode:guid}")]
+    public async Task<IActionResult> JoinGroupByInvite(Guid inviteCode, CancellationToken ct)
     {
-        await _disbandGroup.ExecuteAsync(groupId, ct);
+        await _joinGroupByInvite.ExecuteAsync(inviteCode, ct);
         return NoContent();
+    }
+
+    [HttpGet("invites/{inviteCode:guid}")]
+    public async Task<IActionResult> GetGroupByInviteCode(Guid inviteCode, CancellationToken ct)
+    {
+        var result = await _getGroupByInviteCode.ExecuteAsync(inviteCode, ct);
+        return Ok(result);
     }
 }

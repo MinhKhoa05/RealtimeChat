@@ -1,8 +1,7 @@
+import ChatPage from "@/features/messages/pages/ChatPage";
+
 function App() {
-  return (
-    <div>Hello World</div>
-  )
+  return <ChatPage />;
 }
 
-export default App
-
+export default App;

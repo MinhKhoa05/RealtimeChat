@@ -19,6 +19,9 @@ namespace RealtimeChat.Application.Interfaces
         DbSet<Mention> Mentions { get; }
         DbSet<ShareTripSession> ShareTripSessions { get; }
         DbSet<UserLiveLocation> UserLiveLocations { get; }
+        DbSet<Post> Posts { get; }
+        DbSet<PostLike> PostLikes { get; }
+        DbSet<Comment> Comments { get; }
 
         Task<int> SaveChangesAsync(CancellationToken ct);
     }

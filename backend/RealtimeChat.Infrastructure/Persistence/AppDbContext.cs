@@ -22,6 +22,9 @@ namespace RealtimeChat.Infrastructure.Persistence
         public DbSet<Mention> Mentions => Set<Mention>();
         public DbSet<ShareTripSession> ShareTripSessions => Set<ShareTripSession>();
         public DbSet<UserLiveLocation> UserLiveLocations => Set<UserLiveLocation>();
+        public DbSet<Post> Posts => Set<Post>();
+        public DbSet<PostLike> PostLikes => Set<PostLike>();
+        public DbSet<Comment> Comments => Set<Comment>();
 
         private readonly TimeProvider _timeProvider;
 

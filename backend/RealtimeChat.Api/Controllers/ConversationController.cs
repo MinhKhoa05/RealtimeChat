@@ -11,7 +11,7 @@ namespace RealtimeChat.Api.Controllers;
 [Route("api/conversations")]
 public class ConversationController : ControllerBase
 {
-    private readonly StartDirectConversationUseCase _startDirectConversation;
+    private readonly OpenDirectConversationUseCase _openDirectConversation;
     private readonly GetConversationUseCase _getConversation;
     private readonly GetConversationsUseCase _getConversations;
     private readonly SetConversationPinUseCase _setConversationPin;
@@ -27,7 +27,7 @@ public class ConversationController : ControllerBase
     private readonly GetGroupByInviteCodeUseCase _getGroupByInviteCode;
 
     public ConversationController(
-        StartDirectConversationUseCase startDirectConversation,
+        OpenDirectConversationUseCase openDirectConversation,
         GetConversationUseCase getConversation,
         GetConversationsUseCase getConversations,
         SetConversationPinUseCase setConversationPin,
@@ -41,7 +41,7 @@ public class ConversationController : ControllerBase
         JoinGroupByInviteUseCase joinGroupByInvite,
         GetGroupByInviteCodeUseCase getGroupByInviteCode)
     {
-        _startDirectConversation = startDirectConversation;
+        _openDirectConversation = openDirectConversation;
         _getConversation = getConversation;
         _getConversations = getConversations;
         _setConversationPin = setConversationPin;
@@ -59,10 +59,10 @@ public class ConversationController : ControllerBase
 
     // Conversations
 
-    [HttpPost("direct")]
-    public async Task<IActionResult> StartDirectConversation([FromBody] StartDirectConversationRequest request, CancellationToken ct)
+    [HttpGet("direct/{otherUserId:long}")]
+    public async Task<IActionResult> StartDirectConversation(long otherUserId, CancellationToken ct)
     {
-        var id = await _startDirectConversation.ExecuteAsync(request, ct);
+        var id = await _openDirectConversation.ExecuteAsync(otherUserId, ct);
         return Ok(id);
     }
 

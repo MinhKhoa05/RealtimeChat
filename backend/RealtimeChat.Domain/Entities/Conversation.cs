@@ -21,7 +21,7 @@ public class Conversation : BaseEntity
 
     private Conversation() { }
 
-    public static Conversation CreateDirect(long user1Id, long user2Id)
+    public static Conversation CreateDirect(long user1Id, long user2Id, string directKey)
     {
         if (user1Id == user2Id)
         {
@@ -31,7 +31,7 @@ public class Conversation : BaseEntity
         var conversation = new Conversation
         {
             Type = ConversationType.Direct,
-            DirectKey = GenerateDirectKey(user1Id, user2Id)
+            DirectKey = directKey
         };
 
         conversation.AddMemberInternal(user1Id, ConversationMemberRole.Member);
@@ -138,13 +138,5 @@ public class Conversation : BaseEntity
         {
             throw new DomainException("This operation is only available for group conversations.");
         }
-    }
-
-    private static string GenerateDirectKey(long user1Id, long user2Id)
-    {
-        var min = Math.Min(user1Id, user2Id);
-        var max = Math.Max(user1Id, user2Id);
-
-        return $"{min}:{max}";
     }
 }

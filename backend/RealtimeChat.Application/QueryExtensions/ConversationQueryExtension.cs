@@ -6,18 +6,8 @@ namespace RealtimeChat.Application.QueryExtensions;
 
 public static class ConversationQueryExtensions
 {
-    public static IQueryable<Conversation> Groups(this IQueryable<Conversation> query)
-        => query.Where(x => x.Type == ConversationType.Group);
-
-    public static IQueryable<Conversation> Direct(this IQueryable<Conversation> query, long user1Id, long user2Id)
-    {
-        var min = Math.Min(user1Id, user2Id);
-        var max = Math.Max(user1Id, user2Id);
-
-        var directKey = $"{min}:{max}";
-
-        return query.Where(x => x.Type == ConversationType.Direct && x.DirectKey == directKey);
-    }
+    public static IQueryable<Conversation> WithDirectKey(this IQueryable<Conversation> query, string directKey)
+        => query.Where(x => x.Type == ConversationType.Direct && x.DirectKey == directKey);
 
     public static IQueryable<Conversation> Active(this IQueryable<Conversation> query)
         => query.Where(x => x.DisbandedAt == null);
@@ -29,7 +19,7 @@ public static class ConversationQueryExtensions
         => query.Where(x => x.Members.Any(m => m.MemberId == userId));
 
     public static IQueryable<Conversation> FilterAccessibleGroup(this IQueryable<Conversation> query, long groupId, long userId)
-        => query.FilterAccessible(groupId, userId).Groups();
+        => query.FilterAccessible(groupId, userId).Where(x => x.Type == ConversationType.Group);
 
     // Chỉ dùng khi cần dữ liệu thành viên để tránh tải dữ liệu không cần thiết.
     public static IQueryable<Conversation> WithMembers(this IQueryable<Conversation> query, params long[] userIds)

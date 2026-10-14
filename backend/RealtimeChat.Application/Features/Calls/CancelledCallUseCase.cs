@@ -30,6 +30,7 @@ public class CancelledCallUseCase
         }
 
         call.Cancelled();
+
         await _context.SaveChangesAsync(ct);
 
         await _notifier.NotifyAsync(call.ReceiverId, "call.cancelled", call, ct);

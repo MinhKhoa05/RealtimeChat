@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using RealtimeChat.Application.Features.Conversations.Services;
 
 namespace RealtimeChat.Application.Features.Conversations;
 
@@ -6,7 +7,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddConversations(this IServiceCollection services)
     {
-        services.AddScoped<StartDirectConversationUseCase>();
+        services.AddScoped<IConversationService, ConversationService>();
+
+        services.AddScoped<OpenDirectConversationUseCase>();
         services.AddScoped<GetConversationUseCase>();
         services.AddScoped<GetConversationsUseCase>();
         services.AddScoped<SetConversationPinUseCase>();

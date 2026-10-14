@@ -12,7 +12,6 @@ public class Sticker : BaseEntity
 
     public long MediaId { get; private set; }
     public Media Media { get; private set; } = null!;
-
     
     private Sticker() { }
 

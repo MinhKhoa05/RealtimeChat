@@ -24,12 +24,7 @@ public class RecallMessageUseCase
         var message = await _context.Messages.FindAsync(messageId, ct)
             ?? throw new NotFoundException();
 
-        if (message.SenderId != _currentUser.UserId)
-        {
-            throw new ForbiddenException();
-        }
-
-        message.Recall(_timeProvider.GetUtcNow().UtcDateTime);
+        message.Recall(_currentUser.UserId, _timeProvider.GetUtcNow().UtcDateTime);
         await _context.SaveChangesAsync(ct);
 
         var memberIds = await _context.ConversationMembers

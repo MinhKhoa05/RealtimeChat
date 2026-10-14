@@ -27,13 +27,23 @@ public class Post : BaseEntity
         };
     }
 
-    public void SetPrivacy(PostPrivacy postPrivacy)
+    public void SetPrivacy(long actorId, PostPrivacy postPrivacy)
     {
+        if (actorId != UserId)
+        {
+            throw new ForbiddenDomainException();
+        }
+
         Privacy = postPrivacy;
     }
 
-    public void Delete(DateTime now)
+    public void Delete(long actorId, DateTime now)
     {
+        if (actorId != UserId)
+        {
+            throw new ForbiddenDomainException();
+        }
+
         if (DeletedAt.HasValue)
         {
             throw new DomainException("Post has been deleted");

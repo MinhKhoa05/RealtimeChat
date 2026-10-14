@@ -26,8 +26,13 @@ public class Comment : BaseEntity
         };
     }
 
-    public void Delete(DateTime now)
+    public void Delete(long actorId, DateTime now)
     {
+        if (actorId != UserId)
+        {
+            throw new ForbiddenDomainException();
+        }
+        
         if (DeletedAt.HasValue)
         {
             throw new DomainException("Comment has been deleted");

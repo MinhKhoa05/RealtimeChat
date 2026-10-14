@@ -21,14 +21,9 @@ public class DeletePostUseCase
         var post = await _context.Posts.FindAsync(postId, ct)
             ?? throw new NotFoundException();
 
-        if (post.UserId != _currentUser.UserId)
-        {
-            throw new ForbiddenException();
-        }
-
         var now = _timeProvider.GetUtcNow().UtcDateTime;
 
-        post.Delete(now);
+        post.Delete(_currentUser.UserId, now);
 
         await _context.SaveChangesAsync(ct);
     }

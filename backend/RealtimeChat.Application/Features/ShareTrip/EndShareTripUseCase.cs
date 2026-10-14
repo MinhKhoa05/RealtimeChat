@@ -20,25 +20,15 @@ public class EndShareTripUseCase
 
     public async Task ExecuteAsync(long shareTripId, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
         var trip = await _context.ShareTripSessions
             .FindAsync(shareTripId, ct)
             ?? throw new NotFoundException();
 
-        if (trip.OwnerId != currentUserId)
-        {
-            throw new ForbiddenException();
-        }
-
         var now = _timeProvider.GetUtcNow().UtcDateTime;
 
-        if (!trip.IsActive(now))
-        {
-            throw new BadRequestException("Session is not active");
-        }
-
-        trip.End(now);
+        trip.End(actorId, now);
         await _context.SaveChangesAsync(ct);
 
         await _notifier.NotifyToConversationAsync(trip.ConversationId, "share_trip.end", shareTripId, ct);

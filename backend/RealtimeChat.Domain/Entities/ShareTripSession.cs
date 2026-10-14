@@ -85,8 +85,13 @@ public class ShareTripSession : BaseEntity
 
     public bool IsActive(DateTime now) => Status == ShareTripStatus.Active && now < ExpiresAt;
 
-    public void End(DateTime now)
+    public void End(long actorId, DateTime now)
     {
+        if (actorId != OwnerId)
+        {
+            throw new ForbiddenDomainException();
+        }
+
         if (!IsActive(now))
         {
             throw new DomainException("Session is not active");

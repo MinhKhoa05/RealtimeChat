@@ -136,7 +136,7 @@ public class Message : BaseEntity
         ReplyToMessage = message;
     }
 
-    public void Recall(DateTime now)
+    public void Recall(long actorId, DateTime now)
     {
         if (IsRecalled())
         {
@@ -153,12 +153,13 @@ public class Message : BaseEntity
             throw new DomainException("Message can no longer be recalled.");
         }
 
+        if (actorId != SenderId)
+        {
+            throw new ForbiddenDomainException();
+        }
+
         RecalledAt = now;
     }
-
-    public bool IsCallMessage() => Type == MessageType.Call && CallId != null;
-
-    public bool IsMediaMessage() => IsMediaType(Type) && MediaId != null;
 
     public static bool IsMediaType(MessageType type)
     {

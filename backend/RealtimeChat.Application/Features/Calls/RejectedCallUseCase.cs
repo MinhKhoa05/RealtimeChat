@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.Features.Calls.Services;
 using RealtimeChat.Domain.Enums;
-
 
 namespace RealtimeChat.Application.Features.Calls;
 
@@ -11,28 +11,46 @@ public class RejectedCallUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
+    private readonly ICallHistoryService _callHistory;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public RejectedCallUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
+    public RejectedCallUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, ICallHistoryService callHistory, IUnitOfWork unitOfWork)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
+        _callHistory = callHistory;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task ExecuteAsync(long callId, CancellationToken ct)
     {
-        var call = await _context.Calls
-            .FirstOrDefaultAsync(x => x.Id == callId && x.Status == CallStatus.Ringing, ct)
-            ?? throw new NotFoundException();
+        var result = await _unitOfWork.ExecuteInTransactionAsync(
+            async token =>
+            {
+                var call = await _context.Calls
+                    .FirstOrDefaultAsync(x => x.Id == callId && x.Status == CallStatus.Ringing, token)
+                    ?? throw new NotFoundException();
 
-        if (call.ReceiverId != _currentUser.UserId)
-        {
-            throw new ForbiddenException();
-        }
+                if (call.ReceiverId != _currentUser.UserId)
+                {
+                    throw new ForbiddenException();
+                }
 
-        call.Reject();
-        await _context.SaveChangesAsync(ct);
+                call.Reject();
 
-        await _notifier.NotifyAsync(call.CallerId, "call.rejected", call, ct);
+                var message = await _callHistory.CreateAsync(call, token);
+
+                // Lưu trạng thái Call và Message.
+                await _context.SaveChangesAsync(token);
+
+                return (Call: call, Message: message);
+            },
+            ct);
+
+        // Chỉ thông báo sau khi transaction commit thành công.
+        await _notifier.NotifyAsync(result.Call.CallerId, "call.rejected", result.Call, ct);
+
+        await _notifier.NotifyAsync(result.Call.CallerId, "message.created", result.Message, ct);
     }
 }

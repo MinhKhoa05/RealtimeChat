@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
+using RealtimeChat.Application.Features.Calls.Services;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Domain.Enums;
 
@@ -11,12 +12,16 @@ public class EndCallUseCase
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
     private readonly TimeProvider _timeProvider;
+    private readonly ICallHistoryService _callHistory;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public EndCallUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
+    public EndCallUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, ICallHistoryService callHistory, IUnitOfWork unitOfWork, TimeProvider timeProvider)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
+        _callHistory = callHistory;
+        _unitOfWork = unitOfWork;
         _timeProvider = timeProvider;
     }
 
@@ -24,32 +29,43 @@ public class EndCallUseCase
     {
         var currentUserId = _currentUser.UserId;
 
-        var call = await _context.Calls
-            .FirstOrDefaultAsync(x => x.Id == callId, ct)
-            ?? throw new NotFoundException();
+        var result = await _unitOfWork.ExecuteInTransactionAsync(
+            async token =>
+            {
+                var call = await _context.Calls
+                    .FirstOrDefaultAsync(x => x.Id == callId, token)
+                    ?? throw new NotFoundException();
 
-        // Chỉ người gọi hoặc người nhận mới được kết thúc
-        if (call.CallerId != currentUserId &&
-            call.ReceiverId != currentUserId)
-        {
-            throw new ForbiddenException();
-        }
+                // Chỉ người gọi hoặc người nhận mới được kết thúc.
+                if (call.CallerId != currentUserId &&
+                    call.ReceiverId != currentUserId)
+                {
+                    throw new ForbiddenException();
+                }
 
-        if (call.Status != CallStatus.Accepted)
-        {
-            throw new BadRequestException("This call cannot be ended in its current state.");
-        }
+                if (call.Status != CallStatus.Accepted)
+                {
+                    throw new BadRequestException(
+                        "This call cannot be ended in its current state.");
+                }
 
-        var otherUserId = call.CallerId == currentUserId
-            ? call.ReceiverId
-            : call.CallerId;
+                var otherUserId = call.CallerId == currentUserId
+                    ? call.ReceiverId
+                    : call.CallerId;
 
-        var now = _timeProvider.GetUtcNow().UtcDateTime;
+                call.End(_timeProvider.GetUtcNow().UtcDateTime);
 
-        call.End(now);
+                var message = await _callHistory.CreateAsync(call, token);
 
-        await _context.SaveChangesAsync(ct);
+                await _context.SaveChangesAsync(token);
 
-        await _notifier.NotifyAsync(otherUserId, "call.end", call, ct);
+                return (Call: call, Message: message, OtherUserId: otherUserId);
+            },
+            ct);
+
+        // Chỉ thông báo sau khi transaction commit thành công.
+        await _notifier.NotifyAsync(result.OtherUserId, "call.end", result.Call, ct);
+
+        await _notifier.NotifyAsync(result.OtherUserId, "message.created", result.Message, ct);
     }
 }

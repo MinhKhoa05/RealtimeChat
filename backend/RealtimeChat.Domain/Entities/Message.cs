@@ -67,13 +67,13 @@ public class Message : BaseEntity
         };
     }
 
-    public static Message CreateCall(long conversationId, long senderId, Call call)
+    public static Message CreateCall(long conversationId, Call call)
     {
         return new Message
         {
             ConversationId = conversationId,
             Type = MessageType.Call,
-            SenderId = senderId,
+            SenderId = call.CallerId,   // Người khởi tạo cuộc gọi luôn là SenderId.
             CallId = call.Id,
             Call = call,
         };

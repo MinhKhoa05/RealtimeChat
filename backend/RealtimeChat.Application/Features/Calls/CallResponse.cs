@@ -1,6 +1,6 @@
 using RealtimeChat.Domain.Enums;
 
-namespace RealtimeChat.Application.Features.Call;
+namespace RealtimeChat.Application.Features.Calls;
 
 public class CallResponse
 {

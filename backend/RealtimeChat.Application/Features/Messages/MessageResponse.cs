@@ -1,5 +1,5 @@
 using RealtimeChat.Domain.Enums;
-using RealtimeChat.Application.Features.Call;
+using RealtimeChat.Application.Features.Calls;
 using RealtimeChat.Application.Features.Media;
 using RealtimeChat.Application.Features.Stickers;
 

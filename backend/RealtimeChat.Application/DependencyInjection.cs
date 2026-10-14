@@ -9,7 +9,7 @@ using RealtimeChat.Application.Features.Recommendations;
 using RealtimeChat.Application.Features.Media;
 using RealtimeChat.Application.Features.Stickers;
 using RealtimeChat.Application.Features.ShareTrip;
-using RealtimeChat.Application.Features.Call;
+using RealtimeChat.Application.Features.Calls;
 
 namespace RealtimeChat.Application;
 

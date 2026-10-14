@@ -56,6 +56,16 @@ public class Call : BaseEntity
         Status = CallStatus.Rejected;
     }
 
+    public void Cancelled()
+    {
+        if (Status != CallStatus.Ringing)
+        {
+            throw new DomainException("Call cannot be cancelled.");
+        }
+
+        Status = CallStatus.Cancelled;
+    }
+
     public void Missed()
     {
         if (Status != CallStatus.Ringing)

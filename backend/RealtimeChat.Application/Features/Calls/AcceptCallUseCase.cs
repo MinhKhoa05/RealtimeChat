@@ -26,14 +26,10 @@ public class AcceptCallUseCase
             .FirstOrDefaultAsync(x => x.Id == callId && x.Status == CallStatus.Ringing, ct)
             ?? throw new NotFoundException();
 
-        if (call.ReceiverId != _currentUser.UserId)
-        {
-            throw new ForbiddenException();
-        }
-
         var now = _timeProvider.GetUtcNow().UtcDateTime;
+        
+        call.Accept(_currentUser.UserId, now);
 
-        call.Accept(now);
         await _context.SaveChangesAsync(ct);
 
         await _notifier.NotifyAsync(call.CallerId, "call.acepted", call, ct);

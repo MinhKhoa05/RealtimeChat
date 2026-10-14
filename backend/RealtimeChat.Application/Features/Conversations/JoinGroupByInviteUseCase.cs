@@ -18,16 +18,16 @@ public class JoinGroupByInviteUseCase
 
     public async Task ExecuteAsync(Guid inviteCode, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
         var conversation = await _context.Conversations
             .Where(x => x.InviteCode == inviteCode)
             .Active()
-            .WithMembers(currentUserId) // Load Members để Domain kiểm tra thành viên đã tồn tại.
+            .WithMembers(actorId) // Load Members để Domain kiểm tra thành viên đã tồn tại.
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        conversation.AddMember(currentUserId);
+        conversation.JoinByInvite(actorId);
         await _context.SaveChangesAsync(ct);
     }
 }

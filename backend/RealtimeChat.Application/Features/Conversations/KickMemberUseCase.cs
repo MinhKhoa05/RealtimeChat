@@ -18,20 +18,15 @@ public class KickMemberUseCase
 
     public async Task ExecuteAsync(long groupId, long userId, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
         var group = await _context.Conversations
-            .FilterAccessibleGroup(groupId, currentUserId)
-            .WithMembers(currentUserId, userId) // Lấy member liên quan để thực hiện hành động
+            .FilterAccessibleGroup(groupId, actorId)
+            .WithMembers(actorId, userId) // Lấy member liên quan để thực hiện hành động
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        if (!group.IsAdmin(currentUserId))
-        {
-            throw new ForbiddenException();
-        }
-
-        group.RemoveMember(userId);
+        group.KickMember(actorId, userId);
         await _context.SaveChangesAsync(ct);
     }
 }

@@ -16,14 +16,13 @@ public class Conversation : BaseEntity
     public string? DirectKey { get; private set; } // Ngăn tạo trùng Direct chat khi có request đồng thời.
     public Guid? InviteCode { get; private set; } // Cho phép người dùng tham gia nhóm qua link mời.
 
-    public ICollection<ConversationMember> Members { get; private set; }
-        = new List<ConversationMember>();
+    public ICollection<ConversationMember> Members { get; private set; } = new List<ConversationMember>();
 
     private Conversation() { }
 
-    public static Conversation CreateDirect(long user1Id, long user2Id, string directKey)
+    public static Conversation CreateDirect(long userId, long otherUserId, string directKey)
     {
-        if (user1Id == user2Id)
+        if (userId == otherUserId)
         {
             throw new DomainException("Cannot create private conversation with yourself");
         }
@@ -34,13 +33,16 @@ public class Conversation : BaseEntity
             DirectKey = directKey
         };
 
-        conversation.AddMemberInternal(user1Id, ConversationMemberRole.Member);
-        conversation.AddMemberInternal(user2Id, ConversationMemberRole.Member);
+        var member1 = ConversationMember.CreateMember(userId);
+        var member2 = ConversationMember.CreateMember(otherUserId);
+
+        conversation.Members.Add(member1);
+        conversation.Members.Add(member2);
 
         return conversation;
     }
 
-    public static Conversation CreateGroup(string name, long creatorId)
+    public static Conversation CreateGroup(long actorId, string name)
     {
         var conversation = new Conversation
         {
@@ -49,94 +51,135 @@ public class Conversation : BaseEntity
             InviteCode = Guid.NewGuid(),
         };
 
-        conversation.AddMemberInternal(creatorId, ConversationMemberRole.Admin, creatorId);
+        var admin = ConversationMember.CreateAdmin(actorId);
+        conversation.Members.Add(admin);
 
         return conversation;
     }
 
-    public void AddMember(long memberId, long? invitedById = null)
+    public void AddMember(long actorId, long memberId)
     {
-        EnsureGroup();
+        EnsureGroupActive();
 
-        AddMemberInternal(memberId, ConversationMemberRole.Member, invitedById);
+        if (actorId == memberId)
+        {
+            throw new DomainException("You cannot add yourself to the group.");
+        }
+
+        // Chỉ thành viên của nhóm mới được thêm thành viên
+        var actor = FindMember(actorId)
+            ?? throw new ForbiddenDomainException();
+
+        var member = FindMember(memberId);
+        if (member is not null)
+        {
+            throw new DomainException("User is already member.");
+        }
+
+        member = ConversationMember.CreateMember(memberId, actorId);
+        Members.Add(member);
     }
 
-    public void RemoveMember(long memberId)
+    public void JoinByInvite(long actorId)
     {
-        EnsureGroup();
+        var member = FindMember(actorId);
 
-        var member = FindMember(memberId)
-            ?? throw new DomainException("User is not a member.");
-
-        if (member.Role == ConversationMemberRole.Admin)
+        if (member is not null)
         {
-            throw new DomainException("Cannot remove the admin.");
+            throw new DomainException("User is already a member.");
+        }
+
+        member = ConversationMember.CreateMember(actorId);
+        Members.Add(member);
+    }
+
+    public void KickMember(long actorId, long memberId)
+    {
+        EnsureGroupActive();
+
+        if (actorId == memberId)
+        {
+            throw new DomainException();
+        }
+
+        var actor = GetMemberOrThrow(actorId);
+        if (!actor.IsAdmin())
+        {
+            throw new ForbiddenDomainException();
+        }
+
+        var member = GetMemberOrThrow(memberId);
+        Members.Remove(member);
+    }
+
+    public void Leave(long actorId)
+    {
+        EnsureGroupActive();
+
+        var member = GetMemberOrThrow(actorId);
+        if (member.IsAdmin())
+        {
+            throw new DomainException("Admin cannot leave.");
         }
 
         Members.Remove(member);
     }
 
-    public void TransferAdmin(long newAdminId)
+    public void TransferAdmin(long actorId, long newAdminId)
     {
-        EnsureGroup();
+        EnsureGroupActive();
 
-        var currentAdmin = Members.FirstOrDefault(x => x.Role == ConversationMemberRole.Admin)
-            ?? throw new DomainException("Group has no admin.");
-
-        var target = FindMember(newAdminId)
-            ?? throw new DomainException("User is not a member.");
-
-        if (currentAdmin.MemberId == newAdminId)
+        if (actorId == newAdminId)
         {
-            return;
+            throw new DomainException("Cannot transfer admin role to yourself.");
         }
 
-        currentAdmin.SetRole(ConversationMemberRole.Admin);
-        target.SetRole(ConversationMemberRole.Member);
+        var actor = GetMemberOrThrow(actorId);
+        if (!actor.IsAdmin())
+        {
+            throw new ForbiddenDomainException();
+        }
+
+        var target = GetMemberOrThrow(newAdminId);
+
+        actor.SetMember();
+        target.SetAdmin();
     }
 
-    public void DisbandGroup(DateTime now)
+    public void DisbandGroup(long actorId, DateTime now)
     {
-        EnsureGroup();
+        EnsureGroupActive();
 
-        if (DisbandedAt.HasValue)
+        var actor = GetMemberOrThrow(actorId);
+        if (!actor.IsAdmin())
         {
-            throw new DomainException("Group is already disbanded.");
+            throw new ForbiddenDomainException();
         }
 
         DisbandedAt = now;
     }
-
-    public bool IsAdmin(long userId) => Members.Any(x => x.MemberId == userId && x.Role == ConversationMemberRole.Admin);
-    public bool IsMember(long userId) => Members.Any(x => x.MemberId == userId);
 
     private ConversationMember? FindMember(long memberId)
     {
         return Members.FirstOrDefault(x => x.MemberId == memberId);
     }
 
-    private void AddMemberInternal(long memberId, ConversationMemberRole role, long? invitedById = null)
+    private ConversationMember GetMemberOrThrow(long memberId)
     {
-        var exist = FindMember(memberId);
-        if (exist is not null)
-        {
-            throw new DomainException("User is already a member of the conversation.");
-        }
-        
-        if (DisbandedAt.HasValue)
-        {
-            throw new DomainException("The group has been disbanded.");
-        }
-
-        var member = ConversationMember.Create(memberId, role, invitedById);
-        Members.Add(member);
+        return FindMember(memberId)
+            ?? throw new DomainException("User is not a member.");
     }
 
-    private void EnsureGroup()
+    private void EnsureGroupActive()
     {
         if (Type != ConversationType.Group)
         {
             throw new DomainException("This operation is only available for group conversations.");
+        }
+
+        if (DisbandedAt.HasValue)
+        {
+            throw new DomainException("Group has been disbanded.");
         }
     }
 }

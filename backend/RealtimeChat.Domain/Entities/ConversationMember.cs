@@ -22,19 +22,35 @@ public class ConversationMember : BaseEntity
 
     private ConversationMember() { }
 
-    internal static ConversationMember Create(long userId, ConversationMemberRole role, long? invitedById = null)
+    public static ConversationMember CreateMember(long userId, long? invitedById = null)
     {
         return new ConversationMember
         {
             MemberId = userId,
-            Role = role,
+            Role = ConversationMemberRole.Member,
             InvitedById = invitedById,
         };
     }
 
-    internal void SetRole(ConversationMemberRole role)
+    public static ConversationMember CreateAdmin(long userId)
     {
-        Role = role;
+        return new ConversationMember
+        {
+            MemberId = userId,
+            Role = ConversationMemberRole.Member,
+        };
+    }
+
+    public bool IsAdmin() => Role == ConversationMemberRole.Admin;
+
+    public void SetAdmin()
+    {
+        Role = ConversationMemberRole.Admin;
+    }
+
+    public void SetMember()
+    {
+        Role = ConversationMemberRole.Member;
     }
 
     public void Pin()
@@ -49,6 +65,12 @@ public class ConversationMember : BaseEntity
 
     public void MarkAsRead(long messageId)
     {
+        // Bỏ qua nếu message đã đọc có ID nhỏ hơn message cuối cùng đã đọc.
+        if (messageId < LastReadMessageId)
+        {
+            return;
+        }
+
         LastReadMessageId = messageId;
     }
 }

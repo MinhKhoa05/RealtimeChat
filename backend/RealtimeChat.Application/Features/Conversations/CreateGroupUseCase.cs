@@ -19,9 +19,9 @@ public class CreateGroupUseCase
 
     public async Task<long> ExecuteAsync(CreateGroupRequest request, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
-        var memberIds = request.MemberIds.Where(x => x != currentUserId).Distinct().ToList();
+        var memberIds = request.MemberIds.Where(x => x != actorId).Distinct().ToList();
         if (memberIds.Count < 2)
         {
             throw new BadRequestException("A group must have at least 3 members.");
@@ -29,7 +29,7 @@ public class CreateGroupUseCase
 
         var friendCount = await _context.Relationships
             .Friends()
-            .BetweenUsers(currentUserId, memberIds)
+            .BetweenUsers(actorId, memberIds)
             .CountAsync(ct);
 
         if (friendCount != memberIds.Count)
@@ -37,10 +37,10 @@ public class CreateGroupUseCase
             throw new ForbiddenException("All members must be friends.");
         }
 
-        var conversation = Conversation.CreateGroup(request.Name, currentUserId);
+        var conversation = Conversation.CreateGroup(actorId, request.Name);
         foreach (var memberId in memberIds)
         {
-            conversation.AddMember(memberId);
+            conversation.AddMember(actorId, memberId);
         }
 
         _context.Conversations.Add(conversation);

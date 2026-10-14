@@ -20,20 +20,16 @@ public class DisbandGroupUseCase
 
     public async Task ExecuteAsync(long groupId, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
         var group = await _context.Conversations
-            .FilterAccessibleGroup(groupId, currentUserId)
-            .WithMembers(currentUserId) // Lấy member để kiểm tra quyền
+            .FilterAccessibleGroup(groupId, actorId)
+            .WithMembers(actorId) // Lấy member để kiểm tra quyền
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        if (!group.IsAdmin(currentUserId))
-        {
-            throw new ForbiddenException();
-        }
-
-        group.DisbandGroup(_timeProvider.GetUtcNow().UtcDateTime);
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        group.DisbandGroup(actorId, now);
 
         await _context.SaveChangesAsync(ct);
     }

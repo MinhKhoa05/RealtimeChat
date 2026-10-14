@@ -1,7 +1,6 @@
-﻿namespace RealtimeChat.Domain.Exceptions
+﻿namespace RealtimeChat.Domain.Exceptions;
+
+public class DomainException : Exception
 {
-    public class DomainException : Exception
-    {
-        public DomainException(string message = "Domain Exception") : base(message) { }
-    }
+    public DomainException(string message = "Domain Exception") : base(message) { }
 }

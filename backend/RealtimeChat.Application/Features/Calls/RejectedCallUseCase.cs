@@ -32,12 +32,7 @@ public class RejectedCallUseCase
                     .FirstOrDefaultAsync(x => x.Id == callId && x.Status == CallStatus.Ringing, token)
                     ?? throw new NotFoundException();
 
-                if (call.ReceiverId != _currentUser.UserId)
-                {
-                    throw new ForbiddenException();
-                }
-
-                call.Reject();
+                call.Reject(_currentUser.UserId);
 
                 var message = await _callHistory.CreateAsync(call, token);
 

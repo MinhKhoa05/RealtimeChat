@@ -18,15 +18,15 @@ public class LeaveGroupUseCase
 
     public async Task ExecuteAsync(long groupId, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
         var group = await _context.Conversations
-            .FilterAccessibleGroup(groupId, currentUserId)
-            .WithMembers(currentUserId) // Lấy member để thực hiện hành động ở Domain
+            .FilterAccessibleGroup(groupId, actorId)
+            .WithMembers(actorId) // Lấy member để thực hiện hành động ở Domain
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
         
-        group.RemoveMember(currentUserId);
+        group.Leave(actorId);
         await _context.SaveChangesAsync(ct);
     }
 }

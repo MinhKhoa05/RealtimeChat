@@ -27,7 +27,7 @@ public class EndCallUseCase
 
     public async Task ExecuteAsync(long callId, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
         var result = await _unitOfWork.ExecuteInTransactionAsync(
             async token =>
@@ -36,24 +36,11 @@ public class EndCallUseCase
                     .FirstOrDefaultAsync(x => x.Id == callId, token)
                     ?? throw new NotFoundException();
 
-                // Chỉ người gọi hoặc người nhận mới được kết thúc.
-                if (call.CallerId != currentUserId &&
-                    call.ReceiverId != currentUserId)
-                {
-                    throw new ForbiddenException();
-                }
-
-                if (call.Status != CallStatus.Accepted)
-                {
-                    throw new BadRequestException(
-                        "This call cannot be ended in its current state.");
-                }
-
-                var otherUserId = call.CallerId == currentUserId
+                var otherUserId = call.CallerId == actorId
                     ? call.ReceiverId
                     : call.CallerId;
 
-                call.End(_timeProvider.GetUtcNow().UtcDateTime);
+                call.End(actorId, _timeProvider.GetUtcNow().UtcDateTime);
 
                 var message = await _callHistory.CreateAsync(call, token);
 

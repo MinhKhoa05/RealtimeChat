@@ -35,8 +35,13 @@ public class Call : BaseEntity
         };
     }
 
-    public void Accept(DateTime now)
+    public void Accept(long actorId, DateTime now)
     {
+        if (actorId != ReceiverId)
+        {
+            throw new ForbiddenDomainException();
+        }
+
         if (Status != CallStatus.Ringing)
         {
             throw new DomainException("Call cannot be accepted.");
@@ -46,8 +51,13 @@ public class Call : BaseEntity
         StartedAt = now;
     }
 
-    public void Reject()
+    public void Reject(long actorId)
     {
+        if (actorId != ReceiverId)
+        {
+            throw new ForbiddenDomainException();
+        }
+
         if (Status != CallStatus.Ringing)
         {
             throw new DomainException("Call cannot be rejected.");
@@ -56,8 +66,13 @@ public class Call : BaseEntity
         Status = CallStatus.Rejected;
     }
 
-    public void Cancelled()
+    public void Cancelled(long actorId)
     {
+        if (actorId != CallerId)
+        {
+            throw new ForbiddenDomainException();
+        }
+
         if (Status != CallStatus.Ringing)
         {
             throw new DomainException("Call cannot be cancelled.");
@@ -76,8 +91,13 @@ public class Call : BaseEntity
         Status = CallStatus.Missed;
     }
 
-    public void End(DateTime now)
+    public void End(long actorId, DateTime now)
     {
+        if (actorId != CallerId && actorId != ReceiverId)
+        {
+            throw new ForbiddenDomainException();
+        }
+
         if (Status != CallStatus.Accepted)
         {
             throw new DomainException("Call cannot be end.");

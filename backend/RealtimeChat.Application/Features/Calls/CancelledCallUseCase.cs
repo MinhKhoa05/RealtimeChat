@@ -31,7 +31,7 @@ public class CancelledCallUseCase
                 var call = await _context.Calls.FirstOrDefaultAsync(x => x.Id == callId && x.Status == CallStatus.Ringing, token)
                     ?? throw new NotFoundException();
 
-                call.Cancelled(_currentUser.UserId);
+                call.Cancel(_currentUser.UserId);
 
                 var message = await _callHistory.CreateAsync(call, token);
 

@@ -17,11 +17,6 @@ public class Call : BaseEntity
     public DateTime? StartedAt { get; private set; }
     public DateTime? EndedAt { get; private set; }
 
-    public TimeSpan? Duration =>
-       StartedAt.HasValue && EndedAt.HasValue
-           ? EndedAt.Value - StartedAt.Value
-           : null;
-
     private Call() { }
 
     public static Call Create(long callerId, long receiverId, CallType type)
@@ -66,7 +61,7 @@ public class Call : BaseEntity
         Status = CallStatus.Rejected;
     }
 
-    public void Cancelled(long actorId)
+    public void Cancel(long actorId)
     {
         if (actorId != CallerId)
         {
@@ -81,7 +76,7 @@ public class Call : BaseEntity
         Status = CallStatus.Cancelled;
     }
 
-    public void Missed()
+    public void MarkAsMissed()
     {
         if (Status != CallStatus.Ringing)
         {
@@ -105,5 +100,15 @@ public class Call : BaseEntity
 
         Status = CallStatus.Ended;
         EndedAt = now;
+    }
+
+    public TimeSpan? Duration()
+    {
+        if (Status != CallStatus.Ended)
+        {
+            throw new DomainException();
+        }
+
+        return EndedAt!.Value - StartedAt!.Value;
     }
 }

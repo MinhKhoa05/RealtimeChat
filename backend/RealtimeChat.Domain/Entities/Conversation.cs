@@ -130,8 +130,8 @@ public class Conversation : BaseEntity
             throw new DomainException();
         }
 
-        var actor = GetMemberOrThrow(actorId);
-        if (!actor.IsAdmin())
+        var actor = FindMember(actorId);
+        if (actor is null || !actor.IsAdmin())
         {
             throw new ForbiddenDomainException();
         }

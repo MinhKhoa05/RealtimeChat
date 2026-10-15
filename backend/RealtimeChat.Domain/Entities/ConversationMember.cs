@@ -37,7 +37,7 @@ public class ConversationMember : BaseEntity
         return new ConversationMember
         {
             MemberId = userId,
-            Role = ConversationMemberRole.Member,
+            Role = ConversationMemberRole.Admin,
         };
     }
 

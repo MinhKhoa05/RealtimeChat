@@ -287,8 +287,7 @@ public class ConversationTests
     [Theory]
     [InlineData(2L)]
     [InlineData(10L)]
-    public void KickMember_WhenActorIsNotAdmin_ThrowsForbiddenDomainException(
-        long actorId)
+    public void KickMember_WhenActorIsNotAdmin_ThrowsForbiddenDomainException(long actorId)
     {
         var conversation = CreateGroupDefault();
         var memberId = 3L;

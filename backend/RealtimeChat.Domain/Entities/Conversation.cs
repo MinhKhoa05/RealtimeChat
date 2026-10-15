@@ -42,8 +42,23 @@ public class Conversation : BaseEntity
         return conversation;
     }
 
-    public static Conversation CreateGroup(long actorId, string name)
+    public static Conversation CreateGroup(long actorId, string name, IList<long> memberIds)
     {
+        if (memberIds.Count != memberIds.Distinct().Count())
+        {
+            throw new DomainException("Duplicate member IDs.");
+        }
+
+        if (memberIds.Contains(actorId))
+        {
+            throw new DomainException("Creator must not be included in member IDs.");
+        }
+
+        if (memberIds.Count() < 2)
+        {
+            throw new DomainException("A group must have at least two invited members.");
+        }
+
         var conversation = new Conversation
         {
             Name = name,
@@ -53,6 +68,12 @@ public class Conversation : BaseEntity
 
         var admin = ConversationMember.CreateAdmin(actorId);
         conversation.Members.Add(admin);
+
+        foreach (var memberId in memberIds)
+        {
+            var member = ConversationMember.CreateMember(memberId, actorId);
+            conversation.Members.Add(member);
+        }
 
         return conversation;
     }

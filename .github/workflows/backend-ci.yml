@@ -1,3 +1,4 @@
+
 name: Backend CI
 
 on:
@@ -10,6 +11,7 @@ on:
       - docker-compose.yml
       - .github/workflows/backend-ci.yml
       - .github/scripts/**
+
   pull_request:
     branches: [ main ]
     paths:
@@ -22,18 +24,15 @@ on:
 concurrency:
   group: backend-ci-${{ github.ref }}
   cancel-in-progress: true
- 
+
 permissions:
   contents: read
   checks: write
-  actions: read
-  pull-requests: read
 
 env:
   DOTNET_VERSION: 8.0.x
   SOLUTION_PATH: backend/RealtimeChat.slnx
-  UNIT_TEST_PROJECT: backend/RealtimeChat.UnitTests/RealtimeChat.UnitTests.csproj
-  INTEGRATION_TEST_PROJECT: backend/RealtimeChat.IntegrationTests/RealtimeChat.IntegrationTests.csproj
+  UNIT_TEST_PROJECT: tests/RealtimeChat.UnitTests/RealtimeChat.UnitTests.csproj
   BUILD_CONFIGURATION: Release
 
 jobs:
@@ -54,4 +53,52 @@ jobs:
         run: dotnet restore ${{ env.SOLUTION_PATH }}
 
       - name: Build solution
-        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+        run: >
+          dotnet build ${{ env.SOLUTION_PATH }}
+          --configuration ${{ env.BUILD_CONFIGURATION }}
+          --no-restore
+
+      - name: Run unit tests with coverage
+        run: |
+          dotnet test ${{ env.UNIT_TEST_PROJECT }} \
+            --configuration ${{ env.BUILD_CONFIGURATION }} \
+            --no-restore \
+            --no-build \
+            --logger "trx;LogFileName=unit-tests.trx" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory artifacts/test-results
+
+      - name: Install ReportGenerator
+        if: always()
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        if: always()
+        run: |
+          reportgenerator \
+            "-reports:artifacts/test-results/**/coverage.cobertura.xml" \
+            "-targetdir:artifacts/coverage-report" \
+            "-reporttypes:Html;Cobertura;MarkdownSummaryGithub"
+
+      - name: Add coverage summary
+        if: always()
+        run: |
+          if [ -f artifacts/coverage-report/SummaryGithub.md ]; then
+            cat artifacts/coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: artifacts/test-results
+          if-no-files-found: warn
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: artifacts/coverage-report
+          if-no-files-found: warn

@@ -89,14 +89,15 @@ Api  --->  Application  --->  Domain
 
 ### Friend Recommendation
 
-Hệ thống gợi ý bạn bè dựa trên **lịch sử conversation chung**, được xác định thông qua bảng `ConversationMembers`, bao gồm cả direct conversation và group chat. Những người có nhiều conversation chung được ưu tiên, đồng thời loại trừ các tài khoản đã kết bạn, có lời mời kết bạn đang chờ xử lý hoặc bị chặn.
+Hệ thống gợi ý bạn bè dựa trên **conversation chung và mạng lưới bạn bè**. Các tài khoản đã có quan hệ hoặc không đủ điều kiện gợi ý sẽ bị loại trừ.
 
-- **Candidate Generation:** Xếp hạng ứng viên theo mức độ liên quan và sử dụng BFS để mở rộng tìm kiếm qua các mối liên hệ gián tiếp dựa trên conversation. Nếu chưa đủ ứng viên, hệ thống chọn ngẫu nhiên những người dùng khác đủ điều kiện để bổ sung.
-- **Recommendation Pool:** Tạo pool ứng viên lớn hơn số lượng cần trả về và cache bằng Redis để tái sử dụng qua nhiều lần gợi ý, hạn chế phải chạy lại thuật toán cho mỗi request.
-- **Recommendation Selection:** Sử dụng weighted random để cân bằng giữa mức độ liên quan và sự đa dạng. Trước khi trả kết quả, hệ thống kiểm tra lại trạng thái quan hệ và loại bỏ các ứng viên không còn hợp lệ.
-- **Candidate Suppression:** Hệ thống cho phép user tạm ẩn một ứng viên trong 2 ngày bằng Redis TTL, để tránh đề xuất lại người dùng đó trong thời gian này.
+- **[Candidate Generation](./backend/RealtimeChat.Application/Features/Recommendations/CandidatePool/PoolGenerator.cs):** Thu thập ứng viên từ conversation chung và bạn chung. Nếu chưa đủ ứng viên, hệ thống bổ sung người dùng ngẫu nhiên đủ điều kiện.
+- **Recommendation Scoring:** Mỗi conversation chung đóng góp 3 điểm, mỗi bạn chung đóng góp 5 điểm. Ứng viên xuất hiện ở nhiều nguồn được hợp nhất theo `UserId` và cộng điểm. Hệ thống xếp hạng và chọn top 50 ứng viên.
+- **Recommendation Pool:** Cache pool bằng Redis để tái sử dụng qua nhiều lần gợi ý, hạn chế chạy lại thuật toán cho mỗi request.
+- **Recommendation Selection:** Sử dụng weighted random để cân bằng mức độ liên quan và sự đa dạng. Trước khi trả kết quả, hệ thống kiểm tra lại quan hệ và loại bỏ ứng viên không còn hợp lệ.
+- **Candidate Suppression:** Cho phép tạm ẩn ứng viên trong 1 ngày bằng Redis TTL, tránh đề xuất lại trong thời gian này.
 
-**Trade-off:** Thuật toán dựa trên lịch sử conversation thay vì trực tiếp mở rộng qua quan hệ bạn bè. Ví dụ, nếu A và B đã kết bạn nhưng chưa từng trò chuyện qua direct chat hay group chat, hệ thống có thể không mở rộng tìm kiếm qua B để đề xuất bạn bè của B cho A. Vì vậy, hệ thống có thể bỏ lỡ một số ứng viên tiềm năng.
+**Trade-off:** Thuật toán chưa xét nội dung tin nhắn, tần suất tương tác hoặc mức độ gần đây của hoạt động. Trọng số hiện tại có thể được điều chỉnh dựa trên dữ liệu sử dụng thực tế.
 
 ## Live Trip Sharing
 

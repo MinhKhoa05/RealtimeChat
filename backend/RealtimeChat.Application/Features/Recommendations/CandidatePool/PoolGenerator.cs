@@ -8,122 +8,146 @@ public class PoolGenerator : IPoolGenerator
 {
     private readonly IAppDbContext _context;
 
+    private const int SharedConversationWeight = 3;
+    private const int MutualFriendWeight = 5; // Ưu tiên quan hệ bạn chung hơn
+    private const int RandomWeight = 0;
+
     public PoolGenerator(IAppDbContext context)
     {
         _context = context;
     }
 
-    public async Task<List<Candidate>> GenerateAsync(long userId, int poolSize, IReadOnlySet<long> excludedUserIds, CancellationToken ct)
+    public async Task<List<Candidate>> GenerateAsync(long userId, int poolSize, HashSet<long> excludedUserIds, CancellationToken ct)
     {
-        var candidates = await TraverseCandidatesAsync(userId, poolSize, excludedUserIds, ct);
+        if (poolSize <= 0)
+            return [];
+
+        var candidates = new Dictionary<long, Candidate>();
+
+        // Lấy từ nhóm chung
+        var sharedCandidates = await GetSharedConversationCandidatesAsync(userId, poolSize, excludedUserIds, ct);
+        MergeCandidates(candidates, sharedCandidates);
+
+        // Lấy từ bạn của bạn bè
+        var friendsOfFriendsCandidates = await GetMutualFriendCandidatesAsync(userId, poolSize, excludedUserIds, ct);
+        MergeCandidates(candidates, friendsOfFriendsCandidates);
+
+        // Nếu chưa đủ thì lấy random
         if (candidates.Count < poolSize)
         {
-            var fallbackExcludedUserIds = new HashSet<long>(excludedUserIds);
-
-            foreach (var candidate in candidates)
-                fallbackExcludedUserIds.Add(candidate.UserId);
-
-            var fallbackCandidates = await GetFallbackCandidatesAsync(userId, poolSize - candidates.Count, fallbackExcludedUserIds, ct);
-
-            candidates.AddRange(fallbackCandidates);
-        }
-
-        return candidates;
-    }
-
-    // Duyệt ứng viên theo BFS qua các conversation chung.
-    // Mỗi tầng sử dụng các user tìm được làm cầu nối cho tầng tiếp theo.
-    // Giới hạn tối đa 2 tầng để kiểm soát phạm vi tìm kiếm.
-    private async Task<List<Candidate>> TraverseCandidatesAsync(long userId, int poolSize, IReadOnlySet<long> excludedUserIds, CancellationToken ct)
-    {
-        const int maxDepth = 2;
-        const int maxExpansionSources = 10;
-
-        var scores = new Dictionary<long, int>();
-        var expanded = new HashSet<long> { userId };
-        var frontier = new List<long> { userId };
-
-        for (var depth = 0; depth < maxDepth; depth++)
-        {
-            if (frontier.Count == 0 || scores.Count >= poolSize)
-                break;
-
-            // Chỉ mở rộng từ một số source có score cao nhất.
-            var sourceUserIds = frontier
-                .Take(maxExpansionSources)
-                .ToList();
-
-            var candidates = await FindCandidatesAsync(userId, sourceUserIds, poolSize, excludedUserIds, ct);
-
-            // Giảm trọng số theo độ sâu để ưu tiên các mối liên hệ gần hơn.
-            var depthWeight = 1 << (maxDepth - depth);
-
             foreach (var candidate in candidates)
             {
-                scores[candidate.UserId] = scores.GetValueOrDefault(candidate.UserId) + candidate.Weight * depthWeight;
+                excludedUserIds.Add(candidate.Key);
             }
 
-            // Chọn candidate có score cao làm source cho tầng tiếp theo.
-            frontier = candidates
-                .OrderByDescending(x => x.Weight)
-                .Select(x => x.UserId)
-                .Where(expanded.Add)
-                .Take(maxExpansionSources)
-                .ToList();
+            var randomCandidates = await GetRandomCandidatesAsync(userId, poolSize - candidates.Count, excludedUserIds, ct);
+            MergeCandidates(candidates, randomCandidates);
         }
 
-        return scores
-            .OrderByDescending(x => x.Value)
+        // Xếp hạng và lấy top N ứng viên.
+        return candidates.Values
+            .OrderByDescending(x => x.Weight)
             .Take(poolSize)
-            .Select(x => new Candidate(x.Key, x.Value))
             .ToList();
     }
 
-    // Tìm ứng viên dựa trên các conversation mà source users cùng tham gia.
-    // User có nhiều conversation chung hơn sẽ có Weight cao hơn.
-    private async Task<List<Candidate>> FindCandidatesAsync(long userId, List<long> sourceUserIds, int limit, IReadOnlySet<long> excludedUserIds, CancellationToken ct)
+    private async Task<List<Candidate>> GetSharedConversationCandidatesAsync(long userId, int limit, HashSet<long> excludedUserIds, CancellationToken ct)
     {
-        var conversationIds = _context.ConversationMembers
+        // Lấy các conversation đang hoạt động mà user tham gia.
+        var conversationIds = _context.Conversations
             .AsNoTracking()
-            .Where(x => sourceUserIds.Contains(x.MemberId))
-            .Select(x => x.ConversationId);
+            .Active()
+            .AccessibleBy(userId)
+            .Select(x => x.Id);
 
-        var candidateConnections = _context.ConversationMembers
+        // Lấy danh sách user đủ điều kiện để gợi ý.
+        var eligibleUserIds = GetEligibleUserIds(userId, excludedUserIds);
+
+        // Lấy các thành viên đủ điều kiện trong conversation chung.
+        var sharedMembers = _context.ConversationMembers
             .AsNoTracking()
-            .Where(x =>
-                conversationIds.Contains(x.ConversationId) &&
-                !sourceUserIds.Contains(x.MemberId))
-            .Select(x => new
-            {
-                x.MemberId,
-                x.ConversationId
-            })
-            .Distinct();
+            .Where(x => conversationIds.Contains(x.ConversationId))
+            .Where(x => eligibleUserIds.Contains(x.MemberId));
 
-        var candidateIds = candidateConnections.Where(x => !excludedUserIds.Contains(x.MemberId));
-
-        candidateIds = candidateIds.Where(x => !_context.Relationships.Between(userId, x.MemberId).Any());
-
-        return await candidateIds
+        // Xếp hạng theo số conversation chung.
+        return await sharedMembers
             .GroupBy(x => x.MemberId)
-            .Select(g => new Candidate(g.Key, g.Count()))
+            .Select(g => new Candidate(g.Key, g.Count() * SharedConversationWeight))
             .OrderByDescending(x => x.Weight)
             .Take(limit)
             .ToListAsync(ct);
     }
 
-    // Bổ sung user ngẫu nhiên nếu Traversal chưa đủ pool.
-    private async Task<List<Candidate>> GetFallbackCandidatesAsync(long userId, int limit, IReadOnlySet<long> excludedUserIds, CancellationToken ct)
+    private async Task<List<Candidate>> GetMutualFriendCandidatesAsync(long userId, int limit, HashSet<long> excludedUserIds, CancellationToken ct)
     {
-        return await _context.Users
-            .AsNoTracking()
+        // Lấy danh sách bạn bè trực tiếp của user.
+        var friendIds = _context.Relationships
+            .Friends()
+            .OfUsers(userId)
+            .Select(x => x.UserId == userId ? x.TargetUserId : x.UserId);
+
+        // Lấy danh sách user đủ điều kiện để gợi ý.
+        var eligibleUserIds = GetEligibleUserIds(userId, excludedUserIds);
+
+        // Lấy ứng viên từ bạn bè của bạn bè trực tiếp.
+        var friendOfFriendIds = _context.Relationships
+            .Friends()
             .Where(x =>
-                x.Id != userId &&
-                !_context.Relationships.Between(userId, x.Id).Any() &&
-                !excludedUserIds.Contains(x.Id))
-            .OrderBy(x => EF.Functions.Random()) // Có thể gây chậm khi hệ thống lớn.
-            .Select(x => new Candidate(x.Id, 1))
+                friendIds.Contains(x.UserId) ||
+                friendIds.Contains(x.TargetUserId))
+            .Select(x =>
+                friendIds.Contains(x.UserId) ? x.TargetUserId : x.UserId)
+            .Where(x => eligibleUserIds.Contains(x));
+
+        // Đếm số bạn chung của mỗi ứng viên.
+        return await friendOfFriendIds
+            .GroupBy(x => x)
+            .Select(g => new Candidate(g.Key, g.Count() * MutualFriendWeight))
+            .OrderByDescending(x => x.Weight)
             .Take(limit)
             .ToListAsync(ct);
+    }
+
+    private async Task<List<Candidate>> GetRandomCandidatesAsync(long userId, int limit, HashSet<long> excludedUserIds, CancellationToken ct)
+    {
+        // Lấy danh sách user đủ điều kiện để gợi ý.
+        var eligibleUserIds = GetEligibleUserIds(userId, excludedUserIds);
+
+        // Lấy ngẫu nhiên các ứng viên.
+        return await eligibleUserIds
+            .OrderBy(_ => EF.Functions.Random()) // Có thể gây chậm khi có nhiều users.
+            .Take(limit)
+            .Select(x => new Candidate(x, RandomWeight))
+            .ToListAsync(ct);
+    }
+
+    private static void MergeCandidates(Dictionary<long, Candidate> candidates, IEnumerable<Candidate> incoming)
+    {
+        foreach (var candidate in incoming)
+        {
+            if (candidates.TryGetValue(candidate.UserId, out var existing))
+            {
+                // Nếu bị trùng thì cộng điểm thêm weight
+                candidates[candidate.UserId] = existing with
+                {
+                    Weight = existing.Weight + candidate.Weight
+                };
+            }
+            else
+            {
+                candidates[candidate.UserId] = candidate;
+            }
+        }
+    }
+
+    // Subquery chứa các UserId đủ điều kiện để gợi ý kết bạn.
+    private IQueryable<long> GetEligibleUserIds(long userId, HashSet<long> excludedUserIds)
+    {
+        return _context.Users
+            .AsNoTracking()
+            .Where(x => x.Id != userId)
+            .Where(x => !excludedUserIds.Contains(x.Id))
+            .Where(x => !_context.Relationships.Between(userId, x.Id).Any())
+            .Select(x => x.Id);
     }
 }

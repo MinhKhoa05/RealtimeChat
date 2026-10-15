@@ -44,6 +44,11 @@ public class Conversation : BaseEntity
 
     public static Conversation CreateGroup(long actorId, string name, IList<long> memberIds)
     {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new DomainException("Group name is required.");
+        }
+
         if (memberIds.Count != memberIds.Distinct().Count())
         {
             throw new DomainException("Duplicate member IDs.");
@@ -103,6 +108,8 @@ public class Conversation : BaseEntity
 
     public void JoinByInvite(long actorId)
     {
+        EnsureGroupActive();
+
         var member = FindMember(actorId);
 
         if (member is not null)

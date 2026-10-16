@@ -4,12 +4,10 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class MentionConfiguration : BaseEntityConfiguration<Mention>
+public class MentionConfiguration : IEntityTypeConfiguration<Mention>
 {
-    public override void Configure(EntityTypeBuilder<Mention> builder)
+    public void Configure(EntityTypeBuilder<Mention> builder)
     {
-        base.Configure(builder);
-
         builder.HasOne(x => x.Message)
             .WithMany(x => x.Mentions)
             .HasForeignKey(x => x.MessageId)
@@ -20,10 +18,6 @@ public class MentionConfiguration : BaseEntityConfiguration<Mention>
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Property(x => x.Start)
-            .IsRequired();
-
-        builder.Property(x => x.Length)
-            .IsRequired();
+        builder.HasKey(m => new { m.MessageId, m.UserId });
     }
 }

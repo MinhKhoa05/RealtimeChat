@@ -34,13 +34,15 @@ public class Message : BaseEntity
     private readonly List<Mention> _mentions = [];
     public IReadOnlyCollection<Mention> Mentions => _mentions;
 
+    // Token mention dùng để xác định vị trí mention trong nội dung tin nhắn. "Ví dụ, hello <@1>"
+    private static string MentionToken(long userId) => $"<@{userId}>";
     private static readonly TimeSpan RecallWindow = TimeSpan.FromMinutes(15);
 
     private Message() { }
 
     # region Create
 
-    public static Message CreateText(long conversationId, long senderId, string content, ICollection<Mention>? mentions = null, Message? replyToMessage = null)
+    public static Message CreateText(long conversationId, long senderId, string content, ICollection<long>? mentionUserIds = null, Message? replyToMessage = null)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
@@ -55,8 +57,7 @@ public class Message : BaseEntity
             Content = content,
         };
 
-        if (mentions is not null)
-            message._mentions.AddRange(mentions);
+        message.AddMentions(mentionUserIds);
 
         if (replyToMessage is not null)
             message.SetReplyTo(replyToMessage);
@@ -100,7 +101,7 @@ public class Message : BaseEntity
         };
     }
 
-    public static Message CreateSystem(long conversationId, string content, ICollection<Mention>? mentions = null)
+    public static Message CreateSystem(long conversationId, string content, ICollection<long>? mentionUserIds = null)
     {
         var message = new Message
         {
@@ -109,8 +110,7 @@ public class Message : BaseEntity
             Content = content,
         };
 
-        if (mentions is not null)
-            message._mentions.AddRange(mentions);
+        message.AddMentions(mentionUserIds);
 
         return message;
     }
@@ -158,5 +158,23 @@ public class Message : BaseEntity
 
         ReplyToMessageId = message.Id;
         ReplyToMessage = message;
+    }
+
+    private void AddMentions(ICollection<long>? mentionUserIds)
+    {
+        if (string.IsNullOrWhiteSpace(Content))
+        {
+            throw new DomainException("Cannot add mentions to a message with no content.");
+        }
+
+        foreach (var userId in mentionUserIds?.Distinct() ?? [])
+        {
+            var token = MentionToken(userId);
+
+            if (Content.Contains(token, StringComparison.Ordinal))
+            {
+                _mentions.Add(Mention.Create(userId));
+            }
+        }
     }
 }

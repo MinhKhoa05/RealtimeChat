@@ -9,22 +9,23 @@ public class RecallMessageUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
-    private readonly TimeProvider _timeProvider;
 
-    public RecallMessageUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
+    public RecallMessageUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
-        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(long messageId, CancellationToken ct)
     {
-        var message = await _context.Messages.FindAsync(messageId, ct)
+        var message = await _context.Messages
+            .Where(x => x.Id == messageId)
+            .Include(x => x.Mentions) // Để domain xóa lun Mentions
+            .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        message.Recall(_currentUser.UserId, _timeProvider.GetUtcNow().UtcDateTime);
+        message.Recall(_currentUser.UserId, DateTime.UtcNow);
         await _context.SaveChangesAsync(ct);
 
         var memberIds = await _context.ConversationMembers

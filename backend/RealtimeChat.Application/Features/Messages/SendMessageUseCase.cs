@@ -61,8 +61,14 @@ public class SendMessageUseCase
                     ?? throw new NotFoundException();
             }
 
-            var mentions = await GetValidMentions(conversationId, request.Content, request.Mentions, ct);
-            return Message.CreateText(conversationId, senderId, request.Content!, mentions, replyToMessage);
+            var mentionUserIds = await _context.ConversationMembers
+                .Where(x => x.ConversationId == conversationId)
+                .Where(x => request.MentionUserIds.Contains(x.MemberId))
+                .Select(x => x.MemberId)
+                .Distinct()
+                .ToListAsync(ct);
+
+            return Message.CreateText(conversationId, senderId, request.Content!, mentionUserIds, replyToMessage);
         }
 
         if (type == MessageType.Media)
@@ -83,49 +89,6 @@ public class SendMessageUseCase
 
         throw new BadRequestException($"Cannot support for message type {type}");
     }
-
-    private async Task<ICollection<Mention>> GetValidMentions(long conversationId, string? content, ICollection<MentionDto> mentions, CancellationToken ct)
-    {
-        if (string.IsNullOrWhiteSpace(content))
-            return [];
-
-        var validMentions = new List<Mention>();
-
-        var userIds = mentions.Select(x => x.UserId).Distinct().ToList();
-
-        var users = await _context.ConversationMembers
-            .Where(x => x.ConversationId == conversationId && userIds.Contains(x.MemberId))
-            .Select(x => new
-            {
-                x.Member.Id,
-                x.Member.Name
-            })
-            .ToDictionaryAsync(x => x.Id, ct);
-
-        // Chỉ tạo Mention khi dữ liệu hợp lệ.
-        // Nếu Mention không hợp lệ, bỏ qua và vẫn lưu Message bình thường.
-        foreach (var mention in mentions)
-        {
-            if (!users.TryGetValue(mention.UserId, out var user))
-                continue;
-
-            if (mention.Start < 0 || mention.Length <= 0 || mention.Start > content.Length - mention.Length)
-            {
-                continue;
-            }
-
-            var mentionedText = content.Substring(mention.Start, mention.Length);
-
-            if (mentionedText != $"@{user.Name}")
-                continue;
-
-            // Domain sẽ kiểm tra range hợp lệ
-            var validMention = Mention.Create(user.Id, mention.Start, mention.Length);
-            validMentions.Add(validMention);
-        }
-
-        return validMentions;
-    }
 }
 
 public class SendMessageRequest
@@ -133,6 +96,6 @@ public class SendMessageRequest
     public string? Content { get; set; }
     public MessageType MessageType { get; set; }
     public Guid? ReferenceId { get; set; } // Dùng cho loại Sticker / Media
-    public List<MentionDto> Mentions { get; set; } = [];
+    public ICollection<long> MentionUserIds { get; set; } = [];
     public long? ReplyToMessageId { get; set; }
 }

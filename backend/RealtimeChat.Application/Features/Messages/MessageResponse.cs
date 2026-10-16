@@ -14,21 +14,8 @@ public class MessageResponse
 
     public object? Payload { get; set; }
 
-    public IReadOnlyList<MentionDto>? Mentions { get; set; }
-    public MessageReplyPreviewResponse? ReplyToMessage { get; set; }
-
-    public bool IsRecalled { get; set; }
-}
-
-public class MessageReplyPreviewResponse
-{
-    public long Id { get; set; }
-    public long? SenderId { get; set; }
-
-    public MessageType Type { get; set; }
-    public string? Content { get; set; }
-
-    public object? Payload { get; set; }
+    public IReadOnlyList<long>? MentionUserIds { get; set; }
+    public MessageResponse? ReplyToMessage { get; set; }
 
     public bool IsRecalled { get; set; }
 }

@@ -24,14 +24,7 @@ public static class MessageMapper
 
             Payload = isRecalled ? null : MapPayload(message),
 
-            Mentions = message.Mentions
-                .Select(x => new MentionDto
-                {
-                    UserId = x.UserId,
-                    Start = x.Start,
-                    Length = x.Length,
-                })
-                .ToList(),
+            MentionUserIds = message.Mentions.Select(x => x.UserId).ToList(),
 
             ReplyToMessage = message.ReplyToMessage is null
                 ? null
@@ -61,13 +54,15 @@ public static class MessageMapper
             _ => null
         };
 
-    private static MessageReplyPreviewResponse ToReplyPreview(Message message) =>
+    private static MessageResponse ToReplyPreview(Message message) =>
         new()
         {
             Id = message.Id,
             SenderId = message.SenderId,
             Type = message.Type,
             Content = message.RecalledAt.HasValue ? null : message.Content,
-            IsRecalled = message.RecalledAt.HasValue
+            IsRecalled = message.RecalledAt.HasValue,
+
+            MentionUserIds = message.Mentions.Select(x => x.UserId).ToList(),
         };
 }

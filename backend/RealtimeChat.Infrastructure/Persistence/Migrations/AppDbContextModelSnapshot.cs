@@ -242,33 +242,13 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Mention", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Length")
-                        .HasColumnType("int");
-
                     b.Property<long>("MessageId")
                         .HasColumnType("bigint");
-
-                    b.Property<int>("Start")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("MessageId");
+                    b.HasKey("MessageId", "UserId");
 
                     b.HasIndex("UserId");
 

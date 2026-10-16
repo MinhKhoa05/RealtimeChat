@@ -2,6 +2,7 @@ using RealtimeChat.Application.Features.Calls;
 using RealtimeChat.Application.Features.Media;
 using RealtimeChat.Application.Features.Stickers;
 using RealtimeChat.Domain.Entities;
+using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Messages;
 
@@ -11,39 +12,44 @@ public static class MessageMapper
     {
         var isRecalled = message.RecalledAt.HasValue;
 
-        if (isRecalled)
-        {
-            return new MessageResponse
-            {
-                Id = message.Id,
-                ConversationId = message.ConversationId,
-                SenderId = message.SenderId,
-                Type = message.Type,
-                CreatedAt = message.CreatedAt,
-                IsRecalled = isRecalled,
-            };
-        }
-
         return new MessageResponse
         {
             Id = message.Id,
             ConversationId = message.ConversationId,
             SenderId = message.SenderId,
             Type = message.Type,
-            Content = message.Content,
+            Content = isRecalled ? null : message.Content,
             CreatedAt = message.CreatedAt,
+            IsRecalled = isRecalled,
 
-            Media = message.Media is null
-                ? null
-                : MediaMapper.ToResponse(message.Media),
+            Payload = isRecalled ? null : MapPayload(message),
 
-            Sticker = message.Sticker is null
-                ? null
-                : StickerMapper.ToResponse(message.Sticker),
+            Mentions = message.Mentions
+                .Select(x => new MentionDto
+                {
+                    UserId = x.UserId,
+                    Start = x.Start,
+                    Length = x.Length,
+                })
+                .ToList(),
 
-            Call = message.Call is null
+            ReplyToMessage = message.ReplyToMessage is null
                 ? null
-                : new CallResponse
+                : ToReplyPreview(message.ReplyToMessage)
+        };
+    }
+
+    private static object? MapPayload(Message message) =>
+        message.Type switch
+        {
+            MessageType.Media when message.Media is not null =>
+                MediaMapper.ToResponse(message.Media),
+
+            MessageType.Sticker when message.Sticker is not null =>
+                StickerMapper.ToResponse(message.Sticker),
+
+            MessageType.Call when message.Call is not null =>
+                new CallResponse
                 {
                     Id = message.Call.Id,
                     Type = message.Call.Type,
@@ -52,26 +58,16 @@ public static class MessageMapper
                     Duration = message.Call.Duration()
                 },
 
-            Mentions = message.Mentions
-                .Select(x => new MentionDto
-                {
-                    UserId = x.UserId,
-                    Start = x.Start,
-                    Length = x.Length
-                })
-                .ToList(),
-
-            ReplyToMessage = message.ReplyToMessage is null
-                ? null
-                : new MessageResponse
-                {
-                    Id = message.ReplyToMessage.Id,
-                    SenderId = message.ReplyToMessage.SenderId,
-                    Type = message.ReplyToMessage.Type,
-                    IsRecalled = message.ReplyToMessage.RecalledAt.HasValue,
-                },
-
-            IsRecalled = false
+            _ => null
         };
-    }
+
+    private static MessageReplyPreviewResponse ToReplyPreview(Message message) =>
+        new()
+        {
+            Id = message.Id,
+            SenderId = message.SenderId,
+            Type = message.Type,
+            Content = message.RecalledAt.HasValue ? null : message.Content,
+            IsRecalled = message.RecalledAt.HasValue
+        };
 }

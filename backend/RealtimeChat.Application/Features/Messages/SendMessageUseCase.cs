@@ -35,19 +35,6 @@ public class SendMessageUseCase
 
         var message = await CreateMessage(conversationId, senderId, request, ct);
 
-        if (request.Mentions.Count != 0)
-        {
-            await AddValidMentions(message, request.Mentions, ct);
-        }
-
-        if (request.ReplyToMessageId.HasValue)
-        {
-            var replyMessage = await _context.Messages.FindAsync(request.ReplyToMessageId, ct)
-                ?? throw new NotFoundException("Message reply not found");
-
-            message.SetReplyTo(replyMessage);
-        }
-
         _context.Messages.Add(message);
         await _context.SaveChangesAsync(ct);
 
@@ -67,39 +54,47 @@ public class SendMessageUseCase
 
         if (type == MessageType.Text)
         {
-            return Message.CreateText(conversationId, senderId, request.Content!);
+            Message? replyToMessage = null;
+            if (request.ReplyToMessageId.HasValue)
+            {
+                replyToMessage = await _context.Messages.FindAsync(request.ReplyToMessageId, ct)
+                    ?? throw new NotFoundException();
+            }
+
+            var mentions = await GetValidMentions(conversationId, request.Content, request.Mentions, ct);
+            return Message.CreateText(conversationId, senderId, request.Content!, mentions, replyToMessage);
+        }
+
+        if (type == MessageType.Media)
+        {
+            var media = await _context.Medias.FirstOrDefaultAsync(x => x.PublicId == request.ReferenceId, ct)
+                ?? throw new NotFoundException();
+
+            return Message.CreateMedia(conversationId, senderId, media);
         }
 
         if (type == MessageType.Sticker)
         {
-            var sticker = await _context.Stickers
-                .Include(x => x.Media)
-                .FirstOrDefaultAsync(x => x.PublicId == request.ReferenceId, ct)
-                ?? throw new NotFoundException("Sticker not found");
+            var sticker = await _context.Stickers.FirstOrDefaultAsync(x => x.PublicId == request.ReferenceId, ct)
+                ?? throw new NotFoundException();
 
             return Message.CreateSticker(conversationId, senderId, sticker);
         }
 
-        if (Message.IsMediaType(type))
-        {
-            var media = await _context.Medias.FirstOrDefaultAsync(x => x.PublicId == request.ReferenceId, ct)
-                ?? throw new NotFoundException("Media not found");
-
-            return Message.CreateMedia(conversationId, senderId, media, request.MessageType);
-        }
-
-        throw new BadRequestException($"Message type '{type}' is not supported.");
+        throw new BadRequestException($"Cannot support for message type {type}");
     }
 
-    private async Task AddValidMentions(Message message, IReadOnlyCollection<MentionDto> mentions, CancellationToken ct)
+    private async Task<ICollection<Mention>> GetValidMentions(long conversationId, string? content, ICollection<MentionDto> mentions, CancellationToken ct)
     {
-        if (message.Content is null)
-            return;
+        if (string.IsNullOrWhiteSpace(content))
+            return [];
+
+        var validMentions = new List<Mention>();
 
         var userIds = mentions.Select(x => x.UserId).Distinct().ToList();
 
         var users = await _context.ConversationMembers
-            .Where(x => x.ConversationId == message.ConversationId && userIds.Contains(x.MemberId))
+            .Where(x => x.ConversationId == conversationId && userIds.Contains(x.MemberId))
             .Select(x => new
             {
                 x.Member.Id,
@@ -114,16 +109,22 @@ public class SendMessageUseCase
             if (!users.TryGetValue(mention.UserId, out var user))
                 continue;
 
-            if (mention.Start < 0 || mention.Length <= 0 || mention.Start > message.Content!.Length - mention.Length)
+            if (mention.Start < 0 || mention.Length <= 0 || mention.Start > content.Length - mention.Length)
+            {
                 continue;
+            }
 
-            var mentionedText = message.Content.Substring(mention.Start, mention.Length);
+            var mentionedText = content.Substring(mention.Start, mention.Length);
 
             if (mentionedText != $"@{user.Name}")
                 continue;
 
-            message.AddMention(mention.UserId, mention.Start, mention.Length);
+            // Domain sẽ kiểm tra range hợp lệ
+            var validMention = Mention.Create(user.Id, mention.Start, mention.Length);
+            validMentions.Add(validMention);
         }
+
+        return validMentions;
     }
 }
 
@@ -134,11 +135,4 @@ public class SendMessageRequest
     public Guid? ReferenceId { get; set; } // Dùng cho loại Sticker / Media
     public List<MentionDto> Mentions { get; set; } = [];
     public long? ReplyToMessageId { get; set; }
-}
-
-public class MentionDto
-{
-    public long UserId { get; init; }
-    public int Start { get; init; }
-    public int Length { get; init; }
 }

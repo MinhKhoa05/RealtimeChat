@@ -28,7 +28,7 @@ public class GetMessagesUseCase
             throw new ForbiddenException();
         }
 
-        var result = await _context.Messages
+        var messages = await _context.Messages
             .AsNoTracking()
             .Where(x => x.ConversationId == conversationId)
             .Include(x => x.Media)
@@ -38,6 +38,6 @@ public class GetMessagesUseCase
             .Include(x => x.ReplyToMessage)
             .ToCursorPageAsync(request, ct);
 
-        return result.Map(MessageMapper.ToResponse);
+        return messages.Map(MessageMapper.ToResponse);
     }
 }

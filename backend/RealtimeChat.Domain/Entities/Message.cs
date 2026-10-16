@@ -5,14 +5,15 @@ namespace RealtimeChat.Domain.Entities;
 
 public class Message : BaseEntity
 {
-    public MessageType Type { get; private set; }
-    public string? Content { get; private set; }
-
     public long ConversationId { get; private set; }
     public Conversation Conversation { get; private set; } = null!;
 
+    // Người gửi, null khi là tin nhắn hệ thống
     public long? SenderId { get; private set; }
     public User? Sender { get; private set; }
+
+    public MessageType Type { get; private set; }
+    public string? Content { get; private set; }
 
     // Các payload cho từng loại message
     public long? MediaId { get; private set; }
@@ -30,8 +31,8 @@ public class Message : BaseEntity
 
     public DateTime? RecalledAt { get; private set; }
 
-    private ICollection<Mention> _mentions = new List<Mention>();
-    public ICollection<Mention> Mentions => _mentions;
+    private readonly List<Mention> _mentions = [];
+    public IReadOnlyCollection<Mention> Mentions => _mentions;
 
     private static readonly TimeSpan RecallWindow = TimeSpan.FromMinutes(15);
 
@@ -39,19 +40,39 @@ public class Message : BaseEntity
 
     # region Create
 
-    public static Message CreateText(long conversationId, long senderId, string content)
+    public static Message CreateText(long conversationId, long senderId, string content, ICollection<Mention>? mentions = null, Message? replyToMessage = null)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
             throw new DomainException("Message content cannot be empty.");
         }
 
+        var message = new Message
+        {
+            ConversationId = conversationId,
+            SenderId = senderId,
+            Type = MessageType.Text,
+            Content = content,
+        };
+
+        if (mentions is not null)
+            message._mentions.AddRange(mentions);
+
+        if (replyToMessage is not null)
+            message.SetReplyTo(replyToMessage);
+
+        return message;
+    }
+
+    public static Message CreateMedia(long conversationId, long senderId, Media media)
+    {
         return new Message
         {
             ConversationId = conversationId,
-            Type = MessageType.Text,
             SenderId = senderId,
-            Content = content,
+            Type = MessageType.Media,
+            MediaId = media.Id,
+            Media = media,
         };
     }
 
@@ -60,8 +81,8 @@ public class Message : BaseEntity
         return new Message
         {
             ConversationId = conversationId,
-            Type = MessageType.Sticker,
             SenderId = senderId,
+            Type = MessageType.Sticker,
             StickerId = sticker.Id,
             Sticker = sticker,
         };
@@ -72,69 +93,29 @@ public class Message : BaseEntity
         return new Message
         {
             ConversationId = conversationId,
+            SenderId = call.CallerId,
             Type = MessageType.Call,
-            SenderId = call.CallerId,   // Người khởi tạo cuộc gọi luôn là SenderId.
             CallId = call.Id,
             Call = call,
         };
     }
 
-    public static Message CreateMedia(long conversationId, long senderId, Media media, MessageType type)
+    public static Message CreateSystem(long conversationId, string content, ICollection<Mention>? mentions = null)
     {
-        if (!IsMediaType(type))
-        {
-            throw new DomainException("Message type must be a media type.");
-        }
-
-        return new Message
-        {
-            ConversationId = conversationId,
-            Type = type,
-            SenderId = senderId,
-            MediaId = media.Id,
-            Media = media,
-        };
-    }
-
-    public static Message CreateSystem(long conversationId, string content)
-    {
-        return new Message
+        var message = new Message
         {
             ConversationId = conversationId,
             Type = MessageType.System,
             Content = content,
         };
+
+        if (mentions is not null)
+            message._mentions.AddRange(mentions);
+
+        return message;
     }
 
-    # endregion
-
-    public void AddMention(long userId, int start, int length)
-    {
-        if (Type is not (MessageType.Text or MessageType.System))
-        {
-            throw new DomainException("This message type does not support mentions.");
-        }
-
-        var mention = Mention.Create(userId, start, length);
-
-        _mentions.Add(mention);
-    }
-
-    public void SetReplyTo(Message message)
-    {
-        if (ReplyToMessageId != null)
-        {
-            throw new DomainException("Message has already been set to reply.");
-        }
-
-        if (ConversationId != message.ConversationId)
-        {
-            throw new DomainException("Cannot reply to a message in another conversation.");
-        }
-
-        ReplyToMessageId = message.Id;
-        ReplyToMessage = message;
-    }
+    #endregion
 
     public void Recall(long actorId, DateTime now)
     {
@@ -143,14 +124,9 @@ public class Message : BaseEntity
             throw new DomainException("Message has already been recalled.");
         }
 
-        if (!CanRecall())
+        if (Type == MessageType.System || Type == MessageType.Call)
         {
             throw new DomainException("This message type cannot be recalled.");
-        }
-
-        if (now > CreatedAt.Add(RecallWindow))
-        {
-            throw new DomainException("Message can no longer be recalled.");
         }
 
         if (actorId != SenderId)
@@ -158,24 +134,29 @@ public class Message : BaseEntity
             throw new ForbiddenDomainException();
         }
 
+        if (now > CreatedAt.Add(RecallWindow))
+        {
+            throw new DomainException("Message can no longer be recalled.");
+        }
+
+        Content = null;
+        _mentions.Clear();
         RecalledAt = now;
     }
 
-    public static bool IsMediaType(MessageType type)
+    private void SetReplyTo(Message message)
     {
-        return type == MessageType.Image ||
-            type == MessageType.Video ||
-            type == MessageType.Audio ||
-            type == MessageType.File;
+        if (ConversationId != message.ConversationId)
+        {
+            throw new DomainException("Cannot reply to a message in another conversation.");
+        }
+
+        if (message.Type == MessageType.System)
+        {
+            throw new DomainException("Cannot reply to a system message.");
+        }
+
+        ReplyToMessageId = message.Id;
+        ReplyToMessage = message;
     }
-
-    private bool CanRecall()
-    {
-        if (IsMediaType(Type)) return true;
-
-        return Type is
-            MessageType.Text or
-            MessageType.Sticker;
-    }
-
 }

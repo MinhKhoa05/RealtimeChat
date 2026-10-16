@@ -57,7 +57,7 @@ public class AppDbContext : DbContext, IAppDbContext
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Property(e => e.CreatedAt).CurrentValue = now;
+                entry.Property(e => e.CreatedAt).IsModified = false;
                 entry.Property(e => e.UpdatedAt).CurrentValue = null;
             }
             else

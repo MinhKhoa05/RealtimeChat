@@ -15,8 +15,7 @@ public class Mention : BaseEntity
 
     private Mention() { }
 
-    // Factory nội bộ: Mention chỉ được tạo thông qua Message.
-    internal static Mention Create(long userId, int start, int length)
+    public static Mention Create(long userId, int start, int length)
     {
         if (start < 0)
         {

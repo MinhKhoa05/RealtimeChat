@@ -1,3 +1,4 @@
+
 using FluentAssertions;
 using RealtimeChat.Domain.Entities;
 using RealtimeChat.Domain.Enums;
@@ -7,18 +8,16 @@ namespace RealtimeChat.UnitTests.Domain;
 
 public class CallTests
 {
-    private const long CallerIdDefault = 1;
-    private const long ReceiverIdDefault = 2;
-    private const long OtherUserId = 3;
+    private const long DefaultCallerId = 1L;
+    private const long DefaultReceiverId = 2L;
+    private const long DefaultUnauthorizedUserId = 3L;
 
-    private static Call CreateCallDefault()
-    {
-        return Call.Create(CallerIdDefault, ReceiverIdDefault, CallType.Audio);
-    }
+    private static readonly DateTime DefaultStartedAt =
+        new(2026, 10, 15, 10, 0, 0, DateTimeKind.Utc);
 
-    private static Call CreateCallDefaultWithStatus(CallStatus status)
+    private static Call CreateDefault(CallStatus status = CallStatus.Ringing)
     {
-        var call = CreateCallDefault();
+        var call = Call.Create(DefaultCallerId, DefaultReceiverId, CallType.Audio);
 
         switch (status)
         {
@@ -26,15 +25,15 @@ public class CallTests
                 break;
 
             case CallStatus.Accepted:
-                call.Accept(ReceiverIdDefault, StartedAt);
+                call.Accept(DefaultReceiverId, DefaultStartedAt);
                 break;
 
             case CallStatus.Rejected:
-                call.Reject(ReceiverIdDefault);
+                call.Reject(DefaultReceiverId);
                 break;
 
             case CallStatus.Cancelled:
-                call.Cancel(CallerIdDefault);
+                call.Cancel(DefaultCallerId);
                 break;
 
             case CallStatus.Missed:
@@ -42,28 +41,26 @@ public class CallTests
                 break;
 
             case CallStatus.Ended:
-                call.Accept(ReceiverIdDefault, StartedAt);
-                call.End(ReceiverIdDefault, StartedAt.AddMinutes(1));
+                call.Accept(DefaultReceiverId, DefaultStartedAt);
+                call.End(DefaultReceiverId, DefaultStartedAt.AddMinutes(1));
                 break;
 
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(status), status, null);
         }
 
         return call;
     }
-
-    private static readonly DateTime StartedAt = new(2026, 10, 15, 10, 0, 0, DateTimeKind.Utc);
 
     [Theory]
     [InlineData(CallType.Audio)]
     [InlineData(CallType.Video)]
     public void Create_WithValidInput_CreatesRingingCall(CallType type)
     {
-        var call = Call.Create(CallerIdDefault, ReceiverIdDefault, type);
+        var call = Call.Create(DefaultCallerId, DefaultReceiverId, type);
 
-        call.CallerId.Should().Be(CallerIdDefault);
-        call.ReceiverId.Should().Be(ReceiverIdDefault);
+        call.CallerId.Should().Be(DefaultCallerId);
+        call.ReceiverId.Should().Be(DefaultReceiverId);
         call.Type.Should().Be(type);
         call.Status.Should().Be(CallStatus.Ringing);
         call.StartedAt.Should().BeNull();
@@ -73,22 +70,22 @@ public class CallTests
     [Fact]
     public void Accept_WhenActorIsReceiver_StartsCall()
     {
-        var call = CreateCallDefault();
-        var actorId = ReceiverIdDefault;
+        var call = CreateDefault();
+        var actorId = DefaultReceiverId;
 
-        call.Accept(actorId, StartedAt);
+        call.Accept(actorId, DefaultStartedAt);
 
         call.Status.Should().Be(CallStatus.Accepted);
-        call.StartedAt.Should().Be(StartedAt);
+        call.StartedAt.Should().Be(DefaultStartedAt);
     }
 
     [Fact]
     public void Accept_WhenActorIsNotReceiver_ThrowsForbiddenDomainException()
     {
-        var call = CreateCallDefault();
-        var actorId = OtherUserId;
+        var call = CreateDefault();
+        var actorId = DefaultUnauthorizedUserId;
 
-        var act = () => call.Accept(actorId, StartedAt);
+        var act = () => call.Accept(actorId, DefaultStartedAt);
 
         act.Should().Throw<ForbiddenDomainException>();
     }
@@ -101,10 +98,10 @@ public class CallTests
     [InlineData(CallStatus.Ended)]
     public void Accept_WhenCallIsNotRinging_ThrowsDomainException(CallStatus status)
     {
-        var call = CreateCallDefaultWithStatus(status);
-        var actorId = ReceiverIdDefault;
+        var call = CreateDefault(status);
+        var actorId = DefaultReceiverId;
 
-        var act = () => call.Accept(actorId, StartedAt);
+        var act = () => call.Accept(actorId, DefaultStartedAt);
 
         act.Should().Throw<DomainException>();
     }
@@ -112,8 +109,8 @@ public class CallTests
     [Fact]
     public void Reject_WhenActorIsReceiver_RejectsCall()
     {
-        var call = CreateCallDefault();
-        var actorId = ReceiverIdDefault;
+        var call = CreateDefault();
+        var actorId = DefaultReceiverId;
 
         call.Reject(actorId);
 
@@ -123,8 +120,8 @@ public class CallTests
     [Fact]
     public void Reject_WhenActorIsNotReceiver_ThrowsForbiddenDomainException()
     {
-        var call = CreateCallDefault();
-        var actorId = OtherUserId;
+        var call = CreateDefault();
+        var actorId = DefaultUnauthorizedUserId;
 
         var act = () => call.Reject(actorId);
 
@@ -139,8 +136,8 @@ public class CallTests
     [InlineData(CallStatus.Ended)]
     public void Reject_WhenCallIsNotRinging_ThrowsDomainException(CallStatus status)
     {
-        var call = CreateCallDefaultWithStatus(status);
-        var actorId = ReceiverIdDefault;
+        var call = CreateDefault(status);
+        var actorId = DefaultReceiverId;
 
         var act = () => call.Reject(actorId);
 
@@ -150,8 +147,8 @@ public class CallTests
     [Fact]
     public void Cancel_WhenActorIsCaller_CancelsCall()
     {
-        var call = CreateCallDefault();
-        var actorId = CallerIdDefault;
+        var call = CreateDefault();
+        var actorId = DefaultCallerId;
 
         call.Cancel(actorId);
 
@@ -161,8 +158,8 @@ public class CallTests
     [Fact]
     public void Cancel_WhenActorIsNotCaller_ThrowsForbiddenDomainException()
     {
-        var call = CreateCallDefault();
-        var actorId = OtherUserId;
+        var call = CreateDefault();
+        var actorId = DefaultUnauthorizedUserId;
 
         var act = () => call.Cancel(actorId);
 
@@ -177,19 +174,18 @@ public class CallTests
     [InlineData(CallStatus.Ended)]
     public void Cancel_WhenCallIsNotRinging_ThrowsDomainException(CallStatus status)
     {
-        var call = CreateCallDefaultWithStatus(status);
-        var actorId = CallerIdDefault;
+        var call = CreateDefault(status);
+        var actorId = DefaultCallerId;
 
         var act = () => call.Cancel(actorId);
 
         act.Should().Throw<DomainException>();
     }
 
-
     [Fact]
     public void MarkAsMissed_WhenCallIsRinging_MarksCallAsMissed()
     {
-        var call = CreateCallDefault();
+        var call = CreateDefault();
 
         call.MarkAsMissed();
 
@@ -204,7 +200,7 @@ public class CallTests
     [InlineData(CallStatus.Ended)]
     public void MarkAsMissed_WhenCallIsNotRinging_ThrowsDomainException(CallStatus status)
     {
-        var call = CreateCallDefaultWithStatus(status);
+        var call = CreateDefault(status);
 
         var act = () => call.MarkAsMissed();
 
@@ -212,13 +208,12 @@ public class CallTests
     }
 
     [Theory]
-    [InlineData(CallerIdDefault)]
-    [InlineData(ReceiverIdDefault)]
+    [InlineData(1L)]
+    [InlineData(2L)]
     public void End_WhenActorIsParticipant_EndsAcceptedCall(long actorId)
     {
-        var call = CreateCallDefaultWithStatus(CallStatus.Accepted);
-
-        var endTime = StartedAt.AddMinutes(1);
+        var call = CreateDefault(CallStatus.Accepted);
+        var endTime = DefaultStartedAt.AddMinutes(1);
 
         call.End(actorId, endTime);
 
@@ -229,10 +224,10 @@ public class CallTests
     [Fact]
     public void End_WhenActorIsNotParticipant_ThrowsForbiddenDomainException()
     {
-        var call = CreateCallDefaultWithStatus(CallStatus.Accepted);
-        var actorId = OtherUserId;
+        var call = CreateDefault(CallStatus.Accepted);
+        var actorId = DefaultUnauthorizedUserId;
 
-        var act = () => call.End(actorId, StartedAt.AddMinutes(1));
+        var act = () => call.End(actorId, DefaultStartedAt.AddMinutes(1));
 
         act.Should().Throw<ForbiddenDomainException>();
     }
@@ -245,10 +240,10 @@ public class CallTests
     [InlineData(CallStatus.Ended)]
     public void End_WhenCallIsNotAccepted_ThrowsDomainException(CallStatus status)
     {
-        var call = CreateCallDefaultWithStatus(status);
-        var actorId = CallerIdDefault;
+        var call = CreateDefault(status);
+        var actorId = DefaultCallerId;
 
-        var act = () => call.End(actorId, StartedAt.AddMinutes(1));
+        var act = () => call.End(actorId, DefaultStartedAt.AddMinutes(1));
 
         act.Should().Throw<DomainException>();
     }
@@ -256,7 +251,7 @@ public class CallTests
     [Fact]
     public void Duration_WhenCallIsEnded_ReturnsDuration()
     {
-        var call = CreateCallDefaultWithStatus(CallStatus.Ended);
+        var call = CreateDefault(CallStatus.Ended);
 
         call.Duration().Should().Be(TimeSpan.FromMinutes(1));
     }
@@ -267,10 +262,9 @@ public class CallTests
     [InlineData(CallStatus.Rejected)]
     [InlineData(CallStatus.Cancelled)]
     [InlineData(CallStatus.Missed)]
-    public void Duration_WhenCallIsNotEnded_ThrowsDomainException(
-    CallStatus status)
+    public void Duration_WhenCallIsNotEnded_ThrowsDomainException(CallStatus status)
     {
-        var call = CreateCallDefaultWithStatus(status);
+        var call = CreateDefault(status);
 
         var act = () => call.Duration();
 

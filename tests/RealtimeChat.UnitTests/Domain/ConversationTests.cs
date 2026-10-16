@@ -7,16 +7,18 @@ namespace RealtimeChat.UnitTests.Domain;
 
 public class ConversationTests
 {
-    private const long AdminIdGroupDefault = 1L;
-    private const string GroupNameDefault = "GroupNameDefault";
-    private static readonly DateTime Now =
-        new(2026, 10, 15, 10, 0, 0, DateTimeKind.Utc);
+    private const long DefaultGroupAdminId = 1L;
+    private const string DefaultGroupName = "Test Group";
+    private static readonly List<long> DefaultGroupMemberIds = [2, 3];
+    private const long DefaultNewMemberId = 5L;
+
+    private static readonly DateTime DefaultNow = new(2026, 10, 15, 10, 0, 0, DateTimeKind.Utc);
 
     private static Conversation CreateGroupDefault()
-    {
-        var memberIds = new List<long> { 2, 3 };
-        return Conversation.CreateGroup(AdminIdGroupDefault, GroupNameDefault, memberIds);
-    }
+        => Conversation.CreateGroup(
+            DefaultGroupAdminId,
+            DefaultGroupName,
+            new List<long>(DefaultGroupMemberIds));
 
     [Fact]
     public void CreateDirect_WithValidInput_CreatesDirectConversation()
@@ -49,9 +51,10 @@ public class ConversationTests
     [Fact]
     public void CreateGroup_WithValidInput_CreatesGroup()
     {
-        var actorId = AdminIdGroupDefault;
-        var name = GroupNameDefault;
-        var memberIds = new List<long> { 2, 3, 4 };
+        var actorId = DefaultGroupAdminId;
+        var name = DefaultGroupName;
+        var memberIds = new List<long>(DefaultGroupMemberIds);
+        var memberCount = memberIds.Count + 1; // Members + group admin
 
         var conversation = Conversation.CreateGroup(actorId, name, memberIds);
 
@@ -60,7 +63,7 @@ public class ConversationTests
         conversation.InviteCode.Should().NotBeNull();
         conversation.InviteCode.Should().NotBe(Guid.Empty);
 
-        conversation.Members.Should().HaveCount(4);
+        conversation.Members.Should().HaveCount(memberCount);
         conversation.Members.Should().ContainSingle(x =>
             x.MemberId == actorId &&
             x.Role == ConversationMemberRole.Admin);
@@ -75,12 +78,12 @@ public class ConversationTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("    ")]
-    public void CreateGroup_WhenNameIsNullOrWhiteSpace_ThrowsDomainException(
-        string? name)
+    public void CreateGroup_WhenNameIsNullOrWhiteSpace_ThrowsDomainException(string? name)
     {
-        var memberIds = new List<long> { 2, 3, 4 };
-
-        var act = () => Conversation.CreateGroup(AdminIdGroupDefault, name!, memberIds);
+        var act = () => Conversation.CreateGroup(
+            DefaultGroupAdminId,
+            name!,
+            new List<long>(DefaultGroupMemberIds));
 
         act.Should().Throw<DomainException>();
     }
@@ -90,17 +93,19 @@ public class ConversationTests
     {
         var memberIds = new List<long> { 2, 2, 3, 4 };
 
-        var act = () => Conversation.CreateGroup(AdminIdGroupDefault, GroupNameDefault, memberIds);
+        var act = () => Conversation.CreateGroup(DefaultGroupAdminId, DefaultGroupName, memberIds);
 
         act.Should().Throw<DomainException>();
     }
 
     [Fact]
-    public void CreateGroup_WhenMemberIdsContainActorId_ThrowsDomainException()
+    public void CreateGroup_WhenMembersContainActor_ThrowsDomainException()
     {
-        var memberIds = new List<long> { AdminIdGroupDefault, 2, 3, 4 };
+        var actorId = DefaultGroupAdminId;
+        var memberIds = new List<long>(DefaultGroupMemberIds);
+        memberIds.Add(actorId);
 
-        var act = () => Conversation.CreateGroup(AdminIdGroupDefault, GroupNameDefault, memberIds);
+        var act = () => Conversation.CreateGroup(actorId, DefaultGroupName, memberIds);
 
         act.Should().Throw<DomainException>();
     }
@@ -110,9 +115,13 @@ public class ConversationTests
     [InlineData(1)]
     public void CreateGroup_WhenMemberIdsCountIsLessThanTwo_ThrowsDomainException(int memberCount)
     {
-        var memberIds = Enumerable.Range(2, memberCount).Select(x => (long)x).ToList();
+        var memberIds = new List<long>();
+        for (int i = 0; i < memberCount; i++)
+        {
+            memberIds.Add(DefaultGroupAdminId + i + 1); // Generate IDs distinct from the admin ID
+        }
 
-        var act = () => Conversation.CreateGroup(AdminIdGroupDefault, GroupNameDefault, memberIds);
+        var act = () => Conversation.CreateGroup(DefaultGroupAdminId, DefaultGroupName, memberIds);
 
         act.Should().Throw<DomainException>();
     }
@@ -121,12 +130,13 @@ public class ConversationTests
     public void AddMember_WithValidInput_AddsMemberToGroup()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
-        var memberId = 10L;
+        var actorId = DefaultGroupAdminId;
+        var memberId = DefaultNewMemberId;
+        var memberCount = DefaultGroupMemberIds.Count + 2; // Members + group admin + new member
 
         conversation.AddMember(actorId, memberId);
 
-        conversation.Members.Should().HaveCount(4);
+        conversation.Members.Should().HaveCount(memberCount);
         conversation.Members.Should().ContainSingle(x => x.MemberId == memberId);
     }
 
@@ -135,9 +145,8 @@ public class ConversationTests
     {
         var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
         var actorId = 1L;
-        var memberId = 10L;
 
-        var act = () => conversation.AddMember(actorId, memberId);
+        var act = () => conversation.AddMember(actorId, DefaultNewMemberId);
 
         act.Should().Throw<DomainException>();
     }
@@ -146,9 +155,9 @@ public class ConversationTests
     public void AddMember_WhenGroupIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        conversation.DisbandGroup(AdminIdGroupDefault, Now);
+        conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
 
-        var actorId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
         var memberId = 10L;
 
         var act = () => conversation.AddMember(actorId, memberId);
@@ -160,8 +169,8 @@ public class ConversationTests
     public void AddMember_WhenActorIdEqualsMemberId_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
-        var memberId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
+        var memberId = DefaultGroupAdminId;
 
         var act = () => conversation.AddMember(actorId, memberId);
 
@@ -184,7 +193,7 @@ public class ConversationTests
     public void AddMember_WhenMemberIdIsAlreadyMember_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
         var memberId = 2L;
 
         var act = () => conversation.AddMember(actorId, memberId);
@@ -197,10 +206,11 @@ public class ConversationTests
     {
         var conversation = CreateGroupDefault();
         var actorId = 10L;
+        var memberCount = DefaultGroupMemberIds.Count + 2; // Members + group admin + joining member
 
         conversation.JoinByInvite(actorId);
 
-        conversation.Members.Should().HaveCount(4);
+        conversation.Members.Should().HaveCount(memberCount);
         conversation.Members.Should().ContainSingle(x => x.MemberId == actorId);
     }
 
@@ -219,7 +229,7 @@ public class ConversationTests
     public void JoinByInvite_WhenGroupIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        conversation.DisbandGroup(AdminIdGroupDefault, Now);
+        conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
         var actorId = 10L;
 
         var act = () => conversation.JoinByInvite(actorId);
@@ -242,7 +252,7 @@ public class ConversationTests
     public void KickMember_WithValidInput_RemovesMemberFromGroup()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
         var memberId = 2L;
 
         conversation.KickMember(actorId, memberId);
@@ -265,9 +275,9 @@ public class ConversationTests
     public void KickMember_WhenGroupIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        conversation.DisbandGroup(AdminIdGroupDefault, Now);
+        conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
 
-        var act = () => conversation.KickMember(AdminIdGroupDefault, 2L);
+        var act = () => conversation.KickMember(DefaultGroupAdminId, 2L);
 
         act.Should().Throw<DomainException>();
     }
@@ -276,8 +286,8 @@ public class ConversationTests
     public void KickMember_WhenActorIdEqualsMemberId_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
-        var memberId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
+        var memberId = DefaultGroupAdminId;
 
         var act = () => conversation.KickMember(actorId, memberId);
 
@@ -301,7 +311,7 @@ public class ConversationTests
     public void KickMember_WhenTargetIsNotMember_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
         var memberId = 10L;
 
         var act = () => conversation.KickMember(actorId, memberId);
@@ -335,7 +345,7 @@ public class ConversationTests
     public void Leave_WhenGroupIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        conversation.DisbandGroup(AdminIdGroupDefault, Now);
+        conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
 
         var act = () => conversation.Leave(2L);
 
@@ -347,7 +357,7 @@ public class ConversationTests
     {
         var conversation = CreateGroupDefault();
 
-        var act = () => conversation.Leave(AdminIdGroupDefault);
+        var act = () => conversation.Leave(DefaultGroupAdminId);
 
         act.Should().Throw<DomainException>();
     }
@@ -367,7 +377,7 @@ public class ConversationTests
     public void TransferAdmin_WithValidInput_TransfersAdminRole()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
         var newAdminId = 2L;
 
         conversation.TransferAdmin(actorId, newAdminId);
@@ -395,10 +405,10 @@ public class ConversationTests
     public void TransferAdmin_WhenGroupIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        conversation.DisbandGroup(AdminIdGroupDefault, Now);
+        conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
 
         var act = () => conversation.TransferAdmin(
-            AdminIdGroupDefault,
+            DefaultGroupAdminId,
             2L);
 
         act.Should().Throw<DomainException>();
@@ -408,7 +418,7 @@ public class ConversationTests
     public void TransferAdmin_WhenActorIdEqualsNewAdminId_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
 
         var act = () => conversation.TransferAdmin(actorId, actorId);
 
@@ -431,7 +441,7 @@ public class ConversationTests
     public void TransferAdmin_WhenTargetIsNotMember_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
         var newAdminId = 10L;
 
         var act = () => conversation.TransferAdmin(actorId, newAdminId);
@@ -455,11 +465,11 @@ public class ConversationTests
     public void DisbandGroup_WithValidInput_SetsDisbandedAt()
     {
         var conversation = CreateGroupDefault();
-        var actorId = AdminIdGroupDefault;
+        var actorId = DefaultGroupAdminId;
 
-        conversation.DisbandGroup(actorId, Now);
+        conversation.DisbandGroup(actorId, DefaultNow);
 
-        conversation.DisbandedAt.Should().Be(Now);
+        conversation.DisbandedAt.Should().Be(DefaultNow);
     }
 
     [Fact]
@@ -467,7 +477,7 @@ public class ConversationTests
     {
         var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
 
-        var act = () => conversation.DisbandGroup(1L, Now);
+        var act = () => conversation.DisbandGroup(1L, DefaultNow);
 
         act.Should().Throw<DomainException>();
     }
@@ -476,11 +486,11 @@ public class ConversationTests
     public void DisbandGroup_WhenGroupIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        conversation.DisbandGroup(AdminIdGroupDefault, Now);
+        conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
 
         var act = () => conversation.DisbandGroup(
-            AdminIdGroupDefault,
-            Now.AddMinutes(1));
+            DefaultGroupAdminId,
+            DefaultNow.AddMinutes(1));
 
         act.Should().Throw<DomainException>();
     }
@@ -489,9 +499,9 @@ public class ConversationTests
     public void DisbandGroup_WhenActorIsNotAdmin_ThrowsForbiddenDomainException()
     {
         var conversation = CreateGroupDefault();
-        var actorId = 2L;
+        var actorId = DefaultGroupMemberIds[0];
 
-        var act = () => conversation.DisbandGroup(actorId, Now);
+        var act = () => conversation.DisbandGroup(actorId, DefaultNow);
 
         act.Should().Throw<ForbiddenDomainException>();
     }
@@ -500,9 +510,9 @@ public class ConversationTests
     public void DisbandGroup_WhenActorIsNotMember_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
-        var actorId = 10L;
+        var actorId = DefaultNewMemberId;
 
-        var act = () => conversation.DisbandGroup(actorId, Now);
+        var act = () => conversation.DisbandGroup(actorId, DefaultNow);
 
         act.Should().Throw<DomainException>();
     }

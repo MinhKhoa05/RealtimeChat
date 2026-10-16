@@ -138,7 +138,7 @@ public class Message : BaseEntity
 
     public void Recall(long actorId, DateTime now)
     {
-        if (IsRecalled())
+        if (RecalledAt.HasValue)
         {
             throw new DomainException("Message has already been recalled.");
         }
@@ -167,11 +167,6 @@ public class Message : BaseEntity
             type == MessageType.Video ||
             type == MessageType.Audio ||
             type == MessageType.File;
-    }
-
-    public bool IsRecalled()
-    {
-        return RecalledAt.HasValue;
     }
 
     private bool CanRecall()

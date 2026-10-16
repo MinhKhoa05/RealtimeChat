@@ -170,8 +170,8 @@ public class Conversation : BaseEntity
 
         var target = GetMemberOrThrow(newAdminId);
 
-        actor.SetMember();
-        target.SetAdmin();
+        actor.SetRole(ConversationMemberRole.Member);
+        target.SetRole(ConversationMemberRole.Admin);
     }
 
     public void DisbandGroup(long actorId, DateTime now)

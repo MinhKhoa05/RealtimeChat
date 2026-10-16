@@ -25,14 +25,7 @@ public class SetConversationPinUseCase
                 ct)
             ?? throw new NotFoundException();
 
-        if (request.IsPinned)
-        {
-            member.Pin();
-        }
-        else
-        {
-            member.Unpin();
-        }
+        member.SetPin(request.IsPinned);
 
         await _context.SaveChangesAsync(ct);
     }

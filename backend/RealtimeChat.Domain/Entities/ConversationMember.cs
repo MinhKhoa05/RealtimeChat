@@ -43,24 +43,14 @@ public class ConversationMember : BaseEntity
 
     public bool IsAdmin() => Role == ConversationMemberRole.Admin;
 
-    public void SetAdmin()
+    public void SetRole(ConversationMemberRole role)
     {
-        Role = ConversationMemberRole.Admin;
+        Role = role;
     }
 
-    public void SetMember()
+    public void SetPin(bool isPinned)
     {
-        Role = ConversationMemberRole.Member;
-    }
-
-    public void Pin()
-    {
-        IsPinned = true;
-    }
-
-    public void Unpin()
-    {
-        IsPinned = false;
+        IsPinned = isPinned;
     }
 
     public void MarkAsRead(long messageId)

@@ -9,7 +9,9 @@ public static class MessageMapper
 {
     public static MessageResponse ToResponse(Message message)
     {
-        if (message.IsRecalled())
+        var isRecalled = message.RecalledAt.HasValue;
+
+        if (isRecalled)
         {
             return new MessageResponse
             {
@@ -18,7 +20,7 @@ public static class MessageMapper
                 SenderId = message.SenderId,
                 Type = message.Type,
                 CreatedAt = message.CreatedAt,
-                IsRecalled = true,
+                IsRecalled = isRecalled,
             };
         }
 
@@ -63,10 +65,10 @@ public static class MessageMapper
                 ? null
                 : new MessageResponse
                 {
-                    Id = message.Id,
-                    SenderId = message.SenderId,
-                    Type = message.Type,
-                    IsRecalled = message.IsRecalled(),
+                    Id = message.ReplyToMessage.Id,
+                    SenderId = message.ReplyToMessage.SenderId,
+                    Type = message.ReplyToMessage.Type,
+                    IsRecalled = message.ReplyToMessage.RecalledAt.HasValue,
                 },
 
             IsRecalled = false

@@ -221,6 +221,12 @@ Docker Compose sẽ build và khởi chạy toàn bộ dịch vụ được cấ
 
 Nginx đóng vai trò reverse proxy, định tuyến các request đến frontend hoặc backend API tương ứng.
 
+## Added Documentation
+
+| Tài liệu | Nội dung |
+| -------- | -------- |
+| [Thiết kế cơ sở dữ liệu](./docs/database_design.md) | Sơ đồ ERD và mô tả cấu trúc cơ sở dữ liệu. |
+
 ## Project Status
 
 Đang trong quá trình phát triển.

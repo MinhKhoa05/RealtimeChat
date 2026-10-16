@@ -1,6 +1,6 @@
 namespace RealtimeChat.Domain.Entities;
 
-public class PostLike : BaseEntity
+public class PostLike
 {
     public long PostId { get; private set; }
     public Post Post { get; private set; } = null!;

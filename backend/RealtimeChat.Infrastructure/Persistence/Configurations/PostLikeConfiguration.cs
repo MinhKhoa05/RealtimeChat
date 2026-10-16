@@ -4,12 +4,10 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class PostLikeConfiguration : BaseEntityConfiguration<PostLike>
+public class PostLikeConfiguration : IEntityTypeConfiguration<PostLike>
 {
-    public override void Configure(EntityTypeBuilder<PostLike> builder)
+    public void Configure(EntityTypeBuilder<PostLike> builder)
     {
-        base.Configure(builder);
-
         builder.HasOne(l => l.Post)
             .WithMany(p => p.Likes)
             .HasForeignKey(l => l.PostId)
@@ -20,10 +18,6 @@ public class PostLikeConfiguration : BaseEntityConfiguration<PostLike>
             .HasForeignKey(l => l.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // A user can like a post only once.
-        builder.HasIndex(l => new { l.PostId, l.UserId })
-            .IsUnique();
-
-        builder.HasIndex(l => new { l.UserId, l.CreatedAt });
+        builder.HasKey(l => new { l.PostId, l.UserId });
     }
 }

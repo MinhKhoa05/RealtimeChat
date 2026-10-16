@@ -61,6 +61,7 @@ public class SendMessageUseCase
                     ?? throw new NotFoundException();
             }
 
+            // Lọc ra các mention hợp lệ (đang là thành viên của conversation)
             var mentionUserIds = await _context.ConversationMembers
                 .Where(x => x.ConversationId == conversationId)
                 .Where(x => request.MentionUserIds.Contains(x.MemberId))

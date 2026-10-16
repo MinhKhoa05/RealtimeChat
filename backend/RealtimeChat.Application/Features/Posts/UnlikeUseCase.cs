@@ -18,7 +18,7 @@ public class UnlikePostUseCase
     {
         var currentUserId = _currentUser.UserId;
 
-        var like = await _context.PostLikes.FirstOrDefaultAsync(x => x.Id == postId && x.UserId == currentUserId, ct);
+        var like = await _context.PostLikes.FirstOrDefaultAsync(x => x.PostId == postId && x.UserId == currentUserId, ct);
 
         if (like is null)
             return;

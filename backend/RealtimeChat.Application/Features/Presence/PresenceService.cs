@@ -10,14 +10,11 @@ public class PresenceService : IPresenceService
     private readonly IPresenceTracker _tracker;
     private readonly IClientNotifier _notifier;
 
-    private readonly TimeProvider _timeProvider;
-
-    public PresenceService(IAppDbContext context, IPresenceTracker tracker, IClientNotifier notifier, TimeProvider timeProvider)
+    public PresenceService(IAppDbContext context, IPresenceTracker tracker, IClientNotifier notifier)
     {
         _context = context;
         _tracker = tracker;
         _notifier = notifier;
-        _timeProvider = timeProvider;
     }
 
     public async Task ConnectAsync(long userId, string connectionId, CancellationToken ct = default)
@@ -42,7 +39,7 @@ public class PresenceService : IPresenceService
                 return;
             }
 
-            user.MaskLastSeen(_timeProvider.GetUtcNow().UtcDateTime);
+            user.MaskLastSeen(DateTime.UtcNow);
             await _context.SaveChangesAsync(ct);
 
             await NotifyToFriendsAsync(userId, "user.offline", ct);

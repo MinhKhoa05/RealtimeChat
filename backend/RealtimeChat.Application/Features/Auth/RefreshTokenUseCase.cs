@@ -9,13 +9,11 @@ public class RefreshTokenUseCase
 {
     private readonly IAppDbContext _context;
     private readonly ITokenService _tokenService;
-    private readonly TimeProvider _timeProvider;
 
-    public RefreshTokenUseCase(IAppDbContext context, ITokenService tokenService, TimeProvider timeProvider)
+    public RefreshTokenUseCase(IAppDbContext context, ITokenService tokenService)
     {
         _context = context;
         _tokenService = tokenService;
-        _timeProvider = timeProvider;
     }
 
     public async Task<RefreshTokenResponse> ExecuteAsync(RefreshTokenRequest request, CancellationToken ct)
@@ -26,7 +24,7 @@ public class RefreshTokenUseCase
             .FirstOrDefaultAsync(x => x.TokenHash == refreshTokenHash, ct)
             ?? throw new UnauthorizedException("Invalid refresh token.");
 
-        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        var now = DateTime.UtcNow;
 
         if (!refreshToken.IsUsable(now))
         {

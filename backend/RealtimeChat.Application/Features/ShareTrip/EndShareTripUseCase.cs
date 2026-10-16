@@ -8,14 +8,12 @@ public class EndShareTripUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
-    private readonly TimeProvider _timeProvider;
 
-    public EndShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
+    public EndShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
-        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(long shareTripId, CancellationToken ct)
@@ -26,9 +24,7 @@ public class EndShareTripUseCase
             .FindAsync(shareTripId, ct)
             ?? throw new NotFoundException();
 
-        var now = _timeProvider.GetUtcNow().UtcDateTime;
-
-        trip.End(actorId, now);
+        trip.End(actorId, DateTime.UtcNow);
         await _context.SaveChangesAsync(ct);
 
         await _notifier.NotifyToConversationAsync(trip.ConversationId, "share_trip.end", shareTripId, ct);

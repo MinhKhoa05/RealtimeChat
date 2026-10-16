@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Application.QueryExtensions;
 
 namespace RealtimeChat.Application.Features.Users;
 

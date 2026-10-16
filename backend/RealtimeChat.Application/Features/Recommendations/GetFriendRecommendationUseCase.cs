@@ -12,7 +12,6 @@ public class GetFriendRecommendationUseCase
     private readonly ICurrentUser _currentUser;
     private readonly IPoolManager _poolManager;
 
-
     public GetFriendRecommendationUseCase(IAppDbContext context, ICurrentUser currentUser, IPoolManager poolManager)
     {
         _context = context;

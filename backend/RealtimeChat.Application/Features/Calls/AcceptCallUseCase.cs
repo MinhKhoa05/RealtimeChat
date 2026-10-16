@@ -10,14 +10,12 @@ public class AcceptCallUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
-    private readonly TimeProvider _timeProvider;
 
-    public AcceptCallUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider)
+    public AcceptCallUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
-        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(long callId, CancellationToken ct)
@@ -26,9 +24,7 @@ public class AcceptCallUseCase
             .FirstOrDefaultAsync(x => x.Id == callId && x.Status == CallStatus.Ringing, ct)
             ?? throw new NotFoundException();
 
-        var now = _timeProvider.GetUtcNow().UtcDateTime;
-        
-        call.Accept(_currentUser.UserId, now);
+        call.Accept(_currentUser.UserId, DateTime.UtcNow);
 
         await _context.SaveChangesAsync(ct);
 

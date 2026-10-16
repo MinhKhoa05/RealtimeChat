@@ -11,18 +11,16 @@ public class EndCallUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
-    private readonly TimeProvider _timeProvider;
     private readonly ICallHistoryService _callHistory;
     private readonly IUnitOfWork _unitOfWork;
 
-    public EndCallUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, ICallHistoryService callHistory, IUnitOfWork unitOfWork, TimeProvider timeProvider)
+    public EndCallUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, ICallHistoryService callHistory, IUnitOfWork unitOfWork)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
         _callHistory = callHistory;
         _unitOfWork = unitOfWork;
-        _timeProvider = timeProvider;
     }
 
     public async Task ExecuteAsync(long callId, CancellationToken ct)
@@ -40,7 +38,7 @@ public class EndCallUseCase
                     ? call.ReceiverId
                     : call.CallerId;
 
-                call.End(actorId, _timeProvider.GetUtcNow().UtcDateTime);
+                call.End(actorId, DateTime.UtcNow);
 
                 var message = await _callHistory.CreateAsync(call, token);
 

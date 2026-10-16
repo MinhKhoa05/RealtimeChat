@@ -13,15 +13,13 @@ public class CreateShareTripUseCase
     private readonly IAppDbContext _context;
     private readonly ICurrentUser _currentUser;
     private readonly IClientNotifier _notifier;
-    private readonly TimeProvider _timeProvider;
     private readonly IShareTripService _shareTripService;
 
-    public CreateShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, TimeProvider timeProvider, IShareTripService shareTripService)
+    public CreateShareTripUseCase(IAppDbContext context, ICurrentUser currentUser, IClientNotifier notifier, IShareTripService shareTripService)
     {
         _context = context;
         _currentUser = currentUser;
         _notifier = notifier;
-        _timeProvider = timeProvider;
         _shareTripService = shareTripService;
     }
 
@@ -48,9 +46,7 @@ public class CreateShareTripUseCase
             throw new ConflictException();
         }
 
-        var now = _timeProvider.GetUtcNow().UtcDateTime;
-
-        var trip = ShareTripSession.Create(currentUserId, conversationId, request.TripTitle, request.Destination, now);
+        var trip = ShareTripSession.Create(currentUserId, conversationId, request.TripTitle, request.Destination, DateTime.UtcNow);
         _context.ShareTripSessions.Add(trip);
 
         await _context.SaveChangesAsync(ct);

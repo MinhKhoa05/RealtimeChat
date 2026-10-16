@@ -18,8 +18,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwagger();
 
 // DI
-builder.Services.AddSingleton(TimeProvider.System);
-
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApi(builder.Configuration);

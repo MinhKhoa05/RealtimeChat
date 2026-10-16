@@ -71,6 +71,9 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<long>("AuthorId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -88,18 +91,15 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
 
                     b.HasIndex("DeletedAt");
 
-                    b.HasIndex("UserId");
-
                     b.HasIndex("PostId", "CreatedAt");
 
-                    b.ToTable("Comment");
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Conversation", b =>
@@ -341,6 +341,9 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<long>("AuthorId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
@@ -357,14 +360,11 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "CreatedAt");
+                    b.HasIndex("AuthorId", "CreatedAt");
 
-                    b.ToTable("Post");
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.PostLike", b =>
@@ -394,7 +394,7 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
                     b.HasIndex("UserId", "CreatedAt");
 
-                    b.ToTable("PostLike");
+                    b.ToTable("PostLikes");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.RefreshToken", b =>
@@ -714,21 +714,21 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Comment", b =>
                 {
+                    b.HasOne("RealtimeChat.Domain.Entities.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("RealtimeChat.Domain.Entities.Post", "Post")
                         .WithMany("Comments")
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("RealtimeChat.Domain.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                    b.Navigation("Author");
 
                     b.Navigation("Post");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Conversation", b =>
@@ -841,13 +841,13 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Post", b =>
                 {
-                    b.HasOne("RealtimeChat.Domain.Entities.User", "User")
+                    b.HasOne("RealtimeChat.Domain.Entities.User", "Author")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Author");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.PostLike", b =>

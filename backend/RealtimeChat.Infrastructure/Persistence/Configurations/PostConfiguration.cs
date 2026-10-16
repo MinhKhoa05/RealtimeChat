@@ -10,16 +10,16 @@ public class PostConfiguration : BaseEntityConfiguration<Post>
     {
         base.Configure(builder);
 
-        builder.Property(x => x.UserId)
+        builder.Property(x => x.AuthorId)
             .IsRequired();
 
         builder.Property(x => x.Content)
             .HasColumnType("text")
             .IsRequired();
 
-        builder.HasOne(x => x.User)
+        builder.HasOne(x => x.Author)
             .WithMany()
-            .HasForeignKey(x => x.UserId)
+            .HasForeignKey(x => x.AuthorId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.Comments)
@@ -32,6 +32,6 @@ public class PostConfiguration : BaseEntityConfiguration<Post>
             .HasForeignKey(l => l.PostId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(x => new { x.UserId, x.CreatedAt });
+        builder.HasIndex(x => new { x.AuthorId, x.CreatedAt });
     }
 }

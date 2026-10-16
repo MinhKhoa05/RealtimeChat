@@ -7,8 +7,8 @@ public class Comment : BaseEntity
     public long PostId { get; private set; }
     public Post Post { get; private set; } = null!;
 
-    public long UserId { get; private set; }
-    public User User { get; private set; } = null!;
+    public long AuthorId { get; private set; }
+    public User Author { get; private set; } = null!;
 
     public string Content { get; private set; } = null!;
 
@@ -16,26 +16,26 @@ public class Comment : BaseEntity
 
     private Comment() { }
 
-    public static Comment Create(long postId, long userId, string content)
+    public static Comment Create(long postId, long authorId, string content)
     {
         return new Comment
         {
             PostId = postId,
-            UserId = userId,
+            AuthorId = authorId,
             Content = content,
         };
     }
 
     public void Delete(long actorId, DateTime now)
     {
-        if (actorId != UserId)
+        if (actorId != AuthorId)
         {
             throw new ForbiddenDomainException();
         }
         
         if (DeletedAt.HasValue)
         {
-            throw new DomainException("Comment has been deleted");
+            throw new DomainException("Comment is already deleted");
         }
 
         DeletedAt = now;

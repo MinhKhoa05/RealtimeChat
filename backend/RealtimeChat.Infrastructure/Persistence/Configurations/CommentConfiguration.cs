@@ -21,9 +21,9 @@ public class CommentConfiguration : BaseEntityConfiguration<Comment>
             .HasForeignKey(c => c.PostId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(c => c.User)
+        builder.HasOne(c => c.Author)
             .WithMany()
-            .HasForeignKey(c => c.UserId)
+            .HasForeignKey(c => c.AuthorId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(c => new { c.PostId, c.CreatedAt });

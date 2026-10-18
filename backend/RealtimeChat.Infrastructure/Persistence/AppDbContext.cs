@@ -19,7 +19,6 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<Sticker> Stickers => Set<Sticker>();
     public DbSet<StickerCollection> StickerCollections => Set<StickerCollection>();
     public DbSet<UserStickerCollection> UserStickerCollections => Set<UserStickerCollection>();
-    public DbSet<Mention> Mentions => Set<Mention>();
     public DbSet<ShareTripSession> ShareTripSessions => Set<ShareTripSession>();
     public DbSet<UserLiveLocation> UserLiveLocations => Set<UserLiveLocation>();
     public DbSet<Post> Posts => Set<Post>();

@@ -22,16 +22,6 @@ public class PostConfiguration : BaseEntityConfiguration<Post>
             .HasForeignKey(x => x.AuthorId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(x => x.Comments)
-            .WithOne(c => c.Post)
-            .HasForeignKey(c => c.PostId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany(x => x.Likes)
-            .WithOne(l => l.Post)
-            .HasForeignKey(l => l.PostId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasIndex(x => new { x.AuthorId, x.CreatedAt });
     }
 }

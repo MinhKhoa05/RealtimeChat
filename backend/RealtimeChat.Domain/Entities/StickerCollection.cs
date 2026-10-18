@@ -19,7 +19,10 @@ public class StickerCollection : BaseEntity
 
     public static StickerCollection Create(long ownerId, string label)
     {
-        ValidateLabel(label);
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            throw new DomainException("Label is required.");
+        }
 
         return new StickerCollection
         {
@@ -42,21 +45,11 @@ public class StickerCollection : BaseEntity
 
     public void UpdateLabel(string newLabel)
     {
-        ValidateLabel(newLabel);
-
-        Label = newLabel.Trim();
-    }
-
-    public bool IsPublic()
-    {
-        return Visibility == StickerCollectionVisibility.Public;
-    }
-
-    private static void ValidateLabel(string label)
-    {
-        if (string.IsNullOrWhiteSpace(label))
+        if (string.IsNullOrWhiteSpace(newLabel))
         {
             throw new DomainException("Label is required.");
         }
+
+        Label = newLabel.Trim();
     }
 }

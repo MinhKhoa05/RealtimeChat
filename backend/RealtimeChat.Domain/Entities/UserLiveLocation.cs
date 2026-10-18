@@ -34,7 +34,7 @@ public class UserLiveLocation
         };
     }
 
-    public void UpdateLocation(GeoCoordinate coordinate, float? accuracyMeters, DateTime recordedAt, DateTime now)
+    public bool UpdateLocation(GeoCoordinate coordinate, float? accuracyMeters, DateTime recordedAt, DateTime now)
     {
         if (accuracyMeters is < 0)
         {
@@ -43,12 +43,13 @@ public class UserLiveLocation
 
         if (recordedAt < RecordedAt)
         {
-            return;
+            return false;
         }
 
         Coordinate = coordinate;
         AccuracyMeters = accuracyMeters;
         RecordedAt = recordedAt;
         ReceivedAt = now;
+        return true;
     }
 }

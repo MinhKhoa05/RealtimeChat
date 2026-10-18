@@ -9,7 +9,7 @@ public class PostLikeConfiguration : IEntityTypeConfiguration<PostLike>
     public void Configure(EntityTypeBuilder<PostLike> builder)
     {
         builder.HasOne(l => l.Post)
-            .WithMany(p => p.Likes)
+            .WithMany()
             .HasForeignKey(l => l.PostId)
             .OnDelete(DeleteBehavior.Restrict);
 

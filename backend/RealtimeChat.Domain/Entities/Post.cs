@@ -12,8 +12,8 @@ public class Post : BaseEntity
 
     public DateTime? DeletedAt { get; private set; }
 
-    public ICollection<Comment> Comments { get; private set; } = new List<Comment>();
-    public ICollection<PostLike> Likes { get; private set; } = new List<PostLike>();
+    private List<Comment> _comments = [];
+    private List<PostLike> _postLikes = [];
 
     private Post() { }
 
@@ -37,7 +37,7 @@ public class Post : BaseEntity
         Privacy = postPrivacy;
     }
 
-    public void Delete(long actorId, DateTime now)
+    public bool Delete(long actorId, DateTime now)
     {
         if (actorId != AuthorId)
         {
@@ -46,9 +46,23 @@ public class Post : BaseEntity
 
         if (DeletedAt.HasValue)
         {
-            throw new DomainException("Post has been deleted");
+            return false;
         }
 
         DeletedAt = now;
+        return true;
+    }
+
+    public void EnsureCanComment(long actorId)
+    {
+        if (DeletedAt.HasValue)
+        {
+            throw new DomainException("Post has been deleted");
+        }
+
+        if (Privacy == PostPrivacy.Private && actorId != AuthorId)
+        {
+            throw new ForbiddenDomainException();
+        }
     }
 }

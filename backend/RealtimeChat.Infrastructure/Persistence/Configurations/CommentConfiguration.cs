@@ -17,7 +17,7 @@ public class CommentConfiguration : BaseEntityConfiguration<Comment>
         builder.Property(c => c.DeletedAt);
 
         builder.HasOne(c => c.Post)
-            .WithMany(p => p.Comments)
+            .WithMany()
             .HasForeignKey(c => c.PostId)
             .OnDelete(DeleteBehavior.Restrict);
 

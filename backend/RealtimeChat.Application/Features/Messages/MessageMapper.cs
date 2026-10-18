@@ -48,7 +48,7 @@ public static class MessageMapper
                     Type = message.Call.Type,
                     Status = message.Call.Status,
                     CreatedAt = message.Call.CreatedAt,
-                    Duration = message.Call.Duration()
+                    Duration = message.Call.Duration
                 },
 
             _ => null

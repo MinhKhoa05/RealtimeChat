@@ -13,10 +13,11 @@ public class Conversation : BaseEntity
 
     public DateTime? DisbandedAt { get; private set; }
 
-    public string? DirectKey { get; private set; } // Ngăn tạo trùng Direct chat khi có request đồng thời.
-    public Guid? InviteCode { get; private set; } // Cho phép người dùng tham gia nhóm qua link mời.
+    public string? DirectKey { get; private set; }
+    public Guid? InviteCode { get; private set; }
 
-    public ICollection<ConversationMember> Members { get; private set; } = new List<ConversationMember>();
+    private readonly List<ConversationMember> _members = [];
+    public IReadOnlyCollection<ConversationMember> Members => _members.AsReadOnly();
 
     private Conversation() { }
 
@@ -24,7 +25,7 @@ public class Conversation : BaseEntity
     {
         if (userId == otherUserId)
         {
-            throw new DomainException("Cannot create private conversation with yourself");
+            throw new DomainException("Cannot create private conversation with yourself.");
         }
 
         var conversation = new Conversation
@@ -33,11 +34,8 @@ public class Conversation : BaseEntity
             DirectKey = directKey
         };
 
-        var member1 = ConversationMember.CreateMember(userId);
-        var member2 = ConversationMember.CreateMember(otherUserId);
-
-        conversation.Members.Add(member1);
-        conversation.Members.Add(member2);
+        conversation._members.Add(ConversationMember.CreateMember(userId));
+        conversation._members.Add(ConversationMember.CreateMember(otherUserId));
 
         return conversation;
     }
@@ -59,7 +57,7 @@ public class Conversation : BaseEntity
             throw new DomainException("Creator must not be included in member IDs.");
         }
 
-        if (memberIds.Count() < 2)
+        if (memberIds.Count < 2)
         {
             throw new DomainException("A group must have at least two invited members.");
         }
@@ -68,22 +66,33 @@ public class Conversation : BaseEntity
         {
             Name = name,
             Type = ConversationType.Group,
-            InviteCode = Guid.NewGuid(),
+            InviteCode = Guid.NewGuid()
         };
 
-        var admin = ConversationMember.CreateAdmin(actorId);
-        conversation.Members.Add(admin);
+        conversation._members.Add(ConversationMember.CreateAdmin(actorId));
 
         foreach (var memberId in memberIds)
         {
-            var member = ConversationMember.CreateMember(memberId, actorId);
-            conversation.Members.Add(member);
+            conversation._members.Add(ConversationMember.CreateMember(memberId, actorId));
         }
 
         return conversation;
     }
 
-    public void AddMember(long actorId, long memberId)
+    public void EnsureCanSendMessage(long senderId)
+    {
+        if (DisbandedAt.HasValue)
+        {
+            throw new DomainException("Conversation is inactive");
+        }
+
+        if (FindMember(senderId) is null)
+        {
+            throw new ForbiddenDomainException();
+        }
+    }
+
+    public bool AddMember(long actorId, long memberId)
     {
         EnsureGroupActive();
 
@@ -92,68 +101,76 @@ public class Conversation : BaseEntity
             throw new DomainException("You cannot add yourself to the group.");
         }
 
-        // Chỉ thành viên của nhóm mới được thêm thành viên
-        var actor = FindMember(actorId)
-            ?? throw new ForbiddenDomainException();
-
-        var member = FindMember(memberId);
-        if (member is not null)
+        if (FindMember(actorId) is null)
         {
-            throw new DomainException("User is already member.");
+            throw new ForbiddenDomainException();
         }
 
-        member = ConversationMember.CreateMember(memberId, actorId);
-        Members.Add(member);
+        if (FindMember(memberId) is not null)
+        {
+            return false;
+        }
+
+        _members.Add(ConversationMember.CreateMember(memberId, actorId));
+        return true;
     }
 
-    public void JoinByInvite(long actorId)
+    public bool JoinByInviteKey(long actorId)
     {
         EnsureGroupActive();
 
-        var member = FindMember(actorId);
-
-        if (member is not null)
+        if (FindMember(actorId) is not null)
         {
-            throw new DomainException("User is already a member.");
+            return false;
         }
 
-        member = ConversationMember.CreateMember(actorId);
-        Members.Add(member);
+        _members.Add(ConversationMember.CreateMember(actorId));
+        return true;
     }
 
-    public void KickMember(long actorId, long memberId)
+    public bool KickMember(long actorId, long memberId)
     {
         EnsureGroupActive();
 
         if (actorId == memberId)
         {
-            throw new DomainException();
+            throw new DomainException("Cannot kick yourself. Use Leave instead.");
         }
 
         var actor = FindMember(actorId);
+
         if (actor is null || !actor.IsAdmin())
         {
             throw new ForbiddenDomainException();
         }
 
-        var member = GetMemberOrThrow(memberId);
-        Members.Remove(member);
+        var member = FindMember(memberId);
+
+        if (member is null)
+        {
+            return false;
+        }
+
+        _members.Remove(member);
+        return true;
     }
 
-    public void Leave(long actorId)
+    public bool Leave(long actorId)
     {
         EnsureGroupActive();
 
         var member = GetMemberOrThrow(actorId);
+
         if (member.IsAdmin())
         {
             throw new DomainException("Admin cannot leave.");
         }
 
-        Members.Remove(member);
+        _members.Remove(member);
+        return true;
     }
 
-    public void TransferAdmin(long actorId, long newAdminId)
+    public bool TransferAdmin(long actorId, long newAdminId)
     {
         EnsureGroupActive();
 
@@ -163,33 +180,42 @@ public class Conversation : BaseEntity
         }
 
         var actor = GetMemberOrThrow(actorId);
+
         if (!actor.IsAdmin())
         {
             throw new ForbiddenDomainException();
         }
 
-        var target = GetMemberOrThrow(newAdminId);
+        var newAdmin = GetMemberOrThrow(newAdminId);
 
         actor.SetRole(ConversationMemberRole.Member);
-        target.SetRole(ConversationMemberRole.Admin);
+        newAdmin.SetRole(ConversationMemberRole.Admin);
+        return true;
     }
 
-    public void DisbandGroup(long actorId, DateTime now)
+    public bool DisbandGroup(long actorId, DateTime now)
     {
-        EnsureGroupActive();
+        EnsureGroup();
 
         var actor = GetMemberOrThrow(actorId);
+
         if (!actor.IsAdmin())
         {
             throw new ForbiddenDomainException();
+        }
+
+        if (DisbandedAt.HasValue)
+        {
+            return false;
         }
 
         DisbandedAt = now;
+        return true;
     }
 
     private ConversationMember? FindMember(long memberId)
     {
-        return Members.FirstOrDefault(x => x.MemberId == memberId);
+        return _members.FirstOrDefault(member => member.MemberId == memberId);
     }
 
     private ConversationMember GetMemberOrThrow(long memberId)
@@ -198,12 +224,17 @@ public class Conversation : BaseEntity
             ?? throw new DomainException("User is not a member.");
     }
 
-    private void EnsureGroupActive()
+    private void EnsureGroup()
     {
         if (Type != ConversationType.Group)
         {
             throw new DomainException("This operation is only available for group conversations.");
         }
+    }
+
+    private void EnsureGroupActive()
+    {
+        EnsureGroup();
 
         if (DisbandedAt.HasValue)
         {

@@ -27,7 +27,7 @@ public class JoinGroupByInviteUseCase
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        conversation.JoinByInvite(actorId);
+        conversation.JoinByInviteKey(actorId);
         await _context.SaveChangesAsync(ct);
     }
 }

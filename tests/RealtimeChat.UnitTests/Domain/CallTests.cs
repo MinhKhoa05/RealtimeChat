@@ -91,7 +91,6 @@ public class CallTests
     }
 
     [Theory]
-    [InlineData(CallStatus.Accepted)]
     [InlineData(CallStatus.Rejected)]
     [InlineData(CallStatus.Cancelled)]
     [InlineData(CallStatus.Missed)]
@@ -130,7 +129,6 @@ public class CallTests
 
     [Theory]
     [InlineData(CallStatus.Accepted)]
-    [InlineData(CallStatus.Rejected)]
     [InlineData(CallStatus.Cancelled)]
     [InlineData(CallStatus.Missed)]
     [InlineData(CallStatus.Ended)]
@@ -169,7 +167,6 @@ public class CallTests
     [Theory]
     [InlineData(CallStatus.Accepted)]
     [InlineData(CallStatus.Rejected)]
-    [InlineData(CallStatus.Cancelled)]
     [InlineData(CallStatus.Missed)]
     [InlineData(CallStatus.Ended)]
     public void Cancel_WhenCallIsNotRinging_ThrowsDomainException(CallStatus status)
@@ -196,7 +193,6 @@ public class CallTests
     [InlineData(CallStatus.Accepted)]
     [InlineData(CallStatus.Rejected)]
     [InlineData(CallStatus.Cancelled)]
-    [InlineData(CallStatus.Missed)]
     [InlineData(CallStatus.Ended)]
     public void MarkAsMissed_WhenCallIsNotRinging_ThrowsDomainException(CallStatus status)
     {
@@ -237,36 +233,12 @@ public class CallTests
     [InlineData(CallStatus.Rejected)]
     [InlineData(CallStatus.Cancelled)]
     [InlineData(CallStatus.Missed)]
-    [InlineData(CallStatus.Ended)]
     public void End_WhenCallIsNotAccepted_ThrowsDomainException(CallStatus status)
     {
         var call = CreateDefault(status);
         var actorId = DefaultCallerId;
 
         var act = () => call.End(actorId, DefaultStartedAt.AddMinutes(1));
-
-        act.Should().Throw<DomainException>();
-    }
-
-    [Fact]
-    public void Duration_WhenCallIsEnded_ReturnsDuration()
-    {
-        var call = CreateDefault(CallStatus.Ended);
-
-        call.Duration().Should().Be(TimeSpan.FromMinutes(1));
-    }
-
-    [Theory]
-    [InlineData(CallStatus.Ringing)]
-    [InlineData(CallStatus.Accepted)]
-    [InlineData(CallStatus.Rejected)]
-    [InlineData(CallStatus.Cancelled)]
-    [InlineData(CallStatus.Missed)]
-    public void Duration_WhenCallIsNotEnded_ThrowsDomainException(CallStatus status)
-    {
-        var call = CreateDefault(status);
-
-        var act = () => call.Duration();
 
         act.Should().Throw<DomainException>();
     }

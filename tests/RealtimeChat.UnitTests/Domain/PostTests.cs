@@ -60,13 +60,13 @@ public class PostTests
     }
 
     [Fact]
-    public void Delete_WhenAlreadyDeleted_ThrowsDomainException()
+    public void Delete_WhenAlreadyDeleted_ReturnFalse()
     {
         var post = CreateDefault();
         post.Delete(DefaultAuthorId, DateTime.UtcNow);
 
-        var act = () => post.Delete(DefaultAuthorId, DateTime.UtcNow);
+        var result = post.Delete(DefaultAuthorId, DateTime.UtcNow);
 
-        act.Should().Throw<DomainException>();
+        result.Should().BeFalse();
     }
 }

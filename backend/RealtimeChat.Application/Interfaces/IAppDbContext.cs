@@ -16,7 +16,6 @@ namespace RealtimeChat.Application.Interfaces
         DbSet<Sticker> Stickers { get; }
         DbSet<StickerCollection> StickerCollections { get; }
         DbSet<UserStickerCollection> UserStickerCollections { get; }
-        DbSet<Mention> Mentions { get; }
         DbSet<ShareTripSession> ShareTripSessions { get; }
         DbSet<UserLiveLocation> UserLiveLocations { get; }
         DbSet<Post> Posts { get; }

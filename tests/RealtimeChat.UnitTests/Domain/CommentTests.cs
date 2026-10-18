@@ -34,13 +34,13 @@ public class CommentTests
     }
 
     [Fact]
-    public void Delete_WhenAlreadyDeleted_ThrowsDomainException()
+    public void Delete_WhenAlreadyDeleted_ReturnFalse()
     {
         var comment = CreateDefault();
         comment.Delete(DefaultAuthorId, DateTime.UtcNow);
 
-        var act = () => comment.Delete(DefaultAuthorId, DateTime.UtcNow);
+        var result = comment.Delete(DefaultAuthorId, DateTime.UtcNow);
 
-        act.Should().Throw<DomainException>();
+        result.Should().BeFalse();
     }
 }

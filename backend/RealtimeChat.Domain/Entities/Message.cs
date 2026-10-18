@@ -32,7 +32,7 @@ public class Message : BaseEntity
     public DateTime? RecalledAt { get; private set; }
 
     private readonly List<Mention> _mentions = [];
-    public IReadOnlyCollection<Mention> Mentions => _mentions;
+    public IReadOnlyCollection<Mention> Mentions => _mentions.AsReadOnly();
 
     // Token mention dùng để xác định vị trí mention trong nội dung tin nhắn. "Ví dụ, hello <@1>"
     private static string MentionToken(long userId) => $"<@{userId}>";
@@ -103,6 +103,11 @@ public class Message : BaseEntity
 
     public static Message CreateSystem(long conversationId, string content, ICollection<long>? mentionUserIds = null)
     {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            throw new DomainException("Content is required");    
+        } 
+
         var message = new Message
         {
             ConversationId = conversationId,
@@ -117,21 +122,20 @@ public class Message : BaseEntity
 
     #endregion
 
-    public void Recall(long actorId, DateTime now)
+    public bool Recall(long actorId, DateTime now)
     {
-        if (RecalledAt.HasValue)
-        {
-            throw new DomainException("Message has already been recalled.");
-        }
-
-        if (Type == MessageType.System || Type == MessageType.Call)
-        {
-            throw new DomainException("This message type cannot be recalled.");
-        }
-
         if (actorId != SenderId)
         {
             throw new ForbiddenDomainException();
+        }
+        if (RecalledAt.HasValue)
+        {
+            return false;
+        }
+
+        if (Type is MessageType.System or MessageType.Call)
+        {
+            throw new DomainException("This message type cannot be recalled.");
         }
 
         if (now > CreatedAt.Add(RecallWindow))
@@ -142,6 +146,7 @@ public class Message : BaseEntity
         Content = null;
         _mentions.Clear();
         RecalledAt = now;
+        return true;
     }
 
     private void SetReplyTo(Message message)

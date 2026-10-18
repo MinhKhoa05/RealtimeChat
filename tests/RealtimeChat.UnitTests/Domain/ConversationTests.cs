@@ -190,62 +190,62 @@ public class ConversationTests
     }
 
     [Fact]
-    public void AddMember_WhenMemberIdIsAlreadyMember_ThrowsDomainException()
+    public void AddMember_WhenMemberIsAlreadyMember_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
         var memberId = 2L;
 
-        var act = () => conversation.AddMember(actorId, memberId);
+        var result =  conversation.AddMember(actorId, memberId);
 
-        act.Should().Throw<DomainException>();
+        result.Should().BeFalse();
     }
 
     [Fact]
-    public void JoinByInvite_WithValidInput_AddsMemberToGroup()
+    public void JoinByInviteKey_WithValidInput_AddsMemberToGroup()
     {
         var conversation = CreateGroupDefault();
         var actorId = 10L;
         var memberCount = DefaultGroupMemberIds.Count + 2; // Members + group admin + joining member
 
-        conversation.JoinByInvite(actorId);
+        conversation.JoinByInviteKey(actorId);
 
         conversation.Members.Should().HaveCount(memberCount);
         conversation.Members.Should().ContainSingle(x => x.MemberId == actorId);
     }
 
     [Fact]
-    public void JoinByInvite_WhenConversationIsDirect_ThrowsDomainException()
+    public void JoinByInviteKey_WhenConversationIsDirect_ThrowsDomainException()
     {
         var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
         var actorId = 10L;
 
-        var act = () => conversation.JoinByInvite(actorId);
+        var act = () => conversation.JoinByInviteKey(actorId);
 
         act.Should().Throw<DomainException>();
     }
 
     [Fact]
-    public void JoinByInvite_WhenGroupIsDisbanded_ThrowsDomainException()
+    public void JoinByInviteKey_WhenGroupIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
         var actorId = 10L;
 
-        var act = () => conversation.JoinByInvite(actorId);
+        var act = () => conversation.JoinByInviteKey(actorId);
 
         act.Should().Throw<DomainException>();
     }
 
     [Fact]
-    public void JoinByInvite_WhenActorIdIsAlreadyMember_ThrowsDomainException()
+    public void JoinByInviteKey_WhenActorIdIsAlreadyMember_ReturnFalse()
     {
         var conversation = CreateGroupDefault();
         var actorId = 2L;
 
-        var act = () => conversation.JoinByInvite(actorId);
+        var result = conversation.JoinByInviteKey(actorId);
 
-        act.Should().Throw<DomainException>();
+        result.Should().BeFalse();
     }
 
     [Fact]
@@ -308,15 +308,15 @@ public class ConversationTests
     }
 
     [Fact]
-    public void KickMember_WhenTargetIsNotMember_ThrowsDomainException()
+    public void KickMember_WhenTargetIsNotMember_ReturnFalse()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
         var memberId = 10L;
 
-        var act = () => conversation.KickMember(actorId, memberId);
+        var result = conversation.KickMember(actorId, memberId);
 
-        act.Should().Throw<DomainException>();
+        result.Should().BeFalse();
     }
 
     [Fact]
@@ -483,16 +483,16 @@ public class ConversationTests
     }
 
     [Fact]
-    public void DisbandGroup_WhenGroupIsDisbanded_ThrowsDomainException()
+    public void DisbandGroup_WhenGroupIsDisbanded_ReturnFalse()
     {
         var conversation = CreateGroupDefault();
         conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
 
-        var act = () => conversation.DisbandGroup(
+        var result = conversation.DisbandGroup(
             DefaultGroupAdminId,
             DefaultNow.AddMinutes(1));
 
-        act.Should().Throw<DomainException>();
+        result.Should().BeFalse();
     }
 
     [Fact]

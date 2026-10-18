@@ -17,98 +17,121 @@ public class Call : BaseEntity
     public DateTime? StartedAt { get; private set; }
     public DateTime? EndedAt { get; private set; }
 
+    public TimeSpan? Duration
+        => Status == CallStatus.Ended
+            ? EndedAt!.Value - StartedAt!.Value
+            : null;
+
     private Call() { }
 
     public static Call Create(long callerId, long receiverId, CallType type)
     {
+        if (callerId == receiverId)
+        {
+            throw new DomainException("Caller and receiver must be different.");
+        }
+
         return new Call
         {
             CallerId = callerId,
             ReceiverId = receiverId,
             Type = type,
-            Status = CallStatus.Ringing,
+            Status = CallStatus.Ringing
         };
     }
 
-    public void Accept(long actorId, DateTime now)
+    public bool Accept(long actorId, DateTime now)
     {
         if (actorId != ReceiverId)
         {
             throw new ForbiddenDomainException();
         }
 
-        if (Status != CallStatus.Ringing)
+        if (Status == CallStatus.Accepted)
         {
-            throw new DomainException("Call cannot be accepted.");
+            return false;
         }
+
+        EnsureStatus(CallStatus.Ringing, "accepted");
 
         Status = CallStatus.Accepted;
         StartedAt = now;
+        return true;
     }
 
-    public void Reject(long actorId)
+    public bool Reject(long actorId)
     {
         if (actorId != ReceiverId)
         {
             throw new ForbiddenDomainException();
         }
 
-        if (Status != CallStatus.Ringing)
+        if (Status == CallStatus.Rejected)
         {
-            throw new DomainException("Call cannot be rejected.");
+            return false;
         }
 
+        EnsureStatus(CallStatus.Ringing, "rejected");
+
         Status = CallStatus.Rejected;
+        return true;
     }
 
-    public void Cancel(long actorId)
+    public bool Cancel(long actorId)
     {
         if (actorId != CallerId)
         {
             throw new ForbiddenDomainException();
         }
 
-        if (Status != CallStatus.Ringing)
+        if (Status == CallStatus.Cancelled)
         {
-            throw new DomainException("Call cannot be cancelled.");
+            return false;
         }
+
+        EnsureStatus(CallStatus.Ringing, "cancelled");
 
         Status = CallStatus.Cancelled;
+        return true;
     }
 
-    public void MarkAsMissed()
+    public bool MarkAsMissed()
     {
-        if (Status != CallStatus.Ringing)
+        if (Status == CallStatus.Missed)
         {
-            throw new DomainException("Call cannot be missed.");
+            return false;
         }
 
+        EnsureStatus(CallStatus.Ringing, "marked as missed");
+
         Status = CallStatus.Missed;
+        return true;
     }
 
-    public void End(long actorId, DateTime now)
+    public bool End(long actorId, DateTime now)
     {
         if (actorId != CallerId && actorId != ReceiverId)
         {
             throw new ForbiddenDomainException();
         }
 
-        if (Status != CallStatus.Accepted)
+        if (Status == CallStatus.Ended)
         {
-            throw new DomainException("Call cannot be end.");
+            return false;
         }
+
+        EnsureStatus(CallStatus.Accepted, "ended");
 
         Status = CallStatus.Ended;
         EndedAt = now;
+        return true;
     }
 
-    public TimeSpan? Duration()
+    private void EnsureStatus(CallStatus expectedStatus, string action)
     {
-        if (Status != CallStatus.Ended)
+        if (Status != expectedStatus)
         {
-            throw new DomainException();
+            throw new DomainException($"Call cannot be {action}.");
         }
-
-        return EndedAt!.Value - StartedAt!.Value;
     }
 }

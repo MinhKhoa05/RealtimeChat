@@ -26,11 +26,6 @@ public class ConversationMemberConfiguration : BaseEntityConfiguration<Conversat
             .HasForeignKey(x => x.MemberId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.LastReadMessage)
-            .WithMany()
-            .HasForeignKey(x => x.LastReadMessageId)
-            .OnDelete(DeleteBehavior.SetNull);
-
         builder.HasOne(x => x.InvitedBy)
             .WithMany()
             .HasForeignKey(x => x.InvitedById)

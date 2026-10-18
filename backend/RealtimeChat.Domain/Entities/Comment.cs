@@ -18,26 +18,32 @@ public class Comment : BaseEntity
 
     public static Comment Create(long postId, long authorId, string content)
     {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            throw new DomainException("Content is required.");
+        }
+
         return new Comment
         {
             PostId = postId,
             AuthorId = authorId,
-            Content = content,
+            Content = content
         };
     }
 
-    public void Delete(long actorId, DateTime now)
+    public bool Delete(long actorId, DateTime now)
     {
         if (actorId != AuthorId)
         {
             throw new ForbiddenDomainException();
         }
-        
+
         if (DeletedAt.HasValue)
         {
-            throw new DomainException("Comment is already deleted");
+            return false;
         }
 
         DeletedAt = now;
+        return true;
     }
 }

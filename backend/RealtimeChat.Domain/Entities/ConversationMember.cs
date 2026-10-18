@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Domain.Entities;
@@ -13,7 +14,6 @@ public class ConversationMember : BaseEntity
     public ConversationMemberRole Role { get; private set; }
 
     public long? LastReadMessageId { get; private set; }
-    public Message? LastReadMessage { get; private set; }
 
     public bool IsPinned { get; private set; }
 
@@ -22,7 +22,7 @@ public class ConversationMember : BaseEntity
 
     private ConversationMember() { }
 
-    public static ConversationMember CreateMember(long userId, long? invitedById = null)
+    internal static ConversationMember CreateMember(long userId, long? invitedById = null)
     {
         return new ConversationMember
         {
@@ -32,7 +32,7 @@ public class ConversationMember : BaseEntity
         };
     }
 
-    public static ConversationMember CreateAdmin(long userId)
+    internal static ConversationMember CreateAdmin(long userId)
     {
         return new ConversationMember
         {
@@ -41,26 +41,19 @@ public class ConversationMember : BaseEntity
         };
     }
 
-    public bool IsAdmin() => Role == ConversationMemberRole.Admin;
+    internal bool IsAdmin() => Role == ConversationMemberRole.Admin;
+    internal void SetRole(ConversationMemberRole role) => Role = role;
 
-    public void SetRole(ConversationMemberRole role)
-    {
-        Role = role;
-    }
+    public void SetPin(bool isPinned) => IsPinned = isPinned;
 
-    public void SetPin(bool isPinned)
+    public bool MarkAsRead(long messageId)
     {
-        IsPinned = isPinned;
-    }
-
-    public void MarkAsRead(long messageId)
-    {
-        // Bỏ qua nếu message đã đọc có ID nhỏ hơn message cuối cùng đã đọc.
-        if (messageId < LastReadMessageId)
+        if (LastReadMessageId.HasValue && messageId < LastReadMessageId)
         {
-            return;
+            return false;
         }
 
         LastReadMessageId = messageId;
+        return true;
     }
 }

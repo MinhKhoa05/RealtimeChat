@@ -85,7 +85,7 @@ public class ShareTripSession : BaseEntity
 
     public bool IsActive(DateTime now) => Status == ShareTripStatus.Active && now < ExpiresAt;
 
-    public void End(long actorId, DateTime now)
+    public bool End(long actorId, DateTime now)
     {
         if (actorId != OwnerId)
         {
@@ -94,11 +94,12 @@ public class ShareTripSession : BaseEntity
 
         if (!IsActive(now))
         {
-            throw new DomainException("Session is not active");
+            return false;
         }
 
         Status = ShareTripStatus.Ended;
         EndedAt = now;
+        return true;
     }
 
     public bool HasEta()

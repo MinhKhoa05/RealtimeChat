@@ -16,7 +16,7 @@ public class AddMemberUseCase
         _currentUser = currentUser;
     }
 
-    public async Task ExecuteAsync(long groupId, long userId, CancellationToken ct)
+    public async Task ExecuteAsync(long conversationId, long userId, CancellationToken ct)
     {
         var currentUserId = _currentUser.UserId;
 
@@ -36,12 +36,12 @@ public class AddMemberUseCase
         }
 
         var group = await _context.Conversations
-            .FilterAccessibleGroup(groupId, currentUserId)
+            .FilterAccessibleGroup(conversationId, currentUserId)
             .WithMembers(userId) // Lấy member để kiểm tra đã tham gia nhóm chưa
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        group.AddMember(userId, currentUserId);
+        group.AddMember(currentUserId, userId);
         await _context.SaveChangesAsync(ct);
     }
 }

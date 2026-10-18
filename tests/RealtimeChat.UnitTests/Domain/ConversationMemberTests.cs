@@ -1,34 +1,19 @@
 using RealtimeChat.Domain.Entities;
-using RealtimeChat.Domain.Enums;
 using FluentAssertions;
 
 namespace RealtimeChat.UnitTests.Domain;
 
 public class ConversationMemberTests
 {
-    private const long DefaultMemberId = 1;
-    private static ConversationMember CreateMemberDefault() => ConversationMember.CreateMember(DefaultMemberId);
-
-    // Test 2 trường hợp, có người mời hoặc không có người mời (link tham gia nhóm)
-    [Theory]
-    [InlineData(null)]
-    [InlineData(2L)]
-    public void CreateMember_WithValidInput_CreateMember(long? invitedById)
+    private static ConversationMember CreateMemberDefault()
     {
-        var member = ConversationMember.CreateMember(DefaultMemberId, invitedById);
+        var conversation = Conversation.CreateGroup(
+            actorId: 1,
+            name: "Test Group",
+            memberIds: new List<long> { 2, 3 });
 
-        member.MemberId.Should().Be(DefaultMemberId);
-        member.Role.Should().Be(ConversationMemberRole.Member);
-        member.InvitedById.Should().Be(invitedById);
-    }
-
-    [Fact]
-    public void CreateAdmin_WithValidInput_CreateAdmin()
-    {
-        var admin = ConversationMember.CreateAdmin(DefaultMemberId);
-
-        admin.MemberId.Should().Be(DefaultMemberId);
-        admin.Role.Should().Be(ConversationMemberRole.Admin);
+        return conversation.Members
+            .Single(x => x.MemberId == 2);
     }
 
     [Fact]

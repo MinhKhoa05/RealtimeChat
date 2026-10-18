@@ -44,14 +44,12 @@ public class ConversationMember : BaseEntity
     internal bool IsAdmin() => Role == ConversationMemberRole.Admin;
     internal void SetRole(ConversationMemberRole role) => Role = role;
 
-    public void SetPin(bool isPinned) => IsPinned = isPinned;
+    internal void SetPinned(bool isPinned) => IsPinned = isPinned;
 
-    public bool MarkAsRead(long messageId)
+    internal bool MarkAsRead(long messageId)
     {
         if (LastReadMessageId.HasValue && messageId < LastReadMessageId)
-        {
             return false;
-        }
 
         LastReadMessageId = messageId;
         return true;

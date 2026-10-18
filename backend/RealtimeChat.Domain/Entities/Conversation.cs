@@ -24,9 +24,7 @@ public class Conversation : BaseEntity
     public static Conversation CreateDirect(long userId, long otherUserId, string directKey)
     {
         if (userId == otherUserId)
-        {
             throw new DomainException("Cannot create private conversation with yourself.");
-        }
 
         var conversation = new Conversation
         {
@@ -43,24 +41,16 @@ public class Conversation : BaseEntity
     public static Conversation CreateGroup(long actorId, string name, IList<long> memberIds)
     {
         if (string.IsNullOrWhiteSpace(name))
-        {
             throw new DomainException("Group name is required.");
-        }
 
         if (memberIds.Count != memberIds.Distinct().Count())
-        {
             throw new DomainException("Duplicate member IDs.");
-        }
 
         if (memberIds.Contains(actorId))
-        {
             throw new DomainException("Creator must not be included in member IDs.");
-        }
 
         if (memberIds.Count < 2)
-        {
             throw new DomainException("A group must have at least two invited members.");
-        }
 
         var conversation = new Conversation
         {
@@ -82,14 +72,22 @@ public class Conversation : BaseEntity
     public void EnsureCanSendMessage(long senderId)
     {
         if (DisbandedAt.HasValue)
-        {
             throw new DomainException("Conversation is inactive");
-        }
 
         if (FindMember(senderId) is null)
-        {
             throw new ForbiddenDomainException();
-        }
+    }
+
+    public bool MarkAsReadMessage(long memberId, long messageId)
+    {
+        var member = GetMemberOrThrow(memberId);
+        return member.MarkAsRead(messageId);
+    }
+
+    public void SetPinned(long memberId, bool isPinned)
+    {
+        var member = GetMemberOrThrow(memberId);
+        member.SetPinned(isPinned);
     }
 
     public bool AddMember(long actorId, long memberId)

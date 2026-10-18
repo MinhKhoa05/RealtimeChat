@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.QueryExtensions;
 
 namespace RealtimeChat.Application.Features.Conversations;
 
@@ -17,16 +18,15 @@ public class SetConversationPinUseCase
 
     public async Task ExecuteAsync(long conversationId, SetConversationPinRequest request, CancellationToken ct)
     {
-        var member = await _context.ConversationMembers
-            .FirstOrDefaultAsync(x =>
-                x.ConversationId == conversationId &&
-                x.MemberId == _currentUser.UserId &&
-                x.Conversation.DisbandedAt == null,
-                ct)
+        var userId = _currentUser.UserId;
+
+        var conversation = await _context.Conversations
+            .Where(x => x.Id == conversationId)
+            .IncludeMembers(userId)
+            .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        member.SetPin(request.IsPinned);
-
+        conversation.SetPinned(userId, request.IsPinned);
         await _context.SaveChangesAsync(ct);
     }
 }

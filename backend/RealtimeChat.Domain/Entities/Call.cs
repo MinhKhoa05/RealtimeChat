@@ -27,9 +27,7 @@ public class Call : BaseEntity
     public static Call Create(long callerId, long receiverId, CallType type)
     {
         if (callerId == receiverId)
-        {
             throw new DomainException("Caller and receiver must be different.");
-        }
 
         return new Call
         {
@@ -43,14 +41,10 @@ public class Call : BaseEntity
     public bool Accept(long actorId, DateTime now)
     {
         if (actorId != ReceiverId)
-        {
             throw new ForbiddenDomainException();
-        }
 
         if (Status == CallStatus.Accepted)
-        {
             return false;
-        }
 
         EnsureStatus(CallStatus.Ringing, "accepted");
 
@@ -62,14 +56,10 @@ public class Call : BaseEntity
     public bool Reject(long actorId)
     {
         if (actorId != ReceiverId)
-        {
             throw new ForbiddenDomainException();
-        }
 
         if (Status == CallStatus.Rejected)
-        {
             return false;
-        }
 
         EnsureStatus(CallStatus.Ringing, "rejected");
 
@@ -80,14 +70,10 @@ public class Call : BaseEntity
     public bool Cancel(long actorId)
     {
         if (actorId != CallerId)
-        {
             throw new ForbiddenDomainException();
-        }
 
         if (Status == CallStatus.Cancelled)
-        {
             return false;
-        }
 
         EnsureStatus(CallStatus.Ringing, "cancelled");
 
@@ -98,9 +84,7 @@ public class Call : BaseEntity
     public bool MarkAsMissed()
     {
         if (Status == CallStatus.Missed)
-        {
             return false;
-        }
 
         EnsureStatus(CallStatus.Ringing, "marked as missed");
 
@@ -111,14 +95,10 @@ public class Call : BaseEntity
     public bool End(long actorId, DateTime now)
     {
         if (actorId != CallerId && actorId != ReceiverId)
-        {
             throw new ForbiddenDomainException();
-        }
 
         if (Status == CallStatus.Ended)
-        {
             return false;
-        }
 
         EnsureStatus(CallStatus.Accepted, "ended");
 
@@ -130,8 +110,6 @@ public class Call : BaseEntity
     private void EnsureStatus(CallStatus expectedStatus, string action)
     {
         if (Status != expectedStatus)
-        {
             throw new DomainException($"Call cannot be {action}.");
-        }
     }
 }

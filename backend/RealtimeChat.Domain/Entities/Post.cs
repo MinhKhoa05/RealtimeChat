@@ -30,9 +30,7 @@ public class Post : BaseEntity
     public void SetPrivacy(long actorId, PostPrivacy postPrivacy)
     {
         if (actorId != AuthorId)
-        {
             throw new ForbiddenDomainException();
-        }
 
         Privacy = postPrivacy;
     }
@@ -40,29 +38,21 @@ public class Post : BaseEntity
     public bool Delete(long actorId, DateTime now)
     {
         if (actorId != AuthorId)
-        {
             throw new ForbiddenDomainException();
-        }
 
         if (DeletedAt.HasValue)
-        {
             return false;
-        }
 
         DeletedAt = now;
         return true;
     }
 
-    public void EnsureCanComment(long actorId)
+    public void EnsureCanInteract(long actorId)
     {
         if (DeletedAt.HasValue)
-        {
             throw new DomainException("Post has been deleted");
-        }
 
         if (Privacy == PostPrivacy.Private && actorId != AuthorId)
-        {
             throw new ForbiddenDomainException();
-        }
     }
 }

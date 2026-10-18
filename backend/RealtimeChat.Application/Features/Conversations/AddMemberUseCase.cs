@@ -18,30 +18,26 @@ public class AddMemberUseCase
 
     public async Task ExecuteAsync(long conversationId, long userId, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
-        if (userId == currentUserId)
-        {
+        if (userId == actorId)
             throw new BadRequestException("Cannot add yourself.");
-        }
 
         var isFriend = await _context.Relationships
             .Friends()
-            .Between(userId, currentUserId)
+            .Between(userId, actorId)
             .AnyAsync(ct);
         
         if (!isFriend)
-        {
             throw new ForbiddenException("Users must be friends");
-        }
 
-        var group = await _context.Conversations
-            .FilterAccessibleGroup(conversationId, currentUserId)
-            .WithMembers(userId) // Lấy member để kiểm tra đã tham gia nhóm chưa
+        var conversation = await _context.Conversations
+            .Where(x => x.Id == conversationId)
+            .IncludeMembers(actorId, userId)
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        group.AddMember(currentUserId, userId);
+        conversation.AddMember(actorId, userId);
         await _context.SaveChangesAsync(ct);
     }
 }

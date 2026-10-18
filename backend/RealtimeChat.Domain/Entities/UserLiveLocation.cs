@@ -20,9 +20,7 @@ public class UserLiveLocation
     public static UserLiveLocation Create(long userId, GeoCoordinate coordinate, float? accuracyMeters, DateTime recordedAt, DateTime now)
     {
         if (accuracyMeters is < 0)
-        {
             throw new DomainException("Accuracy must be non-negative.");
-        }
 
         return new UserLiveLocation
         {
@@ -37,14 +35,10 @@ public class UserLiveLocation
     public bool UpdateLocation(GeoCoordinate coordinate, float? accuracyMeters, DateTime recordedAt, DateTime now)
     {
         if (accuracyMeters is < 0)
-        {
             throw new DomainException("Accuracy must be non-negative.");
-        }
 
         if (recordedAt < RecordedAt)
-        {
             return false;
-        }
 
         Coordinate = coordinate;
         AccuracyMeters = accuracyMeters;

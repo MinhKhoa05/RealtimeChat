@@ -16,17 +16,17 @@ public class DisbandGroupUseCase
         _currentUser = currentUser;
     }
 
-    public async Task ExecuteAsync(long groupId, CancellationToken ct)
+    public async Task ExecuteAsync(long conversationId, CancellationToken ct)
     {
         var actorId = _currentUser.UserId;
 
-        var group = await _context.Conversations
-            .FilterAccessibleGroup(groupId, actorId)
-            .WithMembers(actorId) // Lấy member để kiểm tra quyền
+        var conversation = await _context.Conversations
+            .Where(x => x.Id == conversationId)
+            .IncludeMembers(actorId)
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        group.DisbandGroup(actorId, DateTime.UtcNow);
+        conversation.DisbandGroup(actorId, DateTime.UtcNow);
 
         await _context.SaveChangesAsync(ct);
     }

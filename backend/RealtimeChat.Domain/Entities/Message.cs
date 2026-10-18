@@ -45,9 +45,7 @@ public class Message : BaseEntity
     public static Message CreateText(long conversationId, long senderId, string content, ICollection<long>? mentionUserIds = null, Message? replyToMessage = null)
     {
         if (string.IsNullOrWhiteSpace(content))
-        {
             throw new DomainException("Message content cannot be empty.");
-        }
 
         var message = new Message
         {
@@ -104,9 +102,7 @@ public class Message : BaseEntity
     public static Message CreateSystem(long conversationId, string content, ICollection<long>? mentionUserIds = null)
     {
         if (string.IsNullOrWhiteSpace(content))
-        {
             throw new DomainException("Content is required");    
-        } 
 
         var message = new Message
         {
@@ -125,23 +121,16 @@ public class Message : BaseEntity
     public bool Recall(long actorId, DateTime now)
     {
         if (actorId != SenderId)
-        {
             throw new ForbiddenDomainException();
-        }
+
         if (RecalledAt.HasValue)
-        {
             return false;
-        }
 
         if (Type is MessageType.System or MessageType.Call)
-        {
             throw new DomainException("This message type cannot be recalled.");
-        }
 
         if (now > CreatedAt.Add(RecallWindow))
-        {
             throw new DomainException("Message can no longer be recalled.");
-        }
 
         Content = null;
         _mentions.Clear();
@@ -152,14 +141,10 @@ public class Message : BaseEntity
     private void SetReplyTo(Message message)
     {
         if (ConversationId != message.ConversationId)
-        {
             throw new DomainException("Cannot reply to a message in another conversation.");
-        }
 
         if (message.Type == MessageType.System)
-        {
             throw new DomainException("Cannot reply to a system message.");
-        }
 
         ReplyToMessageId = message.Id;
         ReplyToMessage = message;
@@ -168,18 +153,14 @@ public class Message : BaseEntity
     private void AddMentions(ICollection<long>? mentionUserIds)
     {
         if (string.IsNullOrWhiteSpace(Content))
-        {
             throw new DomainException("Cannot add mentions to a message with no content.");
-        }
 
         foreach (var userId in mentionUserIds?.Distinct() ?? [])
         {
             var token = MentionToken(userId);
 
             if (Content.Contains(token, StringComparison.Ordinal))
-            {
                 _mentions.Add(Mention.Create(userId));
-            }
         }
     }
 }

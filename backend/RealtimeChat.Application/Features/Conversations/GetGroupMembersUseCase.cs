@@ -17,29 +17,27 @@ public class GetGroupMembersUseCase
         _currentUser = currentUser;
     }
 
-    public async Task<List<GroupMemberResponse>> ExecuteAsync(long groupId, CancellationToken ct)
+    public async Task<List<GroupMemberResponse>> ExecuteAsync(long conversationId, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
-        var hasAccess = await _context.Conversations
-            .FilterAccessibleGroup(groupId, currentUserId)
-            .AnyAsync(ct);
-
-        if (!hasAccess)
-        {
-            throw new NotFoundException();
-        }
-
-        var members = await _context.ConversationMembers
-            .AsNoTracking()
-            .Where(x => x.ConversationId == groupId)
+        var members = await _context.Conversations
+            .Where(x => x.Id == conversationId)
+            .SelectMany(x => x.Members)
             .Select(x => new GroupMemberResponse
             {
                 MemberId = x.MemberId,
                 Role = x.Role,
+                InvitedById = x.InvitedById,
                 JoinedAt = x.CreatedAt,
             })
             .ToListAsync(ct);
+
+        var hasAccess = members.Any(x => x.MemberId == actorId);
+        if (!hasAccess)
+        {
+            throw new NotFoundException();
+        }
 
         return members;
     }
@@ -49,5 +47,6 @@ public class GroupMemberResponse
 {
     public long MemberId { get; set; }
     public ConversationMemberRole Role { get; set; }
+    public long? InvitedById { get; set; }
     public DateTime JoinedAt { get; set; }
 }

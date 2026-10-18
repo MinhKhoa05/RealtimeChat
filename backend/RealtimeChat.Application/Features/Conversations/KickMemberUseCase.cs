@@ -16,17 +16,17 @@ public class KickMemberUseCase
         _currentUser = currentUser;
     }
 
-    public async Task ExecuteAsync(long groupId, long userId, CancellationToken ct)
+    public async Task ExecuteAsync(long conversationId, long userId, CancellationToken ct)
     {
         var actorId = _currentUser.UserId;
 
-        var group = await _context.Conversations
-            .FilterAccessibleGroup(groupId, actorId)
-            .WithMembers(actorId, userId) // Lấy member liên quan để thực hiện hành động
+        var conversation = await _context.Conversations
+            .Where(x => x.Id == conversationId)
+            .IncludeMembers(actorId, userId)
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        group.KickMember(actorId, userId);
+        conversation.KickMember(actorId, userId);
         await _context.SaveChangesAsync(ct);
     }
 }

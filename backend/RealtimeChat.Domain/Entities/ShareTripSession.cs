@@ -31,9 +31,7 @@ public class ShareTripSession : BaseEntity
     public static ShareTripSession Create(long ownerId, long conversationId, string tripTitle, GeoCoordinate destination, DateTime now)
     {
         if (string.IsNullOrWhiteSpace(tripTitle))
-        {
             throw new DomainException("Trip title is required");
-        }
 
         return new ShareTripSession
         {
@@ -49,14 +47,10 @@ public class ShareTripSession : BaseEntity
     public void UpdateEta(int etaMinutes, GeoCoordinate etaLocation, DateTime now)
     {
         if (!IsActive(now))
-        {
             throw new DomainException("Session is not active");
-        }
 
         if (etaMinutes < 0)
-        {
             throw new DomainException("ETA must be non-negative.");
-        }
 
         EtaMinutes = etaMinutes;
         LastEtaLocation = etaLocation;
@@ -66,19 +60,13 @@ public class ShareTripSession : BaseEntity
     public void Extend(TimeSpan duration, DateTime now)
     {
         if (Status != ShareTripStatus.Active)
-        {
             throw new DomainException("Only active trips can be extended.");
-        }
 
         if (ExpiresAt is null || ExpiresAt <= now)
-        {
             throw new DomainException("Trip session has expired.");
-        }
 
         if (duration <= TimeSpan.Zero)
-        {
             throw new DomainException("Extension duration must be positive.");
-        }
 
         ExpiresAt = ExpiresAt.Value.Add(duration);
     }
@@ -88,14 +76,10 @@ public class ShareTripSession : BaseEntity
     public bool End(long actorId, DateTime now)
     {
         if (actorId != OwnerId)
-        {
             throw new ForbiddenDomainException();
-        }
 
         if (!IsActive(now))
-        {
             return false;
-        }
 
         Status = ShareTripStatus.Ended;
         EndedAt = now;

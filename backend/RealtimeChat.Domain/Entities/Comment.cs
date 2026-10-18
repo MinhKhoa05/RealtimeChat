@@ -19,9 +19,7 @@ public class Comment : BaseEntity
     public static Comment Create(long postId, long authorId, string content)
     {
         if (string.IsNullOrWhiteSpace(content))
-        {
             throw new DomainException("Content is required.");
-        }
 
         return new Comment
         {
@@ -34,14 +32,10 @@ public class Comment : BaseEntity
     public bool Delete(long actorId, DateTime now)
     {
         if (actorId != AuthorId)
-        {
             throw new ForbiddenDomainException();
-        }
 
         if (DeletedAt.HasValue)
-        {
             return false;
-        }
 
         DeletedAt = now;
         return true;

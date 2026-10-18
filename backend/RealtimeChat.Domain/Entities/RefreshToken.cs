@@ -29,16 +29,12 @@ public class RefreshToken : BaseEntity
     public void Revoke(DateTime now)
     {
         if (IsRevoked())
-        {
             throw new DomainException("Token has already been revoked.");
-        }
 
         RevokedAt = now;
     }
 
     public bool IsRevoked() => RevokedAt.HasValue;
-
     public bool IsExpired(DateTime now) => now >= ExpiresAt;
-
     public bool IsUsable(DateTime now) => !IsRevoked() && !IsExpired(now);
 }

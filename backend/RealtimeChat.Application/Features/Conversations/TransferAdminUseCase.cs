@@ -16,18 +16,18 @@ public class TransferAdminUseCase
         _currentUser = currentUser;
     }
 
-    public async Task ExecuteAsync(long groupId, TransferAdminRequest request, CancellationToken ct)
+    public async Task ExecuteAsync(long conversationId, TransferAdminRequest request, CancellationToken ct)
     {
         var actorId = _currentUser.UserId;
         var newAdminId = request.NewAdminId;
 
-        var group = await _context.Conversations
-            .FilterAccessibleGroup(groupId, actorId)
-            .WithMembers(actorId, newAdminId) // Lấy member liên quan để thực hiện action
+        var conversation = await _context.Conversations
+            .Where(x => x.Id == conversationId)
+            .IncludeMembers(actorId, newAdminId)
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 
-        group.TransferAdmin(actorId, newAdminId);
+        conversation.TransferAdmin(actorId, newAdminId);
         await _context.SaveChangesAsync(ct);
     }
 }

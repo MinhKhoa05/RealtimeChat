@@ -22,8 +22,7 @@ public class JoinGroupByInviteUseCase
 
         var conversation = await _context.Conversations
             .Where(x => x.InviteCode == inviteCode)
-            .Active()
-            .WithMembers(actorId) // Load Members để Domain kiểm tra thành viên đã tồn tại.
+            .IncludeMembers(actorId)
             .FirstOrDefaultAsync(ct)
             ?? throw new NotFoundException();
 

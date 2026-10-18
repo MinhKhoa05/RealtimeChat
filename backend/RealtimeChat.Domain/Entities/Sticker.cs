@@ -18,9 +18,7 @@ public class Sticker : BaseEntity
     public static Sticker Create(long collectionId, string label, Media media)
     {
         if (string.IsNullOrWhiteSpace(label))
-        {
             throw new DomainException("Lable is required.");
-        }
 
         return new Sticker
         {
@@ -35,9 +33,7 @@ public class Sticker : BaseEntity
     public void UpdateLabel(string newLabel)
     {
         if (string.IsNullOrWhiteSpace(newLabel))
-        {
             throw new DomainException("Lable is required.");
-        }
 
         Label = newLabel.Trim();
     }

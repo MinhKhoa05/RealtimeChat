@@ -43,8 +43,9 @@ public class PostTests
         var actorId = DefaultAuthorId;
         var now = DateTime.UtcNow;
 
-        post.Delete(actorId, now);
+        var isChange = post.Delete(actorId, now);
 
+        isChange.Should().BeTrue();
         post.DeletedAt.Should().Be(now);
     }
 

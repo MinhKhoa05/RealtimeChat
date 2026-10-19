@@ -8,7 +8,29 @@ public class CommentTests
 {
     private const long DefaultAuthorId = 1;
     private const long DefaultNonAuthorId = 2;
-    private static Comment CreateDefault() => Comment.Create(1, DefaultAuthorId, "Hi");
+    private const string DefautlContent = "Test Comment";
+    private static Comment CreateDefault() => Comment.Create(1, DefaultAuthorId, DefautlContent);
+
+    [Fact]
+    public void Create_WithValidInput_CreatesComment()
+    {
+        var comment = Comment.Create(1, DefaultAuthorId, DefautlContent);
+
+        comment.PostId.Should().Be(1);
+        comment.AuthorId.Should().Be(DefaultAuthorId);
+        comment.Content.Should().Be(DefautlContent);    
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("     ")]
+    public void Create_WhenContentIsNullOrEmpty_ThrowsDomainException(string? content)
+    {
+        var act = () => Comment.Create(1, DefaultAuthorId, content!);
+
+        act.Should().Throw<DomainException>();
+    }
 
     [Fact]
     public void Delete_WithValidInput_SetDeletedAt()
@@ -17,9 +39,10 @@ public class CommentTests
         var actorId = DefaultAuthorId;
         var now = DateTime.UtcNow;
 
-        comment.Delete(actorId, now);
+        var isChange = comment.Delete(actorId, now);
 
         comment.DeletedAt.Should().Be(now);
+        isChange.Should().BeTrue();
     }
 
     [Fact]

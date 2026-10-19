@@ -20,14 +20,21 @@ public class ConversationTests
             DefaultGroupName,
             new List<long>(DefaultGroupMemberIds));
 
+    private static Conversation CreateConversationDefault(ConversationType type)
+    {
+        if (type == ConversationType.Group) return CreateGroupDefault();
+
+        return Conversation.CreateDirect(1, 2);
+    }
+
     [Fact]
-    public void CreateDirect_WithValidInput_CreatesDirectConversation()
+    public void CreateDirect_WhenInputIsValid_CreatesDirectConversation()
     {
         var userId = 1L;
         var otherUserId = 2L;
-        var directKey = "1:2";
+        var directKey = Conversation.CreateDirectKey(userId, otherUserId);
 
-        var conversation = Conversation.CreateDirect(userId, otherUserId, directKey);
+        var conversation = Conversation.CreateDirect(userId, otherUserId);
 
         conversation.Type.Should().Be(ConversationType.Direct);
         conversation.DirectKey.Should().Be(directKey);
@@ -41,15 +48,14 @@ public class ConversationTests
     {
         var userId = 1L;
         var otherUserId = 1L;
-        var directKey = "1:1";
 
-        var act = () => Conversation.CreateDirect(userId, otherUserId, directKey);
+        var act = () => Conversation.CreateDirect(userId, otherUserId);
 
         act.Should().Throw<DomainException>();
     }
 
     [Fact]
-    public void CreateGroup_WithValidInput_CreatesGroup()
+    public void CreateGroup_WhenInputIsValid_CreatesGroupConversation()
     {
         var actorId = DefaultGroupAdminId;
         var name = DefaultGroupName;
@@ -99,7 +105,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void CreateGroup_WhenMembersContainActor_ThrowsDomainException()
+    public void CreateGroup_WhenMemberIdsContainActorId_ThrowsDomainException()
     {
         var actorId = DefaultGroupAdminId;
         var memberIds = new List<long>(DefaultGroupMemberIds);
@@ -113,7 +119,7 @@ public class ConversationTests
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
-    public void CreateGroup_WhenMemberIdsCountIsLessThanTwo_ThrowsDomainException(int memberCount)
+    public void CreateGroup_WhenMemberCountIsLessThanTwo_ThrowsDomainException(int memberCount)
     {
         var memberIds = new List<long>();
         for (int i = 0; i < memberCount; i++)
@@ -127,15 +133,123 @@ public class ConversationTests
     }
 
     [Fact]
-    public void AddMember_WithValidInput_AddsMemberToGroup()
+    public void EnsureCanSendMessage_WhenConversationIsDisbanded_ThrowsDomainException()
+    {
+        // Chỉ có group mới có disbanded
+        var conversation = CreateGroupDefault();
+        conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
+        var memberId = conversation.Members.First().MemberId;
+
+        var act = () => conversation.EnsureCanSendMessage(memberId);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Theory]
+    [InlineData(ConversationType.Group)]
+    [InlineData(ConversationType.Direct)]
+    public void EnsureCanSendMessage_WhenSenderIsNotMember_ThrowsForbiddenDomainException(ConversationType type)
+    {
+        var conversation = CreateConversationDefault(type);
+        var senderId = DefaultNewMemberId;
+
+        var act = () => conversation.EnsureCanSendMessage(senderId);
+
+        act.Should().Throw<ForbiddenDomainException>();
+    }
+
+    [Theory]
+    [InlineData(ConversationType.Direct)]
+    [InlineData(ConversationType.Group)]
+    public void EnsureCanSendMessage_WhenSenderIsMember_DoesNotThrow(ConversationType type)
+    {
+        var conversation = CreateConversationDefault(type);
+        var senderId = 1;
+
+        var act = () => conversation.EnsureCanSendMessage(senderId);
+
+        act.Should().NotThrow();
+    }
+
+    [Theory]
+    [InlineData(ConversationType.Direct)]
+    [InlineData(ConversationType.Group)]
+    public void UpdateReadState_WhenMemberExists_ReturnsTrue(ConversationType type)
+    {
+        var conversation = CreateConversationDefault(type);
+        var member = conversation.Members.First();
+        var messageId = 10;
+
+        var result = conversation.UpdateReadState(member.MemberId, messageId);
+
+        result.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(ConversationType.Direct)]
+    [InlineData(ConversationType.Group)]
+    public void UpdateReadState_WhenMessageIdIsOlderThanLastReadMessageId_DoesNotMoveBackward(ConversationType type)
+    {
+        var conversation = CreateConversationDefault(type);
+        var member = conversation.Members.First();
+        conversation.UpdateReadState(member.MemberId, 10);
+
+        var isChange = conversation.UpdateReadState(member.MemberId, 5);
+
+        isChange.Should().BeFalse();
+        member.LastReadMessageId.Should().Be(10);
+    }
+
+    [Theory]
+    [InlineData(ConversationType.Direct)]
+    [InlineData(ConversationType.Group)]
+    public void UpdateReadState_WhenMemberDoesNotExist_ThrowsDomainException(ConversationType type)
+    {
+        var conversation = CreateConversationDefault(type);
+        var userId = DefaultNewMemberId;
+
+        var act = () => conversation.UpdateReadState(userId, 1);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Theory]
+    [InlineData(ConversationType.Direct)]
+    [InlineData(ConversationType.Group)]
+    public void SetPinned_WhenMemberExists_SetsPinnedState(ConversationType type)
+    {
+        var conversation = CreateConversationDefault(type);
+        var member = conversation.Members.First();
+
+        conversation.SetPinned(member.MemberId, true);
+
+        member.IsPinned.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(ConversationType.Direct)]
+    [InlineData(ConversationType.Group)]
+    public void SetPinned_WhenMemberDoesNotExist_ThrowsDomainException(ConversationType type)
+    {
+        var conversation = CreateConversationDefault(type);
+        var userId = DefaultNewMemberId;
+
+        var act = () => conversation.SetPinned(userId, true);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void AddMember_WhenInputIsValid_AddsMemberToGroup()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
         var memberId = DefaultNewMemberId;
         var memberCount = DefaultGroupMemberIds.Count + 2; // Members + group admin + new member
 
-        conversation.AddMember(actorId, memberId);
+        var isChange = conversation.AddMember(actorId, memberId);
 
+        isChange.Should().BeTrue();
         conversation.Members.Should().HaveCount(memberCount);
         conversation.Members.Should().ContainSingle(x => x.MemberId == memberId);
     }
@@ -143,7 +257,7 @@ public class ConversationTests
     [Fact]
     public void AddMember_WhenConversationIsDirect_ThrowsDomainException()
     {
-        var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
+        var conversation = Conversation.CreateDirect(1L, 2L);
         var actorId = 1L;
 
         var act = () => conversation.AddMember(actorId, DefaultNewMemberId);
@@ -152,7 +266,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void AddMember_WhenGroupIsDisbanded_ThrowsDomainException()
+    public void AddMember_WhenConversationIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
@@ -166,7 +280,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void AddMember_WhenActorIdEqualsMemberId_ThrowsDomainException()
+    public void AddMember_WhenActorIsMemberBeingAdded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
@@ -190,26 +304,27 @@ public class ConversationTests
     }
 
     [Fact]
-    public void AddMember_WhenMemberIsAlreadyMember_ThrowsDomainException()
+    public void AddMember_WhenMemberAlreadyExists_ReturnsFalse()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
         var memberId = 2L;
 
-        var result =  conversation.AddMember(actorId, memberId);
+        var result = conversation.AddMember(actorId, memberId);
 
         result.Should().BeFalse();
     }
 
     [Fact]
-    public void JoinByInviteKey_WithValidInput_AddsMemberToGroup()
+    public void JoinByInviteKey_WhenInputIsValid_AddsMemberToGroup()
     {
         var conversation = CreateGroupDefault();
         var actorId = 10L;
         var memberCount = DefaultGroupMemberIds.Count + 2; // Members + group admin + joining member
 
-        conversation.JoinByInviteKey(actorId);
+        var isChange = conversation.JoinByInviteKey(actorId);
 
+        isChange.Should().BeTrue();
         conversation.Members.Should().HaveCount(memberCount);
         conversation.Members.Should().ContainSingle(x => x.MemberId == actorId);
     }
@@ -217,7 +332,7 @@ public class ConversationTests
     [Fact]
     public void JoinByInviteKey_WhenConversationIsDirect_ThrowsDomainException()
     {
-        var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
+        var conversation = Conversation.CreateDirect(1L, 2L);
         var actorId = 10L;
 
         var act = () => conversation.JoinByInviteKey(actorId);
@@ -226,7 +341,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void JoinByInviteKey_WhenGroupIsDisbanded_ThrowsDomainException()
+    public void JoinByInviteKey_WhenConversationIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
@@ -238,7 +353,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void JoinByInviteKey_WhenActorIdIsAlreadyMember_ReturnFalse()
+    public void JoinByInviteKey_WhenActorIsAlreadyMember_ReturnsFalse()
     {
         var conversation = CreateGroupDefault();
         var actorId = 2L;
@@ -249,14 +364,15 @@ public class ConversationTests
     }
 
     [Fact]
-    public void KickMember_WithValidInput_RemovesMemberFromGroup()
+    public void KickMember_WhenInputIsValid_RemovesMemberFromGroup()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
         var memberId = 2L;
 
-        conversation.KickMember(actorId, memberId);
+        var isChange = conversation.KickMember(actorId, memberId);
 
+        isChange.Should().BeTrue();
         conversation.Members.Should().HaveCount(2);
         conversation.Members.Should().NotContain(x => x.MemberId == memberId);
     }
@@ -264,7 +380,7 @@ public class ConversationTests
     [Fact]
     public void KickMember_WhenConversationIsDirect_ThrowsDomainException()
     {
-        var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
+        var conversation = Conversation.CreateDirect(1L, 2L);
 
         var act = () => conversation.KickMember(1L, 2L);
 
@@ -272,7 +388,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void KickMember_WhenGroupIsDisbanded_ThrowsDomainException()
+    public void KickMember_WhenConversationIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
@@ -283,7 +399,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void KickMember_WhenActorIdEqualsMemberId_ThrowsDomainException()
+    public void KickMember_WhenActorIsTargetMember_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
@@ -308,7 +424,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void KickMember_WhenTargetIsNotMember_ReturnFalse()
+    public void KickMember_WhenTargetIsNotMember_ReturnsFalse()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
@@ -320,13 +436,14 @@ public class ConversationTests
     }
 
     [Fact]
-    public void Leave_WithValidInput_RemovesMemberFromGroup()
+    public void Leave_WhenInputIsValid_RemovesMemberFromGroup()
     {
         var conversation = CreateGroupDefault();
         var actorId = 2L;
 
-        conversation.Leave(actorId);
+        var isChange =conversation.Leave(actorId);
 
+        isChange.Should().BeTrue();
         conversation.Members.Should().HaveCount(2);
         conversation.Members.Should().NotContain(x => x.MemberId == actorId);
     }
@@ -334,7 +451,7 @@ public class ConversationTests
     [Fact]
     public void Leave_WhenConversationIsDirect_ThrowsDomainException()
     {
-        var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
+        var conversation = Conversation.CreateDirect(1L, 2L);
 
         var act = () => conversation.Leave(1L);
 
@@ -342,7 +459,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void Leave_WhenGroupIsDisbanded_ThrowsDomainException()
+    public void Leave_WhenConversationIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
@@ -374,13 +491,15 @@ public class ConversationTests
     }
 
     [Fact]
-    public void TransferAdmin_WithValidInput_TransfersAdminRole()
+    public void TransferAdmin_WhenInputIsValid_TransfersAdminRole()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
         var newAdminId = 2L;
 
-        conversation.TransferAdmin(actorId, newAdminId);
+        var isChnage = conversation.TransferAdmin(actorId, newAdminId);
+
+        isChnage.Should().BeTrue();
 
         conversation.Members.Should().ContainSingle(x =>
             x.MemberId == newAdminId &&
@@ -394,7 +513,7 @@ public class ConversationTests
     [Fact]
     public void TransferAdmin_WhenConversationIsDirect_ThrowsDomainException()
     {
-        var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
+        var conversation = Conversation.CreateDirect(1L, 2L);
 
         var act = () => conversation.TransferAdmin(1L, 2L);
 
@@ -402,7 +521,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void TransferAdmin_WhenGroupIsDisbanded_ThrowsDomainException()
+    public void TransferAdmin_WhenConversationIsDisbanded_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);
@@ -415,7 +534,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void TransferAdmin_WhenActorIdEqualsNewAdminId_ThrowsDomainException()
+    public void TransferAdmin_WhenActorIsTargetAdmin_ThrowsDomainException()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
@@ -462,20 +581,21 @@ public class ConversationTests
     }
 
     [Fact]
-    public void DisbandGroup_WithValidInput_SetsDisbandedAt()
+    public void DisbandGroup_WhenInputIsValid_SetsDisbandedAt()
     {
         var conversation = CreateGroupDefault();
         var actorId = DefaultGroupAdminId;
 
-        conversation.DisbandGroup(actorId, DefaultNow);
+        var isChange = conversation.DisbandGroup(actorId, DefaultNow);
 
+        isChange.Should().BeTrue();
         conversation.DisbandedAt.Should().Be(DefaultNow);
     }
 
     [Fact]
     public void DisbandGroup_WhenConversationIsDirect_ThrowsDomainException()
     {
-        var conversation = Conversation.CreateDirect(1L, 2L, "1:2");
+        var conversation = Conversation.CreateDirect(1L, 2L);
 
         var act = () => conversation.DisbandGroup(1L, DefaultNow);
 
@@ -483,7 +603,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void DisbandGroup_WhenGroupIsDisbanded_ReturnFalse()
+    public void DisbandGroup_WhenGroupIsAlreadyDisbanded_ReturnsFalse()
     {
         var conversation = CreateGroupDefault();
         conversation.DisbandGroup(DefaultGroupAdminId, DefaultNow);

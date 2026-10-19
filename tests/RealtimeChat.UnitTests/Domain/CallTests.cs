@@ -1,4 +1,3 @@
-
 using FluentAssertions;
 using RealtimeChat.Domain.Entities;
 using RealtimeChat.Domain.Enums;
@@ -68,26 +67,47 @@ public class CallTests
     }
 
     [Fact]
+    public void Create_WhenCallerAndReceiverEquals_ThrowsDomainException()
+    {
+        var act = () => Call.Create(DefaultCallerId, DefaultCallerId, CallType.Audio);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
     public void Accept_WhenActorIsReceiver_StartsCall()
     {
         var call = CreateDefault();
         var actorId = DefaultReceiverId;
 
-        call.Accept(actorId, DefaultStartedAt);
+        var isChange = call.Accept(actorId, DefaultStartedAt);
 
         call.Status.Should().Be(CallStatus.Accepted);
         call.StartedAt.Should().Be(DefaultStartedAt);
+        isChange.Should().BeTrue();
     }
 
-    [Fact]
-    public void Accept_WhenActorIsNotReceiver_ThrowsForbiddenDomainException()
+    [Theory]
+    [InlineData(DefaultUnauthorizedUserId)]
+    [InlineData(DefaultCallerId)]
+    public void Accept_WhenActorIsNotReceiver_ThrowsForbiddenDomainException(long actorId)
     {
         var call = CreateDefault();
-        var actorId = DefaultUnauthorizedUserId;
 
         var act = () => call.Accept(actorId, DefaultStartedAt);
 
         act.Should().Throw<ForbiddenDomainException>();
+    }
+
+    [Fact]
+    public void Accept_WhenCallAlreadyAccepted_ReturnFalse()
+    {
+        var call = CreateDefault(CallStatus.Accepted);
+        var actorId = DefaultReceiverId;
+
+        var isChange = call.Accept(actorId, DefaultStartedAt);
+
+        isChange.Should().BeFalse();
     }
 
     [Theory]
@@ -111,20 +131,32 @@ public class CallTests
         var call = CreateDefault();
         var actorId = DefaultReceiverId;
 
-        call.Reject(actorId);
+        var isChange = call.Reject(actorId);
 
         call.Status.Should().Be(CallStatus.Rejected);
+        isChange.Should().BeTrue();
     }
 
-    [Fact]
-    public void Reject_WhenActorIsNotReceiver_ThrowsForbiddenDomainException()
+    [Theory]
+    [InlineData(DefaultUnauthorizedUserId)]
+    [InlineData(DefaultCallerId)]
+    public void Reject_WhenActorIsNotReceiver_ThrowsForbiddenDomainException(long actorId)
     {
         var call = CreateDefault();
-        var actorId = DefaultUnauthorizedUserId;
 
         var act = () => call.Reject(actorId);
 
         act.Should().Throw<ForbiddenDomainException>();
+    }
+
+     [Fact]
+    public void Rejected_WhenCallAlreadyRejected_ReturnFalse()
+    {
+        var call = CreateDefault(CallStatus.Rejected);
+
+        var isChange = call.Reject(DefaultReceiverId);
+
+        isChange.Should().BeFalse();
     }
 
     [Theory]
@@ -148,20 +180,32 @@ public class CallTests
         var call = CreateDefault();
         var actorId = DefaultCallerId;
 
-        call.Cancel(actorId);
+        var isChange = call.Cancel(actorId);
 
         call.Status.Should().Be(CallStatus.Cancelled);
+        isChange.Should().BeTrue();
     }
 
-    [Fact]
-    public void Cancel_WhenActorIsNotCaller_ThrowsForbiddenDomainException()
+    [Theory]
+    [InlineData(DefaultReceiverId)]
+    [InlineData(DefaultUnauthorizedUserId)]
+    public void Cancel_WhenActorIsNotCaller_ThrowsForbiddenDomainException(long actorId)
     {
         var call = CreateDefault();
-        var actorId = DefaultUnauthorizedUserId;
 
         var act = () => call.Cancel(actorId);
 
         act.Should().Throw<ForbiddenDomainException>();
+    }
+
+    [Fact]
+    public void Cancel_WhenCallIsAlreadyCancelled_ReturnFalse()
+    {
+        var call = CreateDefault(CallStatus.Cancelled);
+
+        var isChange = call.Cancel(DefaultCallerId);
+        
+        isChange.Should().BeFalse();
     }
 
     [Theory]
@@ -184,9 +228,20 @@ public class CallTests
     {
         var call = CreateDefault();
 
-        call.MarkAsMissed();
+        var isChange = call.MarkAsMissed();
 
         call.Status.Should().Be(CallStatus.Missed);
+        isChange.Should().BeTrue();
+    }
+
+    [Fact]
+    public void MarkAsMissed_WhenCallIsAlreadyMissed_ReturnFalse()
+    {
+        var call = CreateDefault(CallStatus.Missed);
+
+        var isChange = call.MarkAsMissed();
+
+        isChange.Should().BeFalse();
     }
 
     [Theory]
@@ -204,17 +259,18 @@ public class CallTests
     }
 
     [Theory]
-    [InlineData(1L)]
-    [InlineData(2L)]
+    [InlineData(DefaultCallerId)]
+    [InlineData(DefaultReceiverId)]
     public void End_WhenActorIsParticipant_EndsAcceptedCall(long actorId)
     {
         var call = CreateDefault(CallStatus.Accepted);
         var endTime = DefaultStartedAt.AddMinutes(1);
 
-        call.End(actorId, endTime);
+        var isChange = call.End(actorId, endTime);
 
         call.Status.Should().Be(CallStatus.Ended);
         call.EndedAt.Should().Be(endTime);
+        isChange.Should().BeTrue();
     }
 
     [Fact]
@@ -226,6 +282,16 @@ public class CallTests
         var act = () => call.End(actorId, DefaultStartedAt.AddMinutes(1));
 
         act.Should().Throw<ForbiddenDomainException>();
+    }
+
+    [Fact]
+    public void End_WhenCallIsAlreadyEnded_ReturnFalse()
+    {
+        var call = CreateDefault(CallStatus.Ended);
+
+        var isChange = call.End(DefaultCallerId, DefaultStartedAt.AddMinutes(1));
+
+        isChange.Should().BeFalse();
     }
 
     [Theory]
@@ -241,5 +307,32 @@ public class CallTests
         var act = () => call.End(actorId, DefaultStartedAt.AddMinutes(1));
 
         act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Duration_WhenCallIsEnded_ReturnDuration()
+    {
+        var call = CreateDefault(CallStatus.Accepted);
+        var duration = TimeSpan.FromMinutes(1);
+        call.End(DefaultCallerId, DefaultStartedAt.Add(duration));
+
+        var result = call.Duration;
+
+        result.Should().Be(duration);
+    }
+
+    [Theory]
+    [InlineData(CallStatus.Ringing)]
+    [InlineData(CallStatus.Rejected)]
+    [InlineData(CallStatus.Accepted)]
+    [InlineData(CallStatus.Cancelled)]
+    [InlineData(CallStatus.Missed)]
+    public void Duration_WhenCallIsNotEnded_ReturnNull(CallStatus status)
+    {
+        var call = CreateDefault(status);
+
+        var result = call.Duration;
+
+        result.Should().BeNull();
     }
 }

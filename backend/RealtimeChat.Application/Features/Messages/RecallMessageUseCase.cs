@@ -30,7 +30,7 @@ public class RecallMessageUseCase
         await _context.SaveChangesAsync(ct);
 
         var memberIds = await _context.Conversations
-            .GetMembers(message.ConversationId)            
+            .GetMembers([message.ConversationId])            
             .Select(x => x.MemberId)
             .ToListAsync(ct);
 

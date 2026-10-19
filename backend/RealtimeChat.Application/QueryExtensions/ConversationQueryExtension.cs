@@ -27,12 +27,12 @@ public static class ConversationQueryExtensions
             .Where(x => conversationIds.Contains(x.Id) && !x.DisbandedAt.HasValue)
             .SelectMany(x => x.Members);
 
-    public static IQueryable<ConversationMember> GetMembers(this IQueryable<Conversation> query, long conversationId)
-        => query.GetMembers([conversationId]);
-
     public static Task<bool> IsMemberAsync(this IQueryable<Conversation> query, long conversationId, long userId, CancellationToken ct)
-        => query.GetMembers(conversationId).Where(x => x.MemberId == userId).AnyAsync(ct); 
+        => query.GetMembers([conversationId]).Where(x => x.MemberId == userId).AnyAsync(ct); 
 
-    public static IQueryable<Conversation> WithDirectKey(this IQueryable<Conversation> query, string directKey)
-        => query.Where(x => x.Type == ConversationType.Direct && x.DirectKey == directKey);
+    public static Task<Conversation?> GetDirectConversationAsync(this IQueryable<Conversation> query, long userId, long otherUserId, CancellationToken ct)
+    {
+        var directKey = Conversation.CreateDirectKey(userId, otherUserId);
+        return query.Where(x => x.Type == ConversationType.Direct && x.DirectKey == directKey).FirstOrDefaultAsync(ct);
+    }
 }

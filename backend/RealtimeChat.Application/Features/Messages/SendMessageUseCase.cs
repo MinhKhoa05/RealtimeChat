@@ -35,7 +35,7 @@ public class SendMessageUseCase
         await _context.SaveChangesAsync(ct);
 
         var receiverIds = await _context.Conversations
-            .GetMembers(conversationId)
+            .GetMembers([conversationId])
             .Select(x => x.MemberId)
             .ToListAsync(ct);
 
@@ -58,7 +58,7 @@ public class SendMessageUseCase
             }
 
             var mentionUserIds = await _context.Conversations
-                .GetMembers(conversationId)
+                .GetMembers([conversationId])
                 .Where(m => request.MentionUserIds.Contains(m.MemberId))
                 .Select(m => m.MemberId)
                 .Distinct()

@@ -22,12 +22,7 @@ public class ConversationService : IConversationService
             throw new BadRequestException("You cannot start a conversation with yourself.");
         }
 
-        var directKey = GenerateDirectConversationKey(userId, otherUserId);
-
-        var conversation = await _context.Conversations
-            .WithDirectKey(directKey)
-            .FirstOrDefaultAsync(ct);
-
+        var conversation = await _context.Conversations.GetDirectConversationAsync(userId, otherUserId, ct);
         if (conversation is not null) return conversation;
 
         var existingUserIds = await _context.Users
@@ -38,7 +33,7 @@ public class ConversationService : IConversationService
         if (existingUserIds.Count != 2)
             throw new NotFoundException("User not found");
 
-        conversation = Conversation.CreateDirect(userId, otherUserId, directKey);
+        conversation = Conversation.CreateDirect(userId, otherUserId);
         _context.Conversations.Add(conversation);
 
         try
@@ -48,17 +43,7 @@ public class ConversationService : IConversationService
         }
         catch (DuplicateKeyException)
         {
-            return await _context.Conversations
-                .WithDirectKey(directKey)
-                .FirstAsync(ct);
+            return (await _context.Conversations.GetDirectConversationAsync(userId, otherUserId, ct))!;
         }
-    }
-
-    private static string GenerateDirectConversationKey(long userId, long otherUserId)
-    {
-        var min = Math.Min(userId, otherUserId);
-        var max = Math.Max(userId, otherUserId);
-
-        return $"{min}:{max}";
     }
 }

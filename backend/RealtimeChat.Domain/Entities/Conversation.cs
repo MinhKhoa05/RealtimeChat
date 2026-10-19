@@ -22,7 +22,7 @@ public class Conversation : BaseEntity
 
     private Conversation() { }
 
-    public static Conversation CreateDirect(long userId, long otherUserId, string directKey)
+    public static Conversation CreateDirect(long userId, long otherUserId)
     {
         if (userId == otherUserId)
             throw new DomainException("Cannot create private conversation with yourself.");
@@ -30,7 +30,7 @@ public class Conversation : BaseEntity
         var conversation = new Conversation
         {
             Type = ConversationType.Direct,
-            DirectKey = directKey
+            DirectKey = CreateDirectKey(userId, otherUserId)
         };
 
         conversation._members.Add(ConversationMember.CreateMember(userId));
@@ -210,6 +210,14 @@ public class Conversation : BaseEntity
 
         DisbandedAt = now;
         return true;
+    }
+
+    public static string CreateDirectKey(long userId, long otherUserId)
+    {
+        var min = Math.Min(userId, otherUserId);
+        var max = Math.Max(userId, otherUserId);
+
+        return $"{min}:{max}";
     }
 
     private ConversationMember? FindMember(long memberId)

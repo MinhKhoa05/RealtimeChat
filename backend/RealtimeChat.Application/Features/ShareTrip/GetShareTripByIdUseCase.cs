@@ -24,11 +24,8 @@ public class GetShareTripByIdUseCase
         var trip = await _context.ShareTripSessions.FindAsync(shareTripId, ct)
             ?? throw new NotFoundException();
 
-        var canAccessConversation = await _context.Conversations
-            .FilterAccessible(trip.ConversationId, currentUserId)
-            .AnyAsync(ct);
-
-        if (!canAccessConversation)
+        var isMember = await _context.Conversations.IsMemberAsync(trip.ConversationId, currentUserId, ct);
+        if (!isMember)
         {
             throw new ForbiddenException();
         }

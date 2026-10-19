@@ -31,10 +31,7 @@ public class AddMemberUseCase
         if (!isFriend)
             throw new ForbiddenException("Users must be friends");
 
-        var conversation = await _context.Conversations
-            .Where(x => x.Id == conversationId)
-            .IncludeMembers(actorId, userId)
-            .FirstOrDefaultAsync(ct)
+        var conversation = await _context.Conversations.GetWithMembersAsync(conversationId, [actorId, userId], ct)
             ?? throw new NotFoundException();
 
         conversation.AddMember(actorId, userId);

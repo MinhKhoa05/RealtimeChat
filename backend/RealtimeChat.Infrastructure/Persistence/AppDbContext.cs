@@ -10,9 +10,10 @@ public class AppDbContext : DbContext, IAppDbContext
 {
     public DbSet<Call> Calls => Set<Call>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
-    public DbSet<ConversationMember> ConversationMembers => Set<ConversationMember>();
+    // public DbSet<ConversationMember> ConversationMembers => Set<ConversationMember>();
     public DbSet<Media> Medias => Set<Media>();
     public DbSet<Message> Messages => Set<Message>();
+    // public DbSet<Mention> Mentions => Set<Mention>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Relationship> Relationships => Set<Relationship>();
     public DbSet<User> Users => Set<User>();

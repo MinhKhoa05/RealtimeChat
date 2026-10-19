@@ -5,15 +5,16 @@ namespace RealtimeChat.Domain.Entities;
 
 public class Conversation : BaseEntity
 {
-    public string? Name { get; private set; }
     public ConversationType Type { get; private set; }
+    
+    // Dùng cho Direct Chat
+    public string? DirectKey { get; private set; }
 
+    // Dùng cho Group Chat
+    public string? Name { get; private set; }
     public long? AvatarMediaId { get; private set; }
     public Media? AvatarMedia { get; private set; }
-
     public DateTime? DisbandedAt { get; private set; }
-
-    public string? DirectKey { get; private set; }
     public Guid? InviteCode { get; private set; }
 
     private readonly List<ConversationMember> _members = [];
@@ -38,18 +39,18 @@ public class Conversation : BaseEntity
         return conversation;
     }
 
-    public static Conversation CreateGroup(long actorId, string name, IList<long> memberIds)
+    public static Conversation CreateGroup(long actorId, string name, IList<long> inviteeUserIds)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("Group name is required.");
 
-        if (memberIds.Count != memberIds.Distinct().Count())
-            throw new DomainException("Duplicate member IDs.");
+        if (inviteeUserIds.Count != inviteeUserIds.Distinct().Count())
+            throw new DomainException("Duplicate invitee IDs.");
 
-        if (memberIds.Contains(actorId))
-            throw new DomainException("Creator must not be included in member IDs.");
+        if (inviteeUserIds.Contains(actorId))
+            throw new DomainException("Creator must not be included in invitee IDs.");
 
-        if (memberIds.Count < 2)
+        if (inviteeUserIds.Count < 2)
             throw new DomainException("A group must have at least two invited members.");
 
         var conversation = new Conversation
@@ -61,7 +62,7 @@ public class Conversation : BaseEntity
 
         conversation._members.Add(ConversationMember.CreateAdmin(actorId));
 
-        foreach (var memberId in memberIds)
+        foreach (var memberId in inviteeUserIds)
         {
             conversation._members.Add(ConversationMember.CreateMember(memberId, actorId));
         }
@@ -78,7 +79,7 @@ public class Conversation : BaseEntity
             throw new ForbiddenDomainException();
     }
 
-    public bool MarkAsReadMessage(long memberId, long messageId)
+    public bool UpdateReadState(long memberId, long messageId)
     {
         var member = GetMemberOrThrow(memberId);
         return member.MarkAsRead(messageId);

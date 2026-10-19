@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Conversations;
@@ -22,8 +21,7 @@ public class GetConversationsUseCase
 
         var query = _context.Conversations
             .AsNoTracking()
-            .AccessibleBy(currentUserId)
-            .Active();
+            .Where(x => !x.DisbandedAt.HasValue && x.Members.Any(m => m.MemberId == currentUserId));
 
         if (type.HasValue)
         {

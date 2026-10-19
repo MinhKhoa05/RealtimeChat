@@ -22,8 +22,7 @@ public class GetGroupByInviteCodeUseCase
 
         var groupInvite = await _context.Conversations
             .AsNoTracking()
-            .Where(x => x.InviteCode == inviteCode)
-            .Active()
+            .Where(x => x.InviteCode == inviteCode && !x.DisbandedAt.HasValue)
             .Select(x => new GroupInviteResponse
             {
                 AvatarUrl = null,

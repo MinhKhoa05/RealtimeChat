@@ -20,10 +20,7 @@ public class KickMemberUseCase
     {
         var actorId = _currentUser.UserId;
 
-        var conversation = await _context.Conversations
-            .Where(x => x.Id == conversationId)
-            .IncludeMembers(actorId, userId)
-            .FirstOrDefaultAsync(ct)
+        var conversation = await _context.Conversations.GetWithMembersAsync(conversationId, [actorId, userId], ct)
             ?? throw new NotFoundException();
 
         conversation.KickMember(actorId, userId);

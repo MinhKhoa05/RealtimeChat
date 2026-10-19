@@ -20,10 +20,7 @@ public class JoinGroupByInviteUseCase
     {
         var actorId = _currentUser.UserId;
 
-        var conversation = await _context.Conversations
-            .Where(x => x.InviteCode == inviteCode)
-            .IncludeMembers(actorId)
-            .FirstOrDefaultAsync(ct)
+        var conversation = await _context.Conversations.GetWithMembersByInviteCodeAsync(inviteCode, [actorId], ct)
             ?? throw new NotFoundException();
 
         conversation.JoinByInviteKey(actorId);

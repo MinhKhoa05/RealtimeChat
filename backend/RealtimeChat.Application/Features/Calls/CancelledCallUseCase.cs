@@ -44,7 +44,6 @@ public class CancelledCallUseCase
 
         // Chỉ thông báo sau khi transaction commit thành công.
         await _notifier.NotifyAsync(result.Call.ReceiverId, "call.cancelled", result.Call, ct);
-
         await _notifier.NotifyAsync(result.Call.ReceiverId, "message.created", result.Message, ct);
     }
 }

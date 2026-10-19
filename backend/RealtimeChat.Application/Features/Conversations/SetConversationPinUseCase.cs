@@ -20,10 +20,7 @@ public class SetConversationPinUseCase
     {
         var userId = _currentUser.UserId;
 
-        var conversation = await _context.Conversations
-            .Where(x => x.Id == conversationId)
-            .IncludeMembers(userId)
-            .FirstOrDefaultAsync(ct)
+        var conversation = await _context.Conversations.GetWithMembersAsync(conversationId, [userId], ct)
             ?? throw new NotFoundException();
 
         conversation.SetPinned(userId, request.IsPinned);

@@ -19,15 +19,12 @@ public class GetMessagesUseCase
 
     public async Task<CursorPaginationResult<MessageResponse>> ExecuteAsync(long conversationId, CursorPaginationQuery request, CancellationToken ct)
     {
-        var canAccessConversation = await _context.Conversations
-            .FilterAccessible(conversationId, _currentUser.UserId)
-            .AnyAsync(ct);
-
-        if (!canAccessConversation)
+        var isMember = await _context.Conversations.IsMemberAsync(conversationId, _currentUser.UserId, ct);
+        if (!isMember)
         {
             throw new ForbiddenException();
         }
-
+        
         var messages = await _context.Messages
             .AsNoTracking()
             .Where(x => x.ConversationId == conversationId)

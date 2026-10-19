@@ -25,20 +25,17 @@ public class CreateShareTripUseCase
 
     public async Task ExecuteAsync(long conversationId, CreateShareTripRequest request, CancellationToken ct)
     {
-        var currentUserId = _currentUser.UserId;
+        var actorId = _currentUser.UserId;
 
-        var canAccessConversation = await _context.Conversations
-            .FilterAccessible(conversationId, currentUserId)
-            .AnyAsync(ct);
-
-        if (!canAccessConversation)
+        var isMember = await _context.Conversations.IsMemberAsync(conversationId, actorId, ct);
+        if (!isMember)
         {
             throw new ForbiddenException();
         }
 
         var exsits = await _context.ShareTripSessions
             .Where(x => x.Status == Domain.Enums.ShareTripStatus.Active)
-            .Where(x => x.OwnerId == currentUserId && x.ConversationId == conversationId)
+            .Where(x => x.OwnerId == actorId && x.ConversationId == conversationId)
             .AnyAsync(ct);
 
         if (!exsits)
@@ -46,12 +43,12 @@ public class CreateShareTripUseCase
             throw new ConflictException();
         }
 
-        var trip = ShareTripSession.Create(currentUserId, conversationId, request.TripTitle, request.Destination, DateTime.UtcNow);
+        var trip = ShareTripSession.Create(actorId, conversationId, request.TripTitle, request.Destination, DateTime.UtcNow);
         _context.ShareTripSessions.Add(trip);
 
         await _context.SaveChangesAsync(ct);
 
-        var userLiveLocation = await _shareTripService.UpsertUserLocationAsync(currentUserId, request.CurrentLocationData, ct);
+        var userLiveLocation = await _shareTripService.UpsertUserLocationAsync(actorId, request.CurrentLocationData, ct);
 
         await _notifier.NotifyToConversationAsync(conversationId, "share_trip", trip, ct);
 

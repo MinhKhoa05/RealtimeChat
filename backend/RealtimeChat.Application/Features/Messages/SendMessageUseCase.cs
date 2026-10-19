@@ -24,22 +24,18 @@ public class SendMessageUseCase
     {
         var senderId = _currentUser.UserId;
 
-        var canAccessConversation = await _context.Conversations
-            .FilterAccessible(conversationId, senderId)
-            .AnyAsync(ct);
+        var conversation = await _context.Conversations.GetWithMembersAsync(conversationId, [senderId], ct)
+            ?? throw new NotFoundException();
 
-        if (!canAccessConversation)
-        {
-            throw new ForbiddenException();
-        }
+        conversation.EnsureCanSendMessage(senderId);
 
         var message = await CreateMessage(conversationId, senderId, request, ct);
 
         _context.Messages.Add(message);
         await _context.SaveChangesAsync(ct);
 
-        var receiverIds = await _context.ConversationMembers
-            .Where(x => x.ConversationId == conversationId)
+        var receiverIds = await _context.Conversations
+            .GetMembers(conversationId)
             .Select(x => x.MemberId)
             .ToListAsync(ct);
 
@@ -61,11 +57,10 @@ public class SendMessageUseCase
                     ?? throw new NotFoundException();
             }
 
-            // Lọc ra các mention hợp lệ (đang là thành viên của conversation)
-            var mentionUserIds = await _context.ConversationMembers
-                .Where(x => x.ConversationId == conversationId)
-                .Where(x => request.MentionUserIds.Contains(x.MemberId))
-                .Select(x => x.MemberId)
+            var mentionUserIds = await _context.Conversations
+                .GetMembers(conversationId)
+                .Where(m => request.MentionUserIds.Contains(m.MemberId))
+                .Select(m => m.MemberId)
                 .Distinct()
                 .ToListAsync(ct);
 

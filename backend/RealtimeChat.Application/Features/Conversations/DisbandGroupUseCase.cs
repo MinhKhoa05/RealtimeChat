@@ -20,10 +20,7 @@ public class DisbandGroupUseCase
     {
         var actorId = _currentUser.UserId;
 
-        var conversation = await _context.Conversations
-            .Where(x => x.Id == conversationId)
-            .IncludeMembers(actorId)
-            .FirstOrDefaultAsync(ct)
+        var conversation = await _context.Conversations.GetWithMembersAsync(conversationId, [actorId], ct)
             ?? throw new NotFoundException();
 
         conversation.DisbandGroup(actorId, DateTime.UtcNow);

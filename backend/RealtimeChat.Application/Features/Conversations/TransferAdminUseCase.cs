@@ -21,10 +21,7 @@ public class TransferAdminUseCase
         var actorId = _currentUser.UserId;
         var newAdminId = request.NewAdminId;
 
-        var conversation = await _context.Conversations
-            .Where(x => x.Id == conversationId)
-            .IncludeMembers(actorId, newAdminId)
-            .FirstOrDefaultAsync(ct)
+        var conversation = await _context.Conversations.GetWithMembersAsync(conversationId, [actorId, newAdminId], ct)
             ?? throw new NotFoundException();
 
         conversation.TransferAdmin(actorId, newAdminId);

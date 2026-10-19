@@ -21,11 +21,8 @@ public class GetConversationShareTripsUseCase
     {
         var currentUserId = _currentUser.UserId;
 
-        var canAccessConversation = await _context.Conversations
-            .FilterAccessible(conversationId, currentUserId)
-            .AnyAsync(ct);
-        
-        if (!canAccessConversation)
+        var isMember = await _context.Conversations.IsMemberAsync(conversationId, currentUserId, ct);
+        if (!isMember)
         {
             throw new ForbiddenException();
         }

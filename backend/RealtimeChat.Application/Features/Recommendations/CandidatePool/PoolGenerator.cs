@@ -55,18 +55,16 @@ public class PoolGenerator : IPoolGenerator
     {
         // Lấy các conversation đang hoạt động mà user tham gia.
         var conversationIds = _context.Conversations
-            .AsNoTracking()
-            .Active()
-            .AccessibleBy(userId)
+            .Where(x => !x.DisbandedAt.HasValue && x.Members.Any(x => x.MemberId == userId))
             .Select(x => x.Id);
 
         // Lấy danh sách user đủ điều kiện để gợi ý.
         var eligibleUserIds = GetEligibleUserIds(userId, excludedUserIds);
 
         // Lấy các thành viên đủ điều kiện trong conversation chung.
-        var sharedMembers = _context.ConversationMembers
+        var sharedMembers = _context.Conversations
+            .GetMembers(conversationIds.ToList())
             .AsNoTracking()
-            .Where(x => conversationIds.Contains(x.ConversationId))
             .Where(x => eligibleUserIds.Contains(x.MemberId));
 
         // Xếp hạng theo số conversation chung.

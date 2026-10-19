@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
+using RealtimeChat.Application.QueryExtensions;
 
 namespace RealtimeChat.Application.Features.Messages;
 
@@ -28,9 +29,8 @@ public class RecallMessageUseCase
         message.Recall(_currentUser.UserId, DateTime.UtcNow);
         await _context.SaveChangesAsync(ct);
 
-        var memberIds = await _context.ConversationMembers
-            .AsNoTracking()
-            .Where(x => x.ConversationId == message.ConversationId)
+        var memberIds = await _context.Conversations
+            .GetMembers(message.ConversationId)            
             .Select(x => x.MemberId)
             .ToListAsync(ct);
 

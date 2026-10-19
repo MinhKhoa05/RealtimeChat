@@ -7,9 +7,10 @@ namespace RealtimeChat.Application.Interfaces
     {
         DbSet<Call> Calls { get; }
         DbSet<Conversation> Conversations { get; }
-        DbSet<ConversationMember> ConversationMembers { get; }
+        // DbSet<ConversationMember> ConversationMembers { get; }
         DbSet<Media> Medias { get; }
         DbSet<Message> Messages { get; }
+        // DbSet<Mention> Mentions { get; }
         DbSet<RefreshToken> RefreshTokens { get; }
         DbSet<Relationship> Relationships { get; }
         DbSet<User> Users { get; }

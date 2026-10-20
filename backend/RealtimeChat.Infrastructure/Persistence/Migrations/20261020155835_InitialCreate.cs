@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace RealtimeChat.Infrastructure.Migrations.Persistence
+namespace RealtimeChat.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -44,13 +44,14 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
                     Type = table.Column<int>(type: "int", nullable: false),
-                    AvatarMediaId = table.Column<long>(type: "bigint", nullable: true),
-                    DisbandedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     DirectKey = table.Column<string>(type: "varchar(255)", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    Name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    AvatarMediaId = table.Column<long>(type: "bigint", nullable: true),
+                    DisbandedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    InviteCode = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
                 },
@@ -122,6 +123,71 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                     table.ForeignKey(
                         name: "FK_Calls_Users_ReceiverId",
                         column: x => x.ReceiverId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ConversationMember",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ConversationId = table.Column<long>(type: "bigint", nullable: false),
+                    MemberId = table.Column<long>(type: "bigint", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false),
+                    LastReadMessageId = table.Column<long>(type: "bigint", nullable: true),
+                    IsPinned = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    InvitedById = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConversationMember", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ConversationMember_Conversations_ConversationId",
+                        column: x => x.ConversationId,
+                        principalTable: "Conversations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ConversationMember_Users_InvitedById",
+                        column: x => x.InvitedById,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_ConversationMember_Users_MemberId",
+                        column: x => x.MemberId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Posts",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    AuthorId = table.Column<long>(type: "bigint", nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Privacy = table.Column<int>(type: "int", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Posts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Posts_Users_AuthorId",
+                        column: x => x.AuthorId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -276,6 +342,63 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    PostId = table.Column<long>(type: "bigint", nullable: false),
+                    AuthorId = table.Column<long>(type: "bigint", nullable: false),
+                    Content = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    DeletedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Comments_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Comments_Users_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "PostLikes",
+                columns: table => new
+                {
+                    PostId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PostLikes", x => new { x.PostId, x.UserId });
+                    table.ForeignKey(
+                        name: "FK_PostLikes_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PostLikes_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Stickers",
                 columns: table => new
                 {
@@ -342,11 +465,11 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ConversationId = table.Column<long>(type: "bigint", nullable: false),
+                    SenderId = table.Column<long>(type: "bigint", nullable: true),
                     Type = table.Column<int>(type: "int", nullable: false),
                     Content = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ConversationId = table.Column<long>(type: "bigint", nullable: false),
-                    SenderId = table.Column<long>(type: "bigint", nullable: true),
                     MediaId = table.Column<long>(type: "bigint", nullable: true),
                     CallId = table.Column<long>(type: "bigint", nullable: true),
                     StickerId = table.Column<long>(type: "bigint", nullable: true),
@@ -398,67 +521,23 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "ConversationMembers",
+                name: "Mention",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    ConversationId = table.Column<long>(type: "bigint", nullable: false),
-                    MemberId = table.Column<long>(type: "bigint", nullable: false),
-                    Role = table.Column<int>(type: "int", nullable: false),
-                    LastReadMessageId = table.Column<long>(type: "bigint", nullable: true),
-                    IsPinned = table.Column<bool>(type: "tinyint(1)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ConversationMembers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ConversationMembers_Conversations_ConversationId",
-                        column: x => x.ConversationId,
-                        principalTable: "Conversations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ConversationMembers_Messages_LastReadMessageId",
-                        column: x => x.LastReadMessageId,
-                        principalTable: "Messages",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_ConversationMembers_Users_MemberId",
-                        column: x => x.MemberId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                })
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateTable(
-                name: "Mentions",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     MessageId = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
-                    Start = table.Column<int>(type: "int", nullable: false),
-                    Length = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    UserId = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Mentions", x => x.Id);
+                    table.PrimaryKey("PK_Mention", x => new { x.MessageId, x.UserId });
                     table.ForeignKey(
-                        name: "FK_Mentions_Messages_MessageId",
+                        name: "FK_Mention_Messages_MessageId",
                         column: x => x.MessageId,
                         principalTable: "Messages",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Mentions_Users_UserId",
+                        name: "FK_Mention_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -477,19 +556,34 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                 column: "ReceiverId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ConversationMembers_ConversationId_MemberId",
-                table: "ConversationMembers",
+                name: "IX_Comments_AuthorId",
+                table: "Comments",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_DeletedAt",
+                table: "Comments",
+                column: "DeletedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_PostId_CreatedAt",
+                table: "Comments",
+                columns: new[] { "PostId", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConversationMember_ConversationId_MemberId",
+                table: "ConversationMember",
                 columns: new[] { "ConversationId", "MemberId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ConversationMembers_LastReadMessageId",
-                table: "ConversationMembers",
-                column: "LastReadMessageId");
+                name: "IX_ConversationMember_InvitedById",
+                table: "ConversationMember",
+                column: "InvitedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ConversationMembers_MemberId",
-                table: "ConversationMembers",
+                name: "IX_ConversationMember_MemberId",
+                table: "ConversationMember",
                 column: "MemberId");
 
             migrationBuilder.CreateIndex(
@@ -501,6 +595,12 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                 name: "IX_Conversations_DirectKey",
                 table: "Conversations",
                 column: "DirectKey",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Conversations_InviteCode",
+                table: "Conversations",
+                column: "InviteCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -516,13 +616,8 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Mentions_MessageId",
-                table: "Mentions",
-                column: "MessageId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Mentions_UserId",
-                table: "Mentions",
+                name: "IX_Mention_UserId",
+                table: "Mention",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -554,6 +649,16 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                 name: "IX_Messages_StickerId",
                 table: "Messages",
                 column: "StickerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PostLikes_UserId",
+                table: "PostLikes",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Posts_AuthorId_CreatedAt",
+                table: "Posts",
+                columns: new[] { "AuthorId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_TokenHash",
@@ -641,10 +746,16 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ConversationMembers");
+                name: "Comments");
 
             migrationBuilder.DropTable(
-                name: "Mentions");
+                name: "ConversationMember");
+
+            migrationBuilder.DropTable(
+                name: "Mention");
+
+            migrationBuilder.DropTable(
+                name: "PostLikes");
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
@@ -663,6 +774,9 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
             migrationBuilder.DropTable(
                 name: "Messages");
+
+            migrationBuilder.DropTable(
+                name: "Posts");
 
             migrationBuilder.DropTable(
                 name: "Calls");

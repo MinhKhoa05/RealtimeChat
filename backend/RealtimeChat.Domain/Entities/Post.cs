@@ -12,9 +12,6 @@ public class Post : BaseEntity
 
     public DateTime? DeletedAt { get; private set; }
 
-    private List<Comment> _comments = [];
-    private List<PostLike> _postLikes = [];
-
     private Post() { }
 
     public static Post Create(long authorId, string content, PostPrivacy privacy)

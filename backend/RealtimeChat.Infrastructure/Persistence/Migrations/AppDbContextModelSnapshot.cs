@@ -8,7 +8,7 @@ using RealtimeChat.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace RealtimeChat.Infrastructure.Migrations.Persistence
+namespace RealtimeChat.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -184,14 +184,12 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
                     b.HasIndex("InvitedById");
 
-                    b.HasIndex("LastReadMessageId");
-
                     b.HasIndex("MemberId");
 
                     b.HasIndex("ConversationId", "MemberId")
                         .IsUnique();
 
-                    b.ToTable("ConversationMembers");
+                    b.ToTable("ConversationMember");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Media", b =>
@@ -252,7 +250,7 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Mentions");
+                    b.ToTable("Mention");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Message", b =>
@@ -686,7 +684,7 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                         .IsRequired();
 
                     b.HasOne("RealtimeChat.Domain.Entities.Post", "Post")
-                        .WithMany("Comments")
+                        .WithMany()
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -719,11 +717,6 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                         .HasForeignKey("InvitedById")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("RealtimeChat.Domain.Entities.Message", "LastReadMessage")
-                        .WithMany()
-                        .HasForeignKey("LastReadMessageId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("RealtimeChat.Domain.Entities.User", "Member")
                         .WithMany()
                         .HasForeignKey("MemberId")
@@ -733,8 +726,6 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
                     b.Navigation("Conversation");
 
                     b.Navigation("InvitedBy");
-
-                    b.Navigation("LastReadMessage");
 
                     b.Navigation("Member");
                 });
@@ -818,7 +809,7 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
             modelBuilder.Entity("RealtimeChat.Domain.Entities.PostLike", b =>
                 {
                     b.HasOne("RealtimeChat.Domain.Entities.Post", "Post")
-                        .WithMany("Likes")
+                        .WithMany()
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1032,13 +1023,6 @@ namespace RealtimeChat.Infrastructure.Migrations.Persistence
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Message", b =>
                 {
                     b.Navigation("Mentions");
-                });
-
-            modelBuilder.Entity("RealtimeChat.Domain.Entities.Post", b =>
-                {
-                    b.Navigation("Comments");
-
-                    b.Navigation("Likes");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.StickerCollection", b =>

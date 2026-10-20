@@ -27,6 +27,14 @@ public static class ConversationQueryExtensions
             .Where(x => conversationIds.Contains(x.Id) && !x.DisbandedAt.HasValue)
             .SelectMany(x => x.Members);
 
+    public static Task<List<long>> FilterMemberIdsAsync(this IQueryable<Conversation> query, long conversationId, IEnumerable<long> userIds, CancellationToken  ct)
+        => query
+            .GetMembers([conversationId])
+            .Where(m => userIds.Contains(m.MemberId))
+            .Select(m => m.MemberId)
+            .Distinct()
+            .ToListAsync(ct);
+        
     public static Task<bool> IsMemberAsync(this IQueryable<Conversation> query, long conversationId, long userId, CancellationToken ct)
         => query.GetMembers([conversationId]).Where(x => x.MemberId == userId).AnyAsync(ct); 
 

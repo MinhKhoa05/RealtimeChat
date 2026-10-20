@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
+using RealtimeChat.Domain.Factories;
 
 namespace RealtimeChat.Application.Features.Conversations;
 
@@ -24,6 +24,10 @@ public class JoinGroupByInviteUseCase
             ?? throw new NotFoundException();
 
         conversation.JoinByInviteKey(actorId);
+
+         var message = SystemMessageFactory.CreateMemberJoined(conversation.Id, actorId);
+        _context.Messages.Add(message);
+
         await _context.SaveChangesAsync(ct);
     }
 }

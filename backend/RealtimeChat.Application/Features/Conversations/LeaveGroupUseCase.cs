@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
+using RealtimeChat.Domain.Factories;
 
 namespace RealtimeChat.Application.Features.Conversations;
 
@@ -23,7 +23,11 @@ public class LeaveGroupUseCase
         var conversation = await _context.Conversations.GetWithMembersAsync(conversationId, [actorId], ct)
             ?? throw new NotFoundException();
 
-        conversation.Leave(actorId);        
+        conversation.Leave(actorId);
+
+        var message = SystemMessageFactory.CreateMemberLeft(conversationId, actorId);
+        _context.Messages.Add(message);
+
         await _context.SaveChangesAsync(ct);
     }
 }

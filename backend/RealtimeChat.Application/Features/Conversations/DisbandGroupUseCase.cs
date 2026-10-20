@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
+using RealtimeChat.Domain.Factories;
 
 namespace RealtimeChat.Application.Features.Conversations;
 
@@ -24,6 +24,9 @@ public class DisbandGroupUseCase
             ?? throw new NotFoundException();
 
         conversation.DisbandGroup(actorId, DateTime.UtcNow);
+
+        var message = SystemMessageFactory.CreateGroupDisbanded(conversationId, actorId);
+        _context.Messages.Add(message);
 
         await _context.SaveChangesAsync(ct);
     }

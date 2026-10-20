@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
-using RealtimeChat.Application.QueryExtensions;
 using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Application.Features.Conversations;
@@ -23,6 +22,7 @@ public class GetConversationUseCase
 
         var conversation = await _context.Conversations
             .AsNoTracking()
+            .Where(x => x.Id == conversationId)
             .Where(x => !x.DisbandedAt.HasValue && x.Members.Any(m => m.MemberId == currentUserId))
             .Select(x => new ConversationResponse
             {

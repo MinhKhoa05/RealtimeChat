@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RealtimeChat.Application.Exceptions;
 using RealtimeChat.Application.Interfaces;
 using RealtimeChat.Application.QueryExtensions;
+using RealtimeChat.Domain.Factories;
 
 namespace RealtimeChat.Application.Features.Conversations;
 
@@ -25,6 +26,10 @@ public class TransferAdminUseCase
             ?? throw new NotFoundException();
 
         conversation.TransferAdmin(actorId, newAdminId);
+
+        var message = SystemMessageFactory.CreateAdminTransferred(conversationId, actorId, newAdminId);
+        _context.Messages.Add(message);
+
         await _context.SaveChangesAsync(ct);
     }
 }

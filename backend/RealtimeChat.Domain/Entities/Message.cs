@@ -35,7 +35,7 @@ public class Message : BaseEntity
     public IReadOnlyCollection<Mention> Mentions => _mentions.AsReadOnly();
 
     // Token mention dùng để xác định vị trí mention trong nội dung tin nhắn. "Ví dụ, hello <@1>"
-    private static string MentionToken(long userId) => $"<@{userId}>";
+    public static string MentionToken(long userId) => $"<@{userId}>";
     private static readonly TimeSpan RecallWindow = TimeSpan.FromMinutes(15);
 
     private Message() { }
@@ -99,7 +99,8 @@ public class Message : BaseEntity
         };
     }
 
-    public static Message CreateSystem(long conversationId, string content, ICollection<long>? mentionUserIds = null)
+    // Chỉ cho phép gọi bên Factory
+    internal static Message CreateSystem(long conversationId, string content, ICollection<long>? mentionUserIds = null)
     {
         if (string.IsNullOrWhiteSpace(content))
             throw new DomainException("Content is required");    

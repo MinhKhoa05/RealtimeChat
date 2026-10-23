@@ -1,3 +1,4 @@
+
 name: Backend CI
 
 on:
@@ -29,70 +30,136 @@ env:
 jobs:
   backend-ci:
     name: Build & Test
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Windows, X64]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Cài SDK .NET và bật NuGet cache.
+      # 1. Dọn artifact cũ của lượt chạy trước.
+      - name: Clean Workspace Artifacts
+        shell: powershell
+        run: |
+          if (Test-Path artifacts) {
+            Remove-Item -Path artifacts -Recurse -Force
+          }
+
+      # 2. Thiết lập SDK .NET.
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          cache: true
-          cache-dependency-path: ${{ env.SOLUTION_PATH }}
 
-      # Restore dependencies trước khi build solution.
-      - name: Install Dependencies & Build
+      # 3. Khôi phục dependency và build solution.
+      # NuGet có thể tái sử dụng package đã lưu trong cache cục bộ.
+      - name: Restore & Build
+        shell: powershell
         run: |
-          dotnet restore ${{ env.SOLUTION_PATH }}
-          dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore -v minimal
+          dotnet restore $env:SOLUTION_PATH
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
 
-      # Chạy test trên các project đã được build.
+          dotnet build $env:SOLUTION_PATH `
+            --configuration Release `
+            --no-restore `
+            --verbosity minimal
+
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+      # 4. Chạy test trên output đã build, không build lại.
       - name: Run Tests
+        id: tests
+        shell: powershell
         run: |
-          dotnet test ${{ env.SOLUTION_PATH }} \
-            --configuration Release \
-            --no-restore \
-            --no-build \
-            --logger "trx" \
-            --maxcpucount \
-            --collect:"XPlat Code Coverage" \
-            --results-directory artifacts/test-results \
+          dotnet test $env:SOLUTION_PATH `
+            --configuration Release `
+            --no-restore `
+            --no-build `
+            --logger "trx" `
+            --maxcpucount `
+            --collect:"XPlat Code Coverage" `
+            --results-directory artifacts/test-results `
             -- RunConfiguration.DisableParallelization=false
 
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+      # 5. Xuất kết quả test kể cả khi test thất bại,
+      # nhưng bỏ qua nếu workflow bị hủy.
       - name: Publish Test Results
-        if: always()
+        if: ${{ !cancelled() }}
         uses: dorny/test-reporter@v2
+        continue-on-error: true
         with:
           name: Test Results
           path: artifacts/test-results/**/*.trx
           reporter: dotnet-trx
 
-      # Tạo báo cáo coverage nếu có dữ liệu.
+      # 6. Tạo báo cáo coverage nếu có dữ liệu.
       - name: Generate Coverage Report
-        if: always()
+        if: ${{ !cancelled() }}
+        shell: powershell
         run: |
-          if ! find artifacts/test-results -name 'coverage.cobertura.xml' -type f -print -quit 2>/dev/null | grep -q .; then
-            echo "No coverage data found."
+          $coverageFiles = @(
+            Get-ChildItem `
+              -Path artifacts/test-results `
+              -Filter coverage.cobertura.xml `
+              -Recurse `
+              -File `
+              -ErrorAction SilentlyContinue
+          )
+
+          if ($coverageFiles.Count -eq 0) {
+            Write-Host "Không tìm thấy dữ liệu coverage."
             exit 0
-          fi
+          }
 
-          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.11
+          # Dùng lại ReportGenerator nếu đã cài trong profile của runner.
+          $toolDir = Join-Path $env:USERPROFILE ".dotnet\tools"
+          $reportGenerator = Join-Path $toolDir "reportgenerator.exe"
 
-          reportgenerator \
-            "-reports:artifacts/test-results/**/coverage.cobertura.xml" \
-            "-targetdir:artifacts/coverage-report" \
+          if (-not (Test-Path $reportGenerator)) {
+            dotnet tool install --global `
+              dotnet-reportgenerator-globaltool `
+              --version 5.3.11
+
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+
+          if (-not (Test-Path $reportGenerator)) {
+            Write-Error "Không tìm thấy ReportGenerator: $reportGenerator"
+            exit 1
+          }
+
+          New-Item -ItemType Directory `
+            -Force artifacts/coverage-report | Out-Null
+
+          & $reportGenerator `
+            "-reports:artifacts/test-results/**/coverage.cobertura.xml" `
+            "-targetdir:artifacts/coverage-report" `
             "-reporttypes:Html;Cobertura;MarkdownSummaryGithub"
 
-          if [ -f artifacts/coverage-report/SummaryGithub.md ]; then
-            cat artifacts/coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
-          fi
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
 
-      # Lưu kết quả test và báo cáo coverage trong 7 ngày.
+          # Đưa bản tóm tắt coverage vào phần tổng kết GitHub Actions.
+          $summaryFile = "artifacts/coverage-report/SummaryGithub.md"
+
+          if (Test-Path $summaryFile) {
+            Get-Content $summaryFile |
+              Add-Content $env:GITHUB_STEP_SUMMARY
+          }
+
+      # 7. Lưu kết quả test và báo cáo coverage trong 7 ngày.
       - name: Upload Artifacts
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: test-and-coverage-artifacts

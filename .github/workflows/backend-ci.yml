@@ -2,8 +2,6 @@ name: Backend CI
 
 on:
   push:
-    branches:
-      - "**"
     paths:
       - backend/**
       - tests/**
@@ -11,17 +9,6 @@ on:
       - docker-compose.yml
       - .github/workflows/backend-ci.yml
       - .github/scripts/**
-
-  pull_request:
-    branches: [main]
-    paths:
-      - backend/**
-      - tests/**
-      - deployments/**
-      - docker-compose.yml
-      - .github/workflows/backend-ci.yml
-      - .github/scripts/**
-
   workflow_dispatch:
 
 concurrency:
@@ -35,23 +22,24 @@ permissions:
 env:
   DOTNET_VERSION: 8.0.x
   SOLUTION_PATH: backend/RealtimeChat.slnx
-  UNIT_TEST_PROJECT: tests/RealtimeChat.UnitTests/RealtimeChat.UnitTests.csproj
 
 jobs:
   backend-ci:
-    name: Build and Test
+    name: Build & Test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          skip-lts-prepass: true
 
-      - name: Cache NuGet packages
+      # Cache NuGet packages giữa các lần chạy.
+      - name: Cache NuGet
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
@@ -59,44 +47,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Restore dependencies
-        run: dotnet restore ${{ env.SOLUTION_PATH }}
-
-      - name: Build solution
-        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
-
-      - name: Run unit tests
+      - name: Build & Test
         run: |
-          dotnet test ${{ env.UNIT_TEST_PROJECT }} \
+          dotnet test ${{ env.SOLUTION_PATH }} \
             --configuration Release \
-            --no-build \
-            --no-restore \
-            --logger "trx;LogFileName=unit-tests.trx" \
+            -m \
+            --logger "trx" \
             --collect:"XPlat Code Coverage" \
             --results-directory artifacts/test-results
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-results
-          path: artifacts/test-results/
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Publish test results
+      - name: Publish Test Results
         if: always()
         uses: dorny/test-reporter@v2
         with:
-          name: Unit Tests
+          name: Test Results
           path: artifacts/test-results/**/*.trx
           reporter: dotnet-trx
 
-      - name: Generate coverage report
+      - name: Generate Coverage Report
         if: always()
         run: |
           if ! find artifacts/test-results -name 'coverage.cobertura.xml' -type f -print -quit 2>/dev/null | grep -q .; then
-            echo "No coverage data found; skipping report."
+            echo "No coverage data found."
             exit 0
           fi
 
@@ -107,18 +79,18 @@ jobs:
             "-targetdir:artifacts/coverage-report" \
             "-reporttypes:Html;Cobertura;MarkdownSummaryGithub"
 
-      - name: Add coverage summary
-        if: always()
-        run: |
           if [ -f artifacts/coverage-report/SummaryGithub.md ]; then
-            cat artifacts/coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+            cat artifacts/coverage-report/SummaryGithub.md \
+              >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Upload coverage report
+      - name: Upload Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: artifacts/coverage-report/
+          name: test-and-coverage-artifacts
+          path: |
+            artifacts/test-results/
+            artifacts/coverage-report/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 7

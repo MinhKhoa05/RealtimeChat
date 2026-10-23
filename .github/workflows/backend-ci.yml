@@ -13,13 +13,16 @@ on:
       - .github/scripts/**
 
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - backend/**
+      - tests/**
       - deployments/**
       - docker-compose.yml
       - .github/workflows/backend-ci.yml
       - .github/scripts/**
+
+  workflow_dispatch:
 
 concurrency:
   group: backend-ci-${{ github.ref }}
@@ -33,48 +36,72 @@ env:
   DOTNET_VERSION: 8.0.x
   SOLUTION_PATH: backend/RealtimeChat.slnx
   UNIT_TEST_PROJECT: tests/RealtimeChat.UnitTests/RealtimeChat.UnitTests.csproj
-  BUILD_CONFIGURATION: Release
 
 jobs:
   backend-ci:
-    name: Backend CI
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8 SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore packages
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('backend/**/*.csproj', 'tests/**/*.csproj', '**/Directory.Packages.props', '**/NuGet.config', '**/packages.lock.json', 'backend/RealtimeChat.slnx') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
         run: dotnet restore ${{ env.SOLUTION_PATH }}
 
       - name: Build solution
-        run: >
-          dotnet build ${{ env.SOLUTION_PATH }}
-          --configuration ${{ env.BUILD_CONFIGURATION }}
-          --no-restore
+        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
-      - name: Run unit tests with coverage
+      - name: Run unit tests
         run: |
           dotnet test ${{ env.UNIT_TEST_PROJECT }} \
-            --configuration ${{ env.BUILD_CONFIGURATION }} \
-            --no-restore \
+            --configuration Release \
             --no-build \
+            --no-restore \
             --logger "trx;LogFileName=unit-tests.trx" \
             --collect:"XPlat Code Coverage" \
             --results-directory artifacts/test-results
 
-      - name: Install ReportGenerator
+      - name: Upload test results
         if: always()
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: artifacts/test-results/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Publish test results
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Unit Tests
+          path: artifacts/test-results/**/*.trx
+          reporter: dotnet-trx
 
       - name: Generate coverage report
         if: always()
         run: |
+          if ! find artifacts/test-results -name 'coverage.cobertura.xml' -type f -print -quit 2>/dev/null | grep -q .; then
+            echo "No coverage data found; skipping report."
+            exit 0
+          fi
+
+          dotnet tool install --global dotnet-reportgenerator-globaltool
+
           reportgenerator \
             "-reports:artifacts/test-results/**/coverage.cobertura.xml" \
             "-targetdir:artifacts/coverage-report" \
@@ -87,18 +114,11 @@ jobs:
             cat artifacts/coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-results
-          path: artifacts/test-results
-          if-no-files-found: warn
-
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: artifacts/coverage-report
+          path: artifacts/coverage-report/
           if-no-files-found: warn
+          retention-days: 14

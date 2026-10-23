@@ -1,0 +1,65 @@
+name: Backend Mutation Testing
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: 8.0.x
+  UNIT_TEST_PROJECT: tests/RealtimeChat.UnitTests/RealtimeChat.UnitTests.csproj
+
+jobs:
+  mutation-test:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('backend/**/*.csproj', 'tests/**/*.csproj', '**/Directory.Packages.props', '**/NuGet.config', '**/packages.lock.json', 'backend/RealtimeChat.slnx') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.UNIT_TEST_PROJECT }}
+
+      - name: Install Stryker.NET
+        run: dotnet tool install --global dotnet-stryker
+
+      - name: Run mutation tests
+        working-directory: tests/RealtimeChat.UnitTests
+        run: dotnet stryker --reporter "html" --reporter "json" --reporter "markdown"
+
+      - name: Add mutation summary
+        if: always()
+        shell: bash
+        working-directory: tests/RealtimeChat.UnitTests
+        run: |
+          report=$(find StrykerOutput -name 'mutation-report.md' -type f 2>/dev/null | sort | tail -n 1)
+
+          if [ -n "$report" ]; then
+            cat "$report" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Mutation report was not generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: tests/RealtimeChat.UnitTests/StrykerOutput/
+          if-no-files-found: warn
+          retention-days: 14

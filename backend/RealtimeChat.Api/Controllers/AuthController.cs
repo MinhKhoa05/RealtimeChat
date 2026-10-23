@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealtimeChat.Application.Features.Auth;
@@ -5,7 +6,8 @@ using RealtimeChat.Application.Features.Auth;
 namespace RealtimeChat.Api.Controllers;
 
 [ApiController]
-[Route("api/auth")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/auth")]
 public class AuthController : ControllerBase
 {
     private readonly RegisterUseCase _register;
@@ -31,6 +33,9 @@ public class AuthController : ControllerBase
         _changePassword = changePassword;
     }
 
+    /// <summary>
+    /// Đăng ký tài khoản người dùng mới
+    /// </summary>
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request, CancellationToken ct)
     {
@@ -38,20 +43,29 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Đăng nhập hệ thống
+    /// </summary>
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request, CancellationToken ct)
+    public async Task<ActionResult<LoginResponse>> Login(LoginRequest request, CancellationToken ct)
     {
         var response = await _login.ExecuteAsync(request, ct);
         return Ok(response);
     }
 
+    /// <summary>
+    /// Làm mới access token bằng refresh token
+    /// </summary>
     [HttpPost("refresh")]
-    public async Task<IActionResult> RefreshToken(RefreshTokenRequest request, CancellationToken ct)
+    public async Task<ActionResult<RefreshTokenResponse>> RefreshToken(RefreshTokenRequest request, CancellationToken ct)
     {
         var response = await _refreshToken.ExecuteAsync(request, ct);
         return Ok(response);
     }
 
+    /// <summary>
+    /// Đăng xuất phiên hiện tại
+    /// </summary>
     [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(LogoutRequest request, CancellationToken ct)
@@ -60,6 +74,9 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Đăng xuất tất cả phiên hoạt động
+    /// </summary>
     [Authorize]
     [HttpPost("logout-all")]
     public async Task<IActionResult> LogoutAll(CancellationToken ct)
@@ -68,6 +85,9 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
+    /// <summary>
+    /// Đổi mật khẩu người dùng
+    /// </summary>
     [Authorize]
     [HttpPost("password/change")]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken ct)

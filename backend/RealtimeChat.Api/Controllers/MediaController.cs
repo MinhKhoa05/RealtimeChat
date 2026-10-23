@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealtimeChat.Application.Features.Media;
@@ -6,7 +7,8 @@ namespace RealtimeChat.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/media")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/media")]
 public class MediaController : ControllerBase
 {
     private readonly UploadMediaUseCase _upload;
@@ -16,8 +18,11 @@ public class MediaController : ControllerBase
         _upload = upload;
     }
 
+    /// <summary>
+    /// Tải lên tệp media (ảnh, video, tệp đính kèm)
+    /// </summary>
     [HttpPost]
-    public async Task<IActionResult> Upload(IFormFile file, CancellationToken ct)
+    public async Task<ActionResult<MediaResponse>> Upload(IFormFile file, CancellationToken ct)
     {
         await using var stream = file.OpenReadStream();
 

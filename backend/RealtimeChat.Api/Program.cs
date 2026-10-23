@@ -13,6 +13,7 @@ builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ApiResponseFilter>();
 });
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwagger();
@@ -26,8 +27,7 @@ var app = builder.Build();
 
 await app.Services.ApplyMigrationsAsync();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerDocumentation();
 
 // Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();

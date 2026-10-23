@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealtimeChat.Application.Features.Calls;
@@ -6,7 +7,8 @@ namespace RealtimeChat.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/calls")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/calls")]
 public class CallsController : ControllerBase
 {
     private readonly CreateCallUseCase _createCall;
@@ -29,13 +31,19 @@ public class CallsController : ControllerBase
         _endCall = endCall;
     }
 
+    /// <summary>
+    /// Khởi tạo cuộc gọi mới
+    /// </summary>
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateCallRequest request, CancellationToken ct)
+    public async Task<ActionResult<long>> Create([FromBody] CreateCallRequest request, CancellationToken ct)
     {
         var callId = await _createCall.ExecuteAsync(request.ReceiverId, ct);
         return Ok(callId);
     }
 
+    /// <summary>
+    /// Chấp nhận cuộc gọi
+    /// </summary>
     [HttpPost("{callId:long}/accept")]
     public async Task<IActionResult> Accept(long callId, CancellationToken ct)
     {
@@ -43,6 +51,9 @@ public class CallsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Hủy cuộc gọi đang gọi
+    /// </summary>
     [HttpPost("{callId:long}/cancel")]
     public async Task<IActionResult> Cancel(long callId, CancellationToken ct)
     {
@@ -50,6 +61,9 @@ public class CallsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Từ chối cuộc gọi đến
+    /// </summary>
     [HttpPost("{callId:long}/reject")]
     public async Task<IActionResult> Reject(long callId, CancellationToken ct)
     {
@@ -57,6 +71,9 @@ public class CallsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Kết thúc cuộc gọi
+    /// </summary>
     [HttpPost("{callId:long}/end")]
     public async Task<IActionResult> End(long callId, CancellationToken ct)
     {

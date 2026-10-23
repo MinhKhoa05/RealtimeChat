@@ -1,4 +1,5 @@
 
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealtimeChat.Application.Features.Conversations;
@@ -8,7 +9,8 @@ namespace RealtimeChat.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/conversations")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/conversations")]
 public class ConversationController : ControllerBase
 {
     private readonly OpenDirectConversationUseCase _openDirectConversation;
@@ -59,35 +61,50 @@ public class ConversationController : ControllerBase
 
     // Conversations
 
+    /// <summary>
+    /// Mở hoặc bắt đầu cuộc trò chuyện trực tiếp (1-1) với người dùng khác
+    /// </summary>
     [HttpGet("direct/{otherUserId:long}")]
-    public async Task<IActionResult> StartDirectConversation(long otherUserId, CancellationToken ct)
+    public async Task<ActionResult<long>> StartDirectConversation(long otherUserId, CancellationToken ct)
     {
         var id = await _openDirectConversation.ExecuteAsync(otherUserId, ct);
         return Ok(id);
     }
 
+    /// <summary>
+    /// Lấy danh sách cuộc trò chuyện của người dùng hiện tại
+    /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetConversations(CancellationToken ct)
+    public async Task<ActionResult<List<ConversationItem>>> GetConversations(CancellationToken ct)
     {
         // Không lọc type (lấy tất cả conversation của user
         var result = await _getConversations.ExecuteAsync(type: null, ct);
         return Ok(result);
     }
 
+    /// <summary>
+    /// Lấy danh sách các nhóm trò chuyện của người dùng hiện tại
+    /// </summary>
     [HttpGet("groups")]
-    public async Task<IActionResult> GetGroups(CancellationToken ct)
+    public async Task<ActionResult<List<ConversationItem>>> GetGroups(CancellationToken ct)
     {
         var result = await _getConversations.ExecuteAsync(ConversationType.Group, ct);
         return Ok(result);
     }
 
+    /// <summary>
+    /// Lấy thông tin chi tiết cuộc trò chuyện
+    /// </summary>
     [HttpGet("{conversationId:long}")]
-    public async Task<IActionResult> GetConversation(long conversationId, CancellationToken ct)
+    public async Task<ActionResult<ConversationResponse>> GetConversation(long conversationId, CancellationToken ct)
     {
         var result = await _getConversation.ExecuteAsync(conversationId, ct);
         return Ok(result);
     }
 
+    /// <summary>
+    /// Ghim hoặc bỏ ghim cuộc trò chuyện
+    /// </summary>
     [HttpPost("{conversationId:long}/pin")]
     public async Task<IActionResult> PinConversation(long conversationId, [FromBody] SetConversationPinRequest request, CancellationToken ct)
     {
@@ -97,20 +114,29 @@ public class ConversationController : ControllerBase
 
     // Groups
 
+    /// <summary>
+    /// Tạo nhóm trò chuyện mới
+    /// </summary>
     [HttpPost("groups")]
-    public async Task<IActionResult> CreateGroup([FromBody] CreateGroupRequest request, CancellationToken ct)
+    public async Task<ActionResult<long>> CreateGroup([FromBody] CreateGroupRequest request, CancellationToken ct)
     {
         var id = await _createGroup.ExecuteAsync(request, ct);
         return Ok(id);
     }
 
+    /// <summary>
+    /// Lấy danh sách thành viên trong nhóm
+    /// </summary>
     [HttpGet("groups/{groupId:long}/members")]
-    public async Task<IActionResult> GetGroupMembers(long groupId, CancellationToken ct)
+    public async Task<ActionResult<List<GroupMemberResponse>>> GetGroupMembers(long groupId, CancellationToken ct)
     {
         var result = await _getGroupMembers.ExecuteAsync(groupId, ct);
         return Ok(result);
     }
 
+    /// <summary>
+    /// Thêm thành viên vào nhóm
+    /// </summary>
     [HttpPost("groups/{groupId:long}/members/{userId:long}")]
     public async Task<IActionResult> AddMember(long groupId, long userId, CancellationToken ct)
     {
@@ -118,6 +144,9 @@ public class ConversationController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Xóa thành viên khỏi nhóm
+    /// </summary>
     [HttpDelete("groups/{groupId:long}/members/{userId:long}")]
     public async Task<IActionResult> KickMember(long groupId, long userId, CancellationToken ct)
     {
@@ -125,6 +154,9 @@ public class ConversationController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Rời khỏi nhóm trò chuyện
+    /// </summary>
     [HttpPost("groups/{groupId:long}/leave")]
     public async Task<IActionResult> LeaveGroup(long groupId, CancellationToken ct)
     {
@@ -132,6 +164,9 @@ public class ConversationController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Chuyển quyền quản trị viên nhóm cho thành viên khác
+    /// </summary>
     [HttpPatch("groups/{groupId:long}/admin")]
     public async Task<IActionResult> TransferAdmin(long groupId, [FromBody] TransferAdminRequest request, CancellationToken ct)
     {
@@ -139,6 +174,9 @@ public class ConversationController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Tham gia nhóm trò chuyện bằng mã mời (invite code)
+    /// </summary>
     [HttpPost("groups/join/{inviteCode:guid}")]
     public async Task<IActionResult> JoinGroupByInvite(Guid inviteCode, CancellationToken ct)
     {
@@ -146,8 +184,11 @@ public class ConversationController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Lấy thông tin nhóm bằng mã mời (invite code)
+    /// </summary>
     [HttpGet("invites/{inviteCode:guid}")]
-    public async Task<IActionResult> GetGroupByInviteCode(Guid inviteCode, CancellationToken ct)
+    public async Task<ActionResult<GroupInviteResponse>> GetGroupByInviteCode(Guid inviteCode, CancellationToken ct)
     {
         var result = await _getGroupByInviteCode.ExecuteAsync(inviteCode, ct);
         return Ok(result);

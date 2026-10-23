@@ -21,12 +21,12 @@ public class ConversationMemberConfiguration : BaseEntityConfiguration<Conversat
             .HasForeignKey(x => x.ConversationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(x => x.Member)
+        builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(x => x.MemberId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(x => x.InvitedBy)
+        builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(x => x.InvitedById)
             .OnDelete(DeleteBehavior.SetNull);

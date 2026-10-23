@@ -36,10 +36,7 @@ public class GetConversationsUseCase
                 AvatarUrl = null,
 
                 Name = x.Type == ConversationType.Direct
-                    ? x.Members
-                        .Where(m => m.MemberId != currentUserId)
-                        .Select(m => m.Member.Name)
-                        .FirstOrDefault()
+                    ? null
                     : x.Name,
 
                 IsPinned = x.Members

@@ -31,7 +31,7 @@ public class GetConversationUseCase
                 AvatarUrl = null,
 
                 Name = x.Type == ConversationType.Direct
-                    ? x.Members.First(m => m.MemberId != currentUserId).Member.Name
+                    ? null
                     : x.Name,
 
                 OtherUserId = x.Type == ConversationType.Direct

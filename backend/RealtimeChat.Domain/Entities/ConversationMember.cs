@@ -9,7 +9,6 @@ public class ConversationMember : BaseEntity
     public Conversation Conversation { get; private set; } = null!;
 
     public long MemberId { get; private set; }
-    public User Member { get; private set; } = null!;
 
     public ConversationMemberRole Role { get; private set; }
 
@@ -18,7 +17,6 @@ public class ConversationMember : BaseEntity
     public bool IsPinned { get; private set; }
 
     public long? InvitedById { get; private set; } // Null nếu tham gia qua link nhóm.
-    public User? InvitedBy { get; private set; }
 
     private ConversationMember() { }
 

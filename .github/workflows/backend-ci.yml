@@ -3,12 +3,12 @@ name: Backend CI
 on:
   push:
     paths:
-      - backend/**
-      - tests/**
-      - deployments/**
-      - docker-compose.yml
-      - .github/workflows/backend-ci.yml
-      - .github/scripts/**
+      - 'backend/**'
+      - 'tests/**'
+      - 'deployments/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/backend-ci.yml'
+      - '.github/scripts/**'
   workflow_dispatch:
 
 concurrency:
@@ -22,6 +22,9 @@ permissions:
 env:
   DOTNET_VERSION: 8.0.x
   SOLUTION_PATH: backend/RealtimeChat.slnx
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
 
 jobs:
   backend-ci:
@@ -32,29 +35,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Cài SDK .NET và bật NuGet cache.
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          skip-lts-prepass: true
+          cache: true
+          cache-dependency-path: ${{ env.SOLUTION_PATH }}
 
-      # Cache NuGet packages giữa các lần chạy.
-      - name: Cache NuGet
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('backend/**/*.csproj', 'tests/**/*.csproj', '**/Directory.Packages.props', '**/NuGet.config', '**/packages.lock.json', 'backend/RealtimeChat.slnx') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+      # Restore dependencies trước khi build solution.
+      - name: Install Dependencies & Build
+        run: |
+          dotnet restore ${{ env.SOLUTION_PATH }}
+          dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore -v minimal
 
-      - name: Build & Test
+      # Chạy test trên các project đã được build.
+      - name: Run Tests
         run: |
           dotnet test ${{ env.SOLUTION_PATH }} \
             --configuration Release \
-            -m \
+            --no-restore \
+            --no-build \
             --logger "trx" \
+            --maxcpucount \
             --collect:"XPlat Code Coverage" \
-            --results-directory artifacts/test-results
+            --results-directory artifacts/test-results \
+            -- RunConfiguration.DisableParallelization=false
 
       - name: Publish Test Results
         if: always()
@@ -64,6 +70,7 @@ jobs:
           path: artifacts/test-results/**/*.trx
           reporter: dotnet-trx
 
+      # Tạo báo cáo coverage nếu có dữ liệu.
       - name: Generate Coverage Report
         if: always()
         run: |
@@ -72,7 +79,7 @@ jobs:
             exit 0
           fi
 
-          dotnet tool install --global dotnet-reportgenerator-globaltool
+          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.11
 
           reportgenerator \
             "-reports:artifacts/test-results/**/coverage.cobertura.xml" \
@@ -80,10 +87,10 @@ jobs:
             "-reporttypes:Html;Cobertura;MarkdownSummaryGithub"
 
           if [ -f artifacts/coverage-report/SummaryGithub.md ]; then
-            cat artifacts/coverage-report/SummaryGithub.md \
-              >> "$GITHUB_STEP_SUMMARY"
+            cat artifacts/coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # Lưu kết quả test và báo cáo coverage trong 7 ngày.
       - name: Upload Artifacts
         if: always()
         uses: actions/upload-artifact@v4

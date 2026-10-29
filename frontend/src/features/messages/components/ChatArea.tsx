@@ -17,11 +17,12 @@ import {
   Navigation,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ChatMessage, ChatItem } from "../data/mockData";
-import { PixelBlockIcon } from "./PixelBlockIcon";
+import type { ChatMessage } from "../data/messagesData";
+import type { ConversationItem } from "@/features/conversations/data/conversationsData";
+import { PixelBlockIcon } from "@/components/PixelBlockIcon";
 
 type ChatAreaProps = {
-  activeChat: ChatItem;
+  activeConversation: ConversationItem;
   messages: ChatMessage[];
   onSendMessage: (text: string) => void;
   onToggleRightSidebar: () => void;
@@ -29,7 +30,7 @@ type ChatAreaProps = {
 };
 
 export function ChatArea({
-  activeChat,
+  activeConversation,
   messages,
   onSendMessage,
   onToggleRightSidebar,
@@ -57,16 +58,16 @@ export function ChatArea({
         <div className="flex items-center gap-3">
           <div className="relative">
             <PixelBlockIcon
-              type={activeChat.avatarType}
+              type={activeConversation.avatarType}
               className="size-10 rounded-xl shadow-xs ring-1 ring-black/5"
             />
-            {activeChat.online && (
+            {activeConversation.online && (
               <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500" />
             )}
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 tracking-tight">
-              {activeChat.name}
+              {activeConversation.name}
             </h2>
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <span className="size-2 rounded-full bg-emerald-500" />
@@ -217,7 +218,7 @@ export function ChatArea({
 
       {/* Input Action Bar */}
       <div className="border-t border-[#dbe6f5] bg-white p-3 z-10">
-        {/* Quick Toolbar above input: Icon / Emoji, Sticker, Image, File Attachment, Share Location / Journey */}
+        {/* Quick Toolbar above input */}
         <div className="flex items-center gap-1 pb-2 text-slate-500">
           <button
             type="button"
@@ -279,7 +280,7 @@ export function ChatArea({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Nhập tin nhắn tới ${activeChat.name}...`}
+              placeholder={`Nhập tin nhắn tới ${activeConversation.name}...`}
               className="w-full bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none"
             />
           </div>

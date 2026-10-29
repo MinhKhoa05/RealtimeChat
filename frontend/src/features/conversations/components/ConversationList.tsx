@@ -1,25 +1,29 @@
 import { useState } from "react";
 import { Search, UserPlus, Users, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ChatItem, ChatFilter } from "../data/mockData";
-import { PixelBlockIcon } from "./PixelBlockIcon";
+import type { ConversationItem, ChatFilter } from "../data/conversationsData";
+import { PixelBlockIcon } from "@/components/PixelBlockIcon";
 
-type ChatListProps = {
-  chats: ChatItem[];
-  selectedChatId: string;
-  onSelectChat: (chat: ChatItem) => void;
+type ConversationListProps = {
+  conversations: ConversationItem[];
+  selectedConversationId: string;
+  onSelectConversation: (conversation: ConversationItem) => void;
 };
 
-export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps) {
+export function ConversationList({
+  conversations,
+  selectedConversationId,
+  onSelectConversation,
+}: ConversationListProps) {
   const [filter, setFilter] = useState<ChatFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredChats = chats.filter((chat) => {
-    if (searchQuery.trim() && !chat.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+  const filteredConversations = conversations.filter((c) => {
+    if (searchQuery.trim() && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
-    if (filter === "groups") return chat.type === "group";
-    if (filter === "friends") return chat.type === "friend";
+    if (filter === "groups") return c.type === "group";
+    if (filter === "friends") return c.type === "friend";
     return true;
   });
 
@@ -108,12 +112,12 @@ export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps)
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1">
-        {filteredChats.map((chat) => {
-          const isSelected = chat.id === selectedChatId;
+        {filteredConversations.map((c) => {
+          const isSelected = c.id === selectedConversationId;
           return (
             <div
-              key={chat.id}
-              onClick={() => onSelectChat(chat)}
+              key={c.id}
+              onClick={() => onSelectConversation(c)}
               className={cn(
                 "group relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 select-none",
                 isSelected
@@ -129,10 +133,10 @@ export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps)
               {/* Avatar */}
               <div className="relative shrink-0">
                 <PixelBlockIcon
-                  type={chat.avatarType}
+                  type={c.avatarType}
                   className="size-11 rounded-xl shadow-2xs"
                 />
-                {chat.online && (
+                {c.online && (
                   <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-emerald-500" />
                 )}
               </div>
@@ -146,19 +150,19 @@ export function ChatList({ chats, selectedChatId, onSelectChat }: ChatListProps)
                       isSelected ? "text-slate-950 font-bold" : "text-slate-800",
                     )}
                   >
-                    {chat.name}
+                    {c.name}
                   </h3>
                   <span className="text-[11px] font-medium text-slate-400">
-                    {chat.time}
+                    {c.time}
                   </span>
                 </div>
                 <div className="mt-1 flex items-center justify-between">
                   <p className="truncate text-xs text-slate-500">
-                    {chat.lastMessage}
+                    {c.lastMessage}
                   </p>
-                  {chat.unreadCount && (
+                  {c.unreadCount && (
                     <span className="flex size-4.5 shrink-0 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-2xs">
-                      {chat.unreadCount}
+                      {c.unreadCount}
                     </span>
                   )}
                 </div>

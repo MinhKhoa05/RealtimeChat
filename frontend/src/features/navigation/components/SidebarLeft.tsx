@@ -1,14 +1,13 @@
-import { useState } from "react";
 import {
   MessageSquare,
-  Users,
-  Settings,
+  Network,
   FileText,
   Sticker,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PixelBlockIcon } from "./PixelBlockIcon";
-import type { NavTab } from "../data/mockData";
+import { PixelBlockIcon } from "@/components/PixelBlockIcon";
+import type { NavTab } from "../types";
 
 type NavItem = {
   id: NavTab;
@@ -19,14 +18,17 @@ type NavItem = {
 
 const topNavItems: NavItem[] = [
   { id: "messages", label: "Tin nhắn", icon: MessageSquare, badge: 3 },
-  { id: "friends", label: "Bạn bè", icon: Users },
+  { id: "connect", label: "Kết nối", icon: Network },
   { id: "posts", label: "Bài viết", icon: FileText },
   { id: "stickers", label: "Thư viện Sticker", icon: Sticker },
 ];
 
-export function SidebarLeft() {
-  const [activeNav, setActiveNav] = useState<NavTab>("messages");
+interface SidebarLeftProps {
+  activeNav: NavTab;
+  onSelectNav: (tab: NavTab) => void;
+}
 
+export function SidebarLeft({ activeNav, onSelectNav }: SidebarLeftProps) {
   return (
     <aside className="relative flex h-full w-[72px] shrink-0 flex-col items-center justify-between border-r border-[#0047b3] bg-[#0052cc] py-4 text-white shadow-md select-none z-20">
       {/* Brand & User Profile */}
@@ -52,7 +54,7 @@ export function SidebarLeft() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setActiveNav(item.id)}
+                onClick={() => onSelectNav(item.id)}
                 title={item.label}
                 className={cn(
                   "group relative flex size-11 items-center justify-center rounded-2xl transition-all duration-150 cursor-pointer",
@@ -83,7 +85,7 @@ export function SidebarLeft() {
       <div className="flex flex-col items-center gap-2 w-full px-2">
         <button
           type="button"
-          onClick={() => setActiveNav("settings")}
+          onClick={() => onSelectNav("settings")}
           title="Cài đặt"
           className={cn(
             "group relative flex size-11 items-center justify-center rounded-2xl transition-all duration-150 cursor-pointer",

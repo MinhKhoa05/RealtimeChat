@@ -13,10 +13,10 @@ import {
 import {
   teamMembers,
   sampleFiles,
-} from "../data/mockData";
-import { PixelBlockIcon } from "./PixelBlockIcon";
+} from "../data/detailsData";
+import { PixelBlockIcon } from "@/components/PixelBlockIcon";
 
-export function SidebarRight() {
+export function ConversationDetails() {
   const [notificationsOn, setNotificationsOn] = useState(true);
 
   return (

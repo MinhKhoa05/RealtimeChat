@@ -1,28 +1,32 @@
 import { useState } from "react";
-import { SidebarLeft } from "../components/SidebarLeft";
-import { ChatList } from "../components/ChatList";
-import { ChatArea } from "../components/ChatArea";
-import { SidebarRight } from "../components/SidebarRight";
+import { SidebarLeft } from "@/features/navigation/components/SidebarLeft";
+import type { NavTab } from "@/features/navigation/types";
+import { ConversationList } from "@/features/conversations/components/ConversationList";
 import {
-  sampleChats,
+  sampleConversations,
+  type ConversationItem,
+} from "@/features/conversations/data/conversationsData";
+import { ChatArea } from "@/features/messages/components/ChatArea";
+import {
   sampleChatMessages,
-} from "../data/mockData";
-import type {
-  ChatItem,
-  ChatMessage,
-} from "../data/mockData";
+  type ChatMessage,
+} from "@/features/messages/data/messagesData";
+import { ConversationDetails } from "@/features/details/components/ConversationDetails";
+import { FriendsView } from "@/features/friends/components/FriendsView";
+import type { FriendItem, GroupItem } from "@/features/friends/data/friendsData";
 
 export default function ChatPage() {
-  const [chats, setChats] = useState<ChatItem[]>(sampleChats);
-  const [selectedChatId, setSelectedChatId] = useState<string>("team-project");
+  const [activeNav, setActiveNav] = useState<NavTab>("messages");
+  const [conversations, setConversations] = useState<ConversationItem[]>(sampleConversations);
+  const [selectedConversationId, setSelectedConversationId] = useState<string>("team-project");
   const [messages, setMessages] = useState<ChatMessage[]>(sampleChatMessages);
   const [showRightSidebar, setShowRightSidebar] = useState<boolean>(true);
 
-  const activeChat =
-    chats.find((c) => c.id === selectedChatId) || chats[0];
+  const activeConversation =
+    conversations.find((c) => c.id === selectedConversationId) || conversations[0];
 
-  const handleSelectChat = (chat: ChatItem) => {
-    setSelectedChatId(chat.id);
+  const handleSelectConversation = (conversation: ConversationItem) => {
+    setSelectedConversationId(conversation.id);
   };
 
   const handleSendMessage = (text: string) => {
@@ -44,9 +48,9 @@ export default function ChatPage() {
 
     setMessages((prev) => [...prev, newMsg]);
 
-    setChats((prev) =>
+    setConversations((prev) =>
       prev.map((c) =>
-        c.id === selectedChatId
+        c.id === selectedConversationId
           ? {
               ...c,
               lastMessage: text,
@@ -57,29 +61,87 @@ export default function ChatPage() {
     );
   };
 
+  // Start chat with a friend from Friends View
+  const handleStartChatWithFriend = (friend: FriendItem) => {
+    const existing = conversations.find(
+      (c) => c.name.toLowerCase() === friend.name.toLowerCase(),
+    );
+    if (existing) {
+      setSelectedConversationId(existing.id);
+    } else {
+      const newConversation: ConversationItem = {
+        id: `chat-${friend.id}`,
+        name: friend.name,
+        avatarType: friend.avatarType,
+        lastMessage: "Bắt đầu cuộc trò chuyện mới",
+        time: "Vừa xong",
+        type: "friend",
+        online: friend.online,
+      };
+      setConversations((prev) => [newConversation, ...prev]);
+      setSelectedConversationId(newConversation.id);
+    }
+    setActiveNav("messages");
+  };
+
+  // Open group chat from Group List
+  const handleOpenGroupChat = (group: GroupItem) => {
+    const existing = conversations.find(
+      (c) => c.name.toLowerCase() === group.name.toLowerCase(),
+    );
+    if (existing) {
+      setSelectedConversationId(existing.id);
+    } else {
+      const newConversation: ConversationItem = {
+        id: `chat-${group.id}`,
+        name: group.name,
+        avatarType: group.avatarType,
+        lastMessage: "Chào mừng bạn đến với nhóm",
+        time: "Vừa xong",
+        type: "group",
+      };
+      setConversations((prev) => [newConversation, ...prev]);
+      setSelectedConversationId(newConversation.id);
+    }
+    setActiveNav("messages");
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-100 select-none">
-      {/* Column 1: Zalo-style Left Slim Navigation Bar (68px) */}
-      <SidebarLeft />
+      {/* Column 1: Navigation Sidebar (72px) */}
+      <SidebarLeft activeNav={activeNav} onSelectNav={setActiveNav} />
 
-      {/* Column 2: Conversations & Channels List (310px) */}
-      <ChatList
-        chats={chats}
-        selectedChatId={selectedChatId}
-        onSelectChat={handleSelectChat}
-      />
+      {/* Dynamic Content: When "connect" is selected, render FriendsView */}
+      {activeNav === "connect" ? (
+        <FriendsView
+          key="connect-view"
+          initialSubTab="friends_list"
+          onStartChatWithFriend={handleStartChatWithFriend}
+          onOpenGroupChat={handleOpenGroupChat}
+        />
+      ) : (
+        /* Regular Messaging Columns */
+        <>
+          {/* Column 2: Conversations List (310px) */}
+          <ConversationList
+            conversations={conversations}
+            selectedConversationId={selectedConversationId}
+            onSelectConversation={handleSelectConversation}
+          />
 
-      {/* Column 3: Main Chat Stream (Flex 1) */}
-      <ChatArea
-        activeChat={activeChat}
-        messages={messages}
-        onSendMessage={handleSendMessage}
-        onToggleRightSidebar={() => setShowRightSidebar(!showRightSidebar)}
-        showRightSidebar={showRightSidebar}
-      />
+          {/* Column 3: Chat Area (Flex 1) */}
+          <ChatArea
+            activeConversation={activeConversation}
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            onToggleRightSidebar={() => setShowRightSidebar(!showRightSidebar)}
+            showRightSidebar={showRightSidebar}
+          />
 
-      {/* Column 4: Right Conversation Details Sidebar (300px) */}
-      {showRightSidebar && <SidebarRight />}
+          {/* Column 4: Conversation Details (310px) */}
+          {showRightSidebar && <ConversationDetails />}
+        </>
+      )}
     </div>
   );
 }

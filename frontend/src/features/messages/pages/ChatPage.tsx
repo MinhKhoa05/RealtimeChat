@@ -14,6 +14,8 @@ import {
 import { ConversationDetails } from "@/features/details/components/ConversationDetails";
 import { FriendsView } from "@/features/friends/components/FriendsView";
 import type { FriendItem, GroupItem } from "@/features/friends/data/friendsData";
+import { PostsView } from "@/features/posts/components/PostsView";
+import { StickersView } from "@/features/stickers/components/StickersView";
 
 export default function ChatPage() {
   const [activeNav, setActiveNav] = useState<NavTab>("messages");
@@ -111,7 +113,7 @@ export default function ChatPage() {
       {/* Column 1: Navigation Sidebar (72px) */}
       <SidebarLeft activeNav={activeNav} onSelectNav={setActiveNav} />
 
-      {/* Dynamic Content: When "connect" is selected, render FriendsView */}
+      {/* Dynamic Content: When "connect", "posts", or "stickers" is selected */}
       {activeNav === "connect" ? (
         <FriendsView
           key="connect-view"
@@ -119,6 +121,10 @@ export default function ChatPage() {
           onStartChatWithFriend={handleStartChatWithFriend}
           onOpenGroupChat={handleOpenGroupChat}
         />
+      ) : activeNav === "posts" ? (
+        <PostsView key="posts-view" />
+      ) : activeNav === "stickers" ? (
+        <StickersView key="stickers-view" />
       ) : (
         /* Regular Messaging Columns */
         <>

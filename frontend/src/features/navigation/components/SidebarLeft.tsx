@@ -4,6 +4,7 @@ import {
   FileText,
   Sticker,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PixelBlockIcon } from "@/components/PixelBlockIcon";
@@ -26,20 +27,23 @@ const topNavItems: NavItem[] = [
 interface SidebarLeftProps {
   activeNav: NavTab;
   onSelectNav: (tab: NavTab) => void;
+  onLogout?: () => void;
 }
 
-export function SidebarLeft({ activeNav, onSelectNav }: SidebarLeftProps) {
+export function SidebarLeft({ activeNav, onSelectNav, onLogout }: SidebarLeftProps) {
   return (
     <aside className="relative flex h-full w-[72px] shrink-0 flex-col items-center justify-between border-r border-[#0047b3] bg-[#0052cc] py-4 text-white shadow-md select-none z-20">
-      {/* Brand & User Profile */}
+      {/* Top: App Logo & Navigation */}
       <div className="flex flex-col items-center gap-5 w-full">
-        {/* User Avatar */}
-        <div className="relative cursor-pointer group">
+        {/* App Logo (BlockChat) */}
+        <div
+          title="BlockChat"
+          className="relative cursor-pointer group flex items-center justify-center"
+        >
           <PixelBlockIcon
-            type="user_khoa"
-            className="size-11 rounded-2xl ring-2 ring-white/40 shadow-sm transition-transform duration-200 group-hover:scale-105"
+            type="block_chat"
+            className="size-11 rounded-2xl ring-2 ring-white/30 shadow-sm transition-transform duration-200 group-hover:scale-105"
           />
-          <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-[#0052cc] bg-emerald-400" />
         </div>
 
         {/* Small divider */}
@@ -81,8 +85,24 @@ export function SidebarLeft({ activeNav, onSelectNav }: SidebarLeftProps) {
         </nav>
       </div>
 
-      {/* Bottom: Settings Action (Cài đặt) */}
-      <div className="flex flex-col items-center gap-2 w-full px-2">
+      {/* Bottom: User Avatar, Settings & Logout Actions */}
+      <div className="flex flex-col items-center gap-3 w-full px-2">
+        {/* User Avatar */}
+        <div
+          title="Tài khoản cá nhân"
+          className="relative cursor-pointer group flex items-center justify-center"
+        >
+          <PixelBlockIcon
+            type="user_khoa"
+            className="size-10 rounded-2xl ring-2 ring-white/40 shadow-sm transition-transform duration-200 group-hover:scale-105"
+          />
+          <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-[#0052cc] bg-emerald-400" />
+        </div>
+
+        {/* Small divider */}
+        <div className="h-px w-8 bg-white/20" />
+
+        {/* Settings button */}
         <button
           type="button"
           onClick={() => onSelectNav("settings")}
@@ -99,6 +119,18 @@ export function SidebarLeft({ activeNav, onSelectNav }: SidebarLeftProps) {
           )}
           <Settings className="size-5.5 transition-transform duration-150 group-hover:scale-110 group-hover:rotate-45" />
         </button>
+
+        {/* Logout button */}
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            title="Đăng xuất"
+            className="group relative flex size-11 items-center justify-center rounded-2xl text-blue-100/70 hover:bg-rose-500/20 hover:text-rose-200 transition-all duration-150 cursor-pointer"
+          >
+            <LogOut className="size-5 transition-transform duration-150 group-hover:scale-110" />
+          </button>
+        )}
       </div>
     </aside>
   );

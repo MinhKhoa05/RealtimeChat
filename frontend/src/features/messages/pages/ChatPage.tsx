@@ -17,7 +17,11 @@ import type { FriendItem, GroupItem } from "@/features/friends/data/friendsData"
 import { PostsView } from "@/features/posts/components/PostsView";
 import { StickersView } from "@/features/stickers/components/StickersView";
 
-export default function ChatPage() {
+interface ChatPageProps {
+  onLogout?: () => void;
+}
+
+export default function ChatPage({ onLogout }: ChatPageProps) {
   const [activeNav, setActiveNav] = useState<NavTab>("messages");
   const [conversations, setConversations] = useState<ConversationItem[]>(sampleConversations);
   const [selectedConversationId, setSelectedConversationId] = useState<string>("team-project");
@@ -111,7 +115,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-100 select-none">
       {/* Column 1: Navigation Sidebar (72px) */}
-      <SidebarLeft activeNav={activeNav} onSelectNav={setActiveNav} />
+      <SidebarLeft activeNav={activeNav} onSelectNav={setActiveNav} onLogout={onLogout} />
 
       {/* Dynamic Content: When "connect", "posts", or "stickers" is selected */}
       {activeNav === "connect" ? (

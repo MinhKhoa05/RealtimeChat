@@ -7,12 +7,14 @@ import {
   Search,
   ArrowUpDown,
   Filter,
+  Compass,
   MoreHorizontal,
   MessageSquare,
   Phone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PixelBlockIcon } from "@/components/PixelBlockIcon";
+import { FriendDiscovery } from "./FriendDiscovery";
 import {
   sampleFriendsList,
   sampleFriendGroups,
@@ -20,9 +22,10 @@ import {
   sampleBlockedList,
   type FriendItem,
   type GroupItem,
+  type SuggestedUser,
 } from "../data/friendsData";
 
-export type FriendsSubTab = "friends_list" | "groups_list" | "friend_requests" | "blocked_list";
+export type FriendsSubTab = "discovery" | "friends_list" | "groups_list" | "friend_requests" | "blocked_list";
 
 interface FriendsPageProps {
   initialSubTab?: FriendsSubTab;
@@ -100,15 +103,30 @@ export function FriendsView({ initialSubTab = "friends_list", onStartChatWithFri
           </div>
           <button
             type="button"
+            onClick={() => setActiveSubTab("discovery")}
             className="grid size-8.5 shrink-0 place-items-center rounded-xl text-slate-600 hover:bg-[#eef3fb] hover:text-[#0052cc] transition"
-            title="Thêm bạn mới"
+            title="Thêm bạn mới (Khám phá bạn bè)"
           >
             <UserPlus className="size-4.5" />
           </button>
         </div>
 
-        {/* Categories navigation list (Danh sách bạn bè, Danh sách nhóm, Lời mời kết bạn, Đã chặn) */}
+        {/* Categories navigation list (Khám phá bạn bè, Danh sách bạn bè, Danh sách nhóm, Lời mời kết bạn, Đã chặn) */}
         <div className="p-2 space-y-1">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("discovery")}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-semibold transition-all duration-150 text-left",
+              activeSubTab === "discovery"
+                ? "bg-[#e8f1fd] text-[#0052cc]"
+                : "text-slate-700 hover:bg-slate-50",
+            )}
+          >
+            <Compass className="size-4.5 text-[#0052cc]" />
+            <span>Khám phá bạn bè</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveSubTab("friends_list")}
@@ -178,12 +196,14 @@ export function FriendsView({ initialSubTab = "friends_list", onStartChatWithFri
         <header className="flex h-16 shrink-0 items-center border-b border-[#dbe6f5] bg-white px-6 shadow-2xs">
           <div className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-xl bg-[#eef3fb] text-[#0052cc]">
+              {activeSubTab === "discovery" && <Compass className="size-5" />}
               {activeSubTab === "friends_list" && <UserCheck className="size-5" />}
               {activeSubTab === "groups_list" && <Users className="size-5" />}
               {activeSubTab === "friend_requests" && <UserPlus className="size-5" />}
               {activeSubTab === "blocked_list" && <ShieldBan className="size-5" />}
             </div>
             <h1 className="text-base font-bold text-slate-900 tracking-tight">
+              {activeSubTab === "discovery" && "Khám phá bạn bè"}
               {activeSubTab === "friends_list" && "Danh sách bạn bè"}
               {activeSubTab === "groups_list" && "Danh sách nhóm chat"}
               {activeSubTab === "friend_requests" && "Lời mời kết bạn"}
@@ -191,6 +211,16 @@ export function FriendsView({ initialSubTab = "friends_list", onStartChatWithFri
             </h1>
           </div>
         </header>
+
+        {/* Tab Content: Khám phá bạn bè */}
+        {activeSubTab === "discovery" && (
+          <FriendDiscovery
+            onAddFriendSuccess={(user: SuggestedUser) => {
+              // Can optionally log or trigger a notification
+              console.log("Friend request sent to:", user.name);
+            }}
+          />
+        )}
 
         {/* Tab Content: Danh sách bạn bè */}
         {activeSubTab === "friends_list" && (

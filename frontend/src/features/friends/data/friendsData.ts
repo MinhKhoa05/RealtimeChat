@@ -23,6 +23,20 @@ export interface BlockedItem {
   blockedDate: string;
 }
 
+export type DiscoveryReasonType = "mutual_and_groups" | "mutual_friends" | "shared_groups" | "new_member" | "general_suggestion";
+
+export interface SuggestedUser {
+  id: string;
+  name: string;
+  username: string;
+  avatarType: "steve" | "pink_cat" | "boy" | "user_khoa" | "dog" | "creeper" | "diamond" | "chest";
+  mutualFriendsCount?: number;
+  sharedGroupsCount?: number;
+  isNewMember?: boolean;
+  reasonType: DiscoveryReasonType;
+  bio?: string;
+}
+
 // Mock fictional character friends
 export const sampleFriendsList: FriendItem[] = [
   { id: "f-1", name: "Alex Mason", avatarType: "steve", online: true, statusText: "Khám phá Redstone", group: "A" },
@@ -65,4 +79,117 @@ export const sampleFriendRequests = [
 export const sampleBlockedList: BlockedItem[] = [
   { id: "b-1", name: "Dark Skeleton", avatarType: "creeper", blockedDate: "12/10/2026" },
   { id: "b-2", name: "Zombie Invader", avatarType: "boy", blockedDate: "05/09/2026" },
+];
+
+// Mock suggested users for Friend Discovery (Khám phá bạn bè)
+export const sampleSuggestedUsers: SuggestedUser[] = [
+  {
+    id: "sug-1",
+    name: "Lê Minh Tuấn",
+    username: "tuan.le_craft",
+    avatarType: "steve",
+    mutualFriendsCount: 5,
+    sharedGroupsCount: 3,
+    reasonType: "mutual_and_groups",
+    bio: "Đam mê xây dựng Redstone và Pixel Art 🧱",
+  },
+  {
+    id: "sug-2",
+    name: "Phạm Hải Đăng",
+    username: "dang.haipham",
+    avatarType: "boy",
+    mutualFriendsCount: 2,
+    reasonType: "mutual_friends",
+    bio: "Frontend Developer & Gamer",
+  },
+  {
+    id: "sug-3",
+    name: "Nguyễn Thảo Vy",
+    username: "vy.nguyen_art",
+    avatarType: "pink_cat",
+    sharedGroupsCount: 3,
+    reasonType: "shared_groups",
+    bio: "Họa sĩ minh họa 2D & Pixel enthusiast ✨",
+  },
+  {
+    id: "sug-4",
+    name: "Đỗ Gia Huy",
+    username: "huy.do_newbie",
+    avatarType: "dog",
+    isNewMember: true,
+    reasonType: "new_member",
+    bio: "Vừa tham gia BlockChat, rất vui được làm quen!",
+  },
+  {
+    id: "sug-5",
+    name: "Trần Bảo An",
+    username: "baoan.tran",
+    avatarType: "diamond",
+    reasonType: "general_suggestion",
+    bio: "Thích nghe nhạc lofi & đọc sách công nghệ",
+  },
+  {
+    id: "sug-6",
+    name: "Hoàng Minh Trí",
+    username: "tri.hoang_pixel",
+    avatarType: "chest",
+    mutualFriendsCount: 4,
+    sharedGroupsCount: 1,
+    reasonType: "mutual_and_groups",
+    bio: "Game designer độc lập",
+  },
+  {
+    id: "sug-7",
+    name: "Vũ Phương Linh",
+    username: "linh.vu_design",
+    avatarType: "pink_cat",
+    mutualFriendsCount: 3,
+    reasonType: "mutual_friends",
+    bio: "UI/UX Designer, yêu thích sự tối giản",
+  },
+  {
+    id: "sug-8",
+    name: "Bùi Quốc Khánh",
+    username: "khanh.bui_code",
+    avatarType: "creeper",
+    sharedGroupsCount: 4,
+    reasonType: "shared_groups",
+    bio: "Backend Golang & C# lover ⚡",
+  },
+  {
+    id: "sug-9",
+    name: "Đặng Mai Chi",
+    username: "maichi.dang",
+    avatarType: "pink_cat",
+    isNewMember: true,
+    reasonType: "new_member",
+    bio: "Newbie tại BlockChat! Chào mọi người 👋",
+  },
+  {
+    id: "sug-10",
+    name: "Ngô Quang Huy",
+    username: "huy.ngo_explorer",
+    avatarType: "steve",
+    reasonType: "general_suggestion",
+    bio: "Khám phá những vùng đất và công nghệ mới",
+  },
+  {
+    id: "sug-11",
+    name: "Trịnh Thiên Hương",
+    username: "huong.trinh_music",
+    avatarType: "diamond",
+    mutualFriendsCount: 1,
+    sharedGroupsCount: 2,
+    reasonType: "mutual_and_groups",
+    bio: "Nhà sản xuất âm nhạc 8-bit & Synthwave",
+  },
+  {
+    id: "sug-12",
+    name: "Lâm Nhật Nam",
+    username: "nam.lam_gamer",
+    avatarType: "boy",
+    mutualFriendsCount: 6,
+    reasonType: "mutual_friends",
+    bio: "Chơi game cùng bạn bè mỗi tối cuối tuần 🎮",
+  },
 ];

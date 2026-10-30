@@ -21,6 +21,10 @@ import {
   initialUserProfile,
   type UserProfile,
 } from "@/features/profile/data/profileData";
+import { AudioCallModal } from "@/features/calls/components/AudioCallModal";
+import { VideoCallModal } from "@/features/calls/components/VideoCallModal";
+import { IncomingCallBanner } from "@/features/calls/components/IncomingCallBanner";
+import type { ActiveCallState, CallType } from "@/features/calls/types";
 
 interface ChatPageProps {
   onLogout?: () => void;
@@ -37,8 +41,67 @@ export default function ChatPage({ onLogout }: ChatPageProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>(initialUserProfile);
 
+  // Call state
+  const [callState, setCallState] = useState<ActiveCallState | null>(null);
+
   const activeConversation =
     conversations.find((c) => c.id === selectedConversationId) || conversations[0];
+
+  // Initiate Outgoing Call (Audio or Video)
+  const handleStartCall = (type: CallType) => {
+    setCallState({
+      type,
+      status: "outgoing_calling",
+      caller: {
+        id: activeConversation.id,
+        name: activeConversation.name,
+        avatarType: activeConversation.avatarType,
+        isGroup: activeConversation.type === "group",
+        subtitle: activeConversation.type === "group" ? "Cuộc gọi nhóm" : undefined,
+      },
+    });
+
+    // Simulate connection transition: calling -> connecting -> active
+    setTimeout(() => {
+      setCallState((prev) => (prev ? { ...prev, status: "outgoing_connecting" } : null));
+      setTimeout(() => {
+        setCallState((prev) => (prev ? { ...prev, status: "active" } : null));
+      }, 1200);
+    }, 1500);
+  };
+
+  // Simulate Incoming Call (e.g. from active conversation or another friend)
+  const handleSimulateIncomingCall = (type: CallType) => {
+    setCallState({
+      type,
+      status: "incoming",
+      caller: {
+        id: activeConversation.id,
+        name: activeConversation.name,
+        avatarType: activeConversation.avatarType,
+        isGroup: activeConversation.type === "group",
+        subtitle: activeConversation.type === "group" ? "Cuộc gọi nhóm" : undefined,
+      },
+    });
+  };
+
+  // Accept incoming call
+  const handleAcceptIncomingCall = () => {
+    if (!callState) return;
+    setCallState({
+      ...callState,
+      status: "active",
+    });
+  };
+
+  // Decline or end call
+  const handleEndCall = () => {
+    if (!callState) return;
+    setCallState((prev) => (prev ? { ...prev, status: "ended" } : null));
+    setTimeout(() => {
+      setCallState(null);
+    }, 400);
+  };
 
   const handleSelectConversation = (conversation: ConversationItem) => {
     setSelectedConversationId(conversation.id);
@@ -160,12 +223,44 @@ export default function ChatPage({ onLogout }: ChatPageProps) {
             onSendMessage={handleSendMessage}
             onToggleRightSidebar={() => setShowRightSidebar(!showRightSidebar)}
             showRightSidebar={showRightSidebar}
+            onStartAudioCall={() => handleStartCall("audio")}
+            onStartVideoCall={() => handleStartCall("video")}
+            onSimulateIncomingCall={handleSimulateIncomingCall}
           />
 
           {/* Column 4: Conversation Details (310px) */}
           {showRightSidebar && <ConversationDetails />}
         </>
       )}
+
+      {/* Incoming Call Simulation Banner */}
+      {callState && callState.status === "incoming" && (
+        <IncomingCallBanner
+          callState={callState}
+          onAccept={handleAcceptIncomingCall}
+          onDecline={handleEndCall}
+        />
+      )}
+
+      {/* Active / Outgoing Audio Call Modal */}
+      {callState &&
+        callState.type === "audio" &&
+        callState.status !== "incoming" && (
+          <AudioCallModal
+            callState={callState}
+            onEndCall={handleEndCall}
+          />
+        )}
+
+      {/* Active / Outgoing Video Call Modal */}
+      {callState &&
+        callState.type === "video" &&
+        callState.status !== "incoming" && (
+          <VideoCallModal
+            callState={callState}
+            onEndCall={handleEndCall}
+          />
+        )}
 
       {/* Simple Zalo-style Profile Modal */}
       <ProfileModal

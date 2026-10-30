@@ -27,6 +27,9 @@ type ChatAreaProps = {
   onSendMessage: (text: string) => void;
   onToggleRightSidebar: () => void;
   showRightSidebar: boolean;
+  onStartAudioCall?: () => void;
+  onStartVideoCall?: () => void;
+  onSimulateIncomingCall?: (type: "audio" | "video") => void;
 };
 
 export function ChatArea({
@@ -35,6 +38,9 @@ export function ChatArea({
   onSendMessage,
   onToggleRightSidebar,
   showRightSidebar,
+  onStartAudioCall,
+  onStartVideoCall,
+  onSimulateIncomingCall,
 }: ChatAreaProps) {
   const [inputValue, setInputValue] = useState("");
 
@@ -80,18 +86,31 @@ export function ChatArea({
         <div className="flex items-center gap-1 text-slate-600">
           <button
             type="button"
-            className="grid size-9 place-items-center rounded-xl hover:bg-[#edf5ff] hover:text-[#0052cc] transition"
-            title="Cuộc gọi thoại"
+            onClick={onStartAudioCall}
+            className="grid size-9 place-items-center rounded-xl hover:bg-[#edf5ff] hover:text-[#0052cc] transition cursor-pointer"
+            title="Cuộc gọi thoại (Audio Call)"
           >
             <Phone className="size-4.5" />
           </button>
           <button
             type="button"
-            className="grid size-9 place-items-center rounded-xl hover:bg-[#edf5ff] hover:text-[#0052cc] transition"
-            title="Cuộc gọi video"
+            onClick={onStartVideoCall}
+            className="grid size-9 place-items-center rounded-xl hover:bg-[#edf5ff] hover:text-[#0052cc] transition cursor-pointer"
+            title="Cuộc gọi video (Video Call)"
           >
             <Video className="size-5" />
           </button>
+          {onSimulateIncomingCall && (
+            <button
+              type="button"
+              onClick={() => onSimulateIncomingCall("audio")}
+              className="hidden lg:flex items-center gap-1 rounded-xl bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition cursor-pointer border border-emerald-200 ml-1"
+              title="Mô phỏng cuộc gọi đến để kiểm tra tính năng Accept/Decline"
+            >
+              <Phone className="size-3 text-emerald-600 animate-pulse" />
+              <span>Thử gọi đến</span>
+            </button>
+          )}
           <button
             type="button"
             className="grid size-9 place-items-center rounded-xl hover:bg-[#edf5ff] hover:text-[#0052cc] transition"

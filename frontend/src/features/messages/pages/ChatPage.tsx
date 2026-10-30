@@ -16,6 +16,11 @@ import { FriendsView } from "@/features/friends/components/FriendsView";
 import type { FriendItem, GroupItem } from "@/features/friends/data/friendsData";
 import { PostsView } from "@/features/posts/components/PostsView";
 import { StickersView } from "@/features/stickers/components/StickersView";
+import { ProfileModal } from "@/features/profile/components/ProfileModal";
+import {
+  initialUserProfile,
+  type UserProfile,
+} from "@/features/profile/data/profileData";
 
 interface ChatPageProps {
   onLogout?: () => void;
@@ -27,6 +32,10 @@ export default function ChatPage({ onLogout }: ChatPageProps) {
   const [selectedConversationId, setSelectedConversationId] = useState<string>("team-project");
   const [messages, setMessages] = useState<ChatMessage[]>(sampleChatMessages);
   const [showRightSidebar, setShowRightSidebar] = useState<boolean>(true);
+
+  // Profile modal state
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile>(initialUserProfile);
 
   const activeConversation =
     conversations.find((c) => c.id === selectedConversationId) || conversations[0];
@@ -44,8 +53,8 @@ export default function ChatPage({ onLogout }: ChatPageProps) {
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       senderId: "khoa",
-      senderName: "Khoa",
-      avatarType: "user_khoa",
+      senderName: userProfile.displayName,
+      avatarType: userProfile.avatarType,
       content: text,
       time: timeStr,
       isMine: true,
@@ -115,7 +124,12 @@ export default function ChatPage({ onLogout }: ChatPageProps) {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-100 select-none">
       {/* Column 1: Navigation Sidebar (72px) */}
-      <SidebarLeft activeNav={activeNav} onSelectNav={setActiveNav} onLogout={onLogout} />
+      <SidebarLeft
+        activeNav={activeNav}
+        onSelectNav={setActiveNav}
+        onOpenProfile={() => setIsProfileOpen(true)}
+        onLogout={onLogout}
+      />
 
       {/* Dynamic Content: When "connect", "posts", or "stickers" is selected */}
       {activeNav === "connect" ? (
@@ -152,6 +166,14 @@ export default function ChatPage({ onLogout }: ChatPageProps) {
           {showRightSidebar && <ConversationDetails />}
         </>
       )}
+
+      {/* Simple Zalo-style Profile Modal */}
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        profile={userProfile}
+        onUpdateProfile={(updated) => setUserProfile(updated)}
+      />
     </div>
   );
 }

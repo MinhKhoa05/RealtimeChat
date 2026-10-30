@@ -27,10 +27,16 @@ const topNavItems: NavItem[] = [
 interface SidebarLeftProps {
   activeNav: NavTab;
   onSelectNav: (tab: NavTab) => void;
+  onOpenProfile?: () => void;
   onLogout?: () => void;
 }
 
-export function SidebarLeft({ activeNav, onSelectNav, onLogout }: SidebarLeftProps) {
+export function SidebarLeft({
+  activeNav,
+  onSelectNav,
+  onOpenProfile,
+  onLogout,
+}: SidebarLeftProps) {
   return (
     <aside className="relative flex h-full w-[72px] shrink-0 flex-col items-center justify-between border-r border-[#0047b3] bg-[#0052cc] py-4 text-white shadow-md select-none z-20">
       {/* Top: App Logo & Navigation */}
@@ -85,19 +91,21 @@ export function SidebarLeft({ activeNav, onSelectNav, onLogout }: SidebarLeftPro
         </nav>
       </div>
 
-      {/* Bottom: User Avatar, Settings & Logout Actions */}
+      {/* Bottom: User Avatar (Profile modal), Settings & Logout Actions */}
       <div className="flex flex-col items-center gap-3 w-full px-2">
-        {/* User Avatar */}
-        <div
-          title="Tài khoản cá nhân"
-          className="relative cursor-pointer group flex items-center justify-center"
+        {/* User Avatar - Click opens simple Zalo profile popup */}
+        <button
+          type="button"
+          onClick={onOpenProfile}
+          title="Hồ sơ của bạn"
+          className="relative cursor-pointer group flex items-center justify-center rounded-2xl transition-transform hover:scale-105"
         >
           <PixelBlockIcon
             type="user_khoa"
-            className="size-10 rounded-2xl ring-2 ring-white/40 shadow-sm transition-transform duration-200 group-hover:scale-105"
+            className="size-10 rounded-2xl ring-1 ring-white/50 shadow-sm"
           />
           <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-[#0052cc] bg-emerald-400" />
-        </div>
+        </button>
 
         {/* Small divider */}
         <div className="h-px w-8 bg-white/20" />

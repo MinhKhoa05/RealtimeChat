@@ -20,11 +20,11 @@ Tài liệu này mô tả cấu trúc cơ sở dữ liệu của RealtimeChat, 
 
 #### 3. Bài viết
 
-![Posts](erds/RealtimeChat_Posts.png)
+![Posts](erds/posts.drawio.svg)
 
 #### 4. Thư viện sticker
 
-![Sticker System](erds/RealtimeChat_StickerSystem.png)
+![Sticker System](erds/sticker-system.drawio.svg)
 
 #### 5. Chia sẻ vị trí và hành trình
 
@@ -367,3 +367,4 @@ Lưu phiên chia sẻ hành trình trong cuộc trò chuyện, gồm điểm đ�
 |---|---|---|
 | `ConversationId` | Non-unique | Tra cứu phiên theo cuộc trò chuyện. |
 | `OwnerId` | Non-unique | Tra cứu phiên theo người sở hữu. |
+

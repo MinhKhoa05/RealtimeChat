@@ -16,7 +16,7 @@ Tài liệu này mô tả cấu trúc cơ sở dữ liệu của RealtimeChat, 
 
 #### 2. Nhắn tin và cuộc gọi
 
-![Messaging & Calls](erds/RealtimeChat_MessagingAndCall.png)
+![Messaging & Calls](erds/messaging-and-call.drawio.svg)
 
 #### 3. Bài viết
 

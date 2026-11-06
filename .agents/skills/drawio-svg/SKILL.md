@@ -54,6 +54,7 @@ Define the schema in JSON following [references/schema-guide.md](./references/sc
 | Constraint badges | Sequential per table (`PK`, `FK#`, `UK#`, `IX#`) | `"PK"`, `"FK1, UK1"`, `"IX1"` |
 | Relationship endpoints | `"from": "SourceTable.Col", "to": "TargetTable.Col"` | `"from": "Users.Id", "to": "Posts.UserId"` |
 | Cardinality (`from:to`) | **Left side** = at `from` table; **Right side** = at `to` table | `"1..1:0..N"` (`1..1` at `Users`, `0..N` at `Posts`) |
+| Waypoint & Connector Routing | Use auto-routing with obstacle avoidance (`libavoidRouting=1`) | `"edgeStyle=orthogonalEdgeStyle;...libavoidRouting=1;"` |
 | External stub tables | PK row only for out-of-module referenced tables | `{ "name": "Id", "type": "BIGINT", "key": "PK" }` |
 
 ## Workflows

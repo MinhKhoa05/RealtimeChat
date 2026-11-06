@@ -121,3 +121,4 @@ See [sample-schema.json](./sample-schema.json) for a complete working example.
   - `"1..1:0..1"` — Mandatory 1 at `from` to Optional 1 at `to`.
   - `"0..1:0..1"` — Optional 1 to Optional 1 (e.g., `Users.AvatarMediaId?` $\leftrightarrow$ `Medias.Id`).
   - Omit `"cardinality"` when it cannot be reliably determined.
+- Edge style and auto-waypoints: Edge styling standardizes on `edgeStyle=orthogonalEdgeStyle;...libavoidRouting=1;` for automatic orthogonal avoidance routing (Waypoints auto-layout in Draw.io).

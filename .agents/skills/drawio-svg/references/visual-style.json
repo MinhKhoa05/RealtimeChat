@@ -107,6 +107,7 @@
   },
   "relationship": {
     "edgeStyle": "orthogonalEdgeStyle",
+    "libavoidRouting": 1,
     "lineColor": "light-dark(#000000, #ffffff)",
     "lineColorFallbackHex": "#000000",
     "lineWidth": 1,
@@ -131,9 +132,9 @@
       }
     },
     "commonPatterns": {
-      "oneToMany": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;endFill=1;startArrow=ERmandOne;startFill=0;",
-      "zeroOrOneToZeroOrOne": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToOne;endFill=0;startArrow=ERzeroToOne;startFill=0;",
-      "oneToZeroOrOne": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToOne;endFill=0;startArrow=ERmandOne;startFill=0;"
+      "oneToMany": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;endFill=1;startArrow=ERmandOne;startFill=0;libavoidRouting=1;",
+      "zeroOrOneToZeroOrOne": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToOne;endFill=0;startArrow=ERzeroToOne;startFill=0;libavoidRouting=1;",
+      "oneToZeroOrOne": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToOne;endFill=0;startArrow=ERmandOne;startFill=0;libavoidRouting=1;"
     }
   },
   "layout": {

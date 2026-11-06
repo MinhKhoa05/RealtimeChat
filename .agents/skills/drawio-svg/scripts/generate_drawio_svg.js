@@ -188,7 +188,7 @@ function buildMxGraphModelXml(schema) {
     const t = CARD_MAP[r.toCard] || { arrow: 'none', fill: '0' };
     const pts = r.points ? `<Array as="points">${r.points.map(p => `<mxPoint x="${p.x}" y="${p.y}"/>`).join('')}</Array>` : '';
     cells.push(
-      `<mxCell id="${esc(r.id)}" edge="1" parent="1" source="${esc(r.src.rowId)}" target="${esc(r.dst.rowId)}" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=${t.arrow};endFill=${t.fill};startArrow=${s.arrow};startFill=${s.fill};" value=""><mxGeometry height="100" relative="1" width="100" as="geometry">${pts}</mxGeometry></mxCell>`
+      `<mxCell id="${esc(r.id)}" edge="1" parent="1" source="${esc(r.src.rowId)}" target="${esc(r.dst.rowId)}" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=${t.arrow};endFill=${t.fill};startArrow=${s.arrow};startFill=${s.fill};libavoidRouting=1;" value=""><mxGeometry height="100" relative="1" width="100" as="geometry">${pts}</mxGeometry></mxCell>`
     );
   }
   return `<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" background="${CANVAS_BG}" math="0" shadow="0"><root>${cells.join('')}</root></mxGraphModel>`;
@@ -249,7 +249,7 @@ function extractJsonFromDrawioSvg(svgPath) {
     const sA = (e.style.match(/startArrow=([^;]+)/) || [])[1], eA = (e.style.match(/endArrow=([^;]+)/) || [])[1];
     const rel = { id: e.id, from: rowToCol.get(e.src), to: rowToCol.get(e.dst) };
     if (ARROW_TO_CARD[sA] && ARROW_TO_CARD[eA]) rel.cardinality = `${ARROW_TO_CARD[sA]}:${ARROW_TO_CARD[eA]}`;
-    if (e.pts.length) rel.points = e.pts;
+    if (e.pts.length && !e.style.includes('libavoidRouting=1')) rel.points = e.pts;
     return rel;
   });
   return { tables, relationships };

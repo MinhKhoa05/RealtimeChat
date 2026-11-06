@@ -7,6 +7,7 @@ Tài liệu này mô tả cấu trúc cơ sở dữ liệu của RealtimeChat, 
 ### Tổng quan
 
 ![RealtimeChat ERD - Full](erds/RealtimeChat_Full.png)
+![RealtimeChat ERD - Full](erds/test.drawio.svg)
 
 ### Theo nhóm nghiệp vụ
 

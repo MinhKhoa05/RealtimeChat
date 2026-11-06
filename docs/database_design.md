@@ -7,13 +7,12 @@ Tài liệu này mô tả cấu trúc cơ sở dữ liệu của RealtimeChat, 
 ### Tổng quan
 
 ![RealtimeChat ERD - Full](erds/RealtimeChat_Full.png)
-![RealtimeChat ERD - Full](erds/test.drawio.svg)
 
 ### Theo nhóm nghiệp vụ
 
 #### 1. Tài khoản và quan hệ người dùng
 
-![Identity & Relationships](erds/RealtimeChat_IdentityAndRelationship.png)
+![Identity & Relationships](erds/identity-and-relationship.drawio.svg)
 
 #### 2. Nhắn tin và cuộc gọi
 

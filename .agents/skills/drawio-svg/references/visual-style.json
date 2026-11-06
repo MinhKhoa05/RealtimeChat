@@ -1,0 +1,146 @@
+{
+  "canvas": {
+    "background": "light-dark(#ffffff, #121212)",
+    "svgBackgroundStyle": "background: #ffffff; background-color: light-dark(#ffffff, #121212); color-scheme: light;",
+    "grid": 1,
+    "gridSize": 10,
+    "guides": 1,
+    "tooltips": 1,
+    "connect": 1,
+    "arrows": 1,
+    "fold": 1,
+    "page": 1,
+    "pageScale": 1,
+    "pageWidth": 850,
+    "pageHeight": 1100,
+    "math": 0,
+    "shadow": 0
+  },
+  "font": {
+    "family": "Helvetica",
+    "defaultSize": 12,
+    "headerFontStyle": 1,
+    "pkKeyCellFontStyle": 1,
+    "pkColumnCellFontStyle": 5,
+    "regularColumnCellFontStyle": 0,
+    "textColor": "light-dark(#000000, #ffffff)"
+  },
+  "table": {
+    "shape": "table",
+    "headerBackground": "light-dark(#00ffff, #ededed)",
+    "headerBackgroundFallbackHex": "#00ffff",
+    "bodyBackground": "none",
+    "borderColor": "light-dark(#000000, #ffffff)",
+    "borderColorFallbackHex": "#000000",
+    "borderWidth": 1,
+    "cornerRadius": 0,
+    "rounded": 0,
+    "headerHeight": 30,
+    "rowHeight": 30,
+    "collapsible": 1,
+    "fixedRows": 1,
+    "rowLines": 0,
+    "resizeLast": 1,
+    "defaultWidths": {
+      "compact": 220,
+      "standard": 240,
+      "wide": 260,
+      "extraWide": 280
+    },
+    "keyColumnWidths": {
+      "singleConstraint": 30,
+      "mediumConstraint": 40,
+      "compositeConstraint": 60
+    },
+    "containerStyle": "shape=table;startSize=30;container=1;collapsible=1;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;rounded=0;fillColor=light-dark(#00ffff, #ededed);"
+  },
+  "row": {
+    "shape": "tableRow",
+    "height": 30,
+    "firstRowBottomBorder": 1,
+    "otherRowsBottomBorder": 0,
+    "ports": "[[0,0.5],[1,0.5]]",
+    "portConstraint": "eastwest",
+    "firstRowStyle": "shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=1;rounded=0;",
+    "standardRowStyle": "shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;rounded=0;"
+  },
+  "cells": {
+    "shape": "partialRectangle",
+    "paddingLeft": 6,
+    "pkKeyCellStyle": "shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;fontStyle=1;overflow=hidden;whiteSpace=wrap;html=1;rounded=0;",
+    "pkColumnCellStyle": "shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;align=left;spacingLeft=6;fontStyle=5;overflow=hidden;whiteSpace=wrap;html=1;rounded=0;",
+    "regularKeyCellStyle": "shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;editable=1;overflow=hidden;whiteSpace=wrap;html=1;rounded=0;",
+    "regularColumnCellStyle": "shape=partialRectangle;connectable=0;fillColor=none;top=0;left=0;bottom=0;right=0;align=left;spacingLeft=6;overflow=hidden;whiteSpace=wrap;html=1;rounded=0;"
+  },
+  "constraints": {
+    "primaryKey": {
+      "label": "PK",
+      "keyCellValue": "PK",
+      "keyCellFontStyle": 1,
+      "columnCellFontStyle": 5,
+      "description": "Bold 'PK' in left cell; Bold + Underlined (fontStyle=5) column name and type in right cell; bottom border line enabled on row (bottom=1)."
+    },
+    "foreignKey": {
+      "prefix": "FK",
+      "numbered": true,
+      "keyCellValueTemplate": "<b>FK{n}</b>",
+      "description": "Numbered sequentially per table (FK1, FK2, ...) wrapped in <b> tags in left cell."
+    },
+    "uniqueKey": {
+      "prefix": "UK",
+      "numbered": true,
+      "keyCellValueTemplate": "<b>UK{n}</b>",
+      "description": "Numbered per unique index in table (UK1, UK2, ...). Composite unique keys share the same UK number across participating columns."
+    },
+    "nonUniqueIndex": {
+      "prefix": "IX",
+      "numbered": true,
+      "keyCellValueTemplate": "<b>IX{n}</b>",
+      "description": "Optional index indicator (IX1, IX2) wrapped in <b> tags."
+    },
+    "compositeExamples": [
+      "<b>FK1, UK1</b>",
+      "<b>FK2, UK1</b>",
+      "<b>PK, FK1</b>"
+    ],
+    "nullableIndicator": "?"
+  },
+  "relationship": {
+    "edgeStyle": "orthogonalEdgeStyle",
+    "lineColor": "light-dark(#000000, #ffffff)",
+    "lineColorFallbackHex": "#000000",
+    "lineWidth": 1,
+    "fontSize": 12,
+    "html": 1,
+    "cardinalities": {
+      "oneMandatory": {
+        "arrow": "ERmandOne",
+        "fill": 0
+      },
+      "zeroOrOne": {
+        "arrow": "ERzeroToOne",
+        "fill": 0
+      },
+      "zeroOrMany": {
+        "arrow": "ERzeroToMany",
+        "fill": 1
+      },
+      "oneOrMany": {
+        "arrow": "ERoneToMany",
+        "fill": 1
+      }
+    },
+    "commonPatterns": {
+      "oneToMany": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToMany;endFill=1;startArrow=ERmandOne;startFill=0;",
+      "zeroOrOneToZeroOrOne": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToOne;endFill=0;startArrow=ERzeroToOne;startFill=0;",
+      "oneToZeroOrOne": "edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERzeroToOne;endFill=0;startArrow=ERmandOne;startFill=0;"
+    }
+  },
+  "layout": {
+    "horizontalColumnGapMin": 80,
+    "horizontalColumnGapRecommended": 100,
+    "verticalTableGapMin": 50,
+    "verticalTableGapRecommended": 60,
+    "waypointChannelStep": 20
+  }
+}

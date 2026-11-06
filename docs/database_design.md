@@ -28,7 +28,7 @@ Tài liệu này mô tả cấu trúc cơ sở dữ liệu của RealtimeChat, 
 
 #### 5. Chia sẻ vị trí và hành trình
 
-![Live Trip Sharing](erds/RealtimeChat_LiveTripSharing.png)
+![Live Trip Sharing](erds/live-trip-sharing.drawio.svg)
 
 ---
 

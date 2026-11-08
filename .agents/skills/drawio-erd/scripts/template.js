@@ -15,11 +15,13 @@ const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').
 // Tính kích thước cột (auto-fit) và tọa độ (x, y) tránh chồng chéo các bảng
 function calculateLayout(tables = []) {
   let curX = START_X, curY = START_Y, rowH = 0;
+  const fit = (len, charW = 6.8, pad = 12, min = 40) => Math.max(min, Math.ceil((len * charW + pad) / 10) * 10);
   return tables.map((t, i) => {
     const cols = t.columns || [];
     const keyWidth = Math.max(1, ...cols.map(c => c.key ? c.key.split(',').length : 0)) * 30;
-    const nameWidth = Math.max(90, Math.ceil((Math.max(6, t.name.length, ...cols.map(c => String(c.name || '').length)) * 8 + 16) / 10) * 10);
-    const typeWidth = Math.max(80, Math.ceil((Math.max(6, ...cols.map(c => String(c.type || 'BIGINT').length)) * 8 + 16) / 10) * 10);
+    const typeWidth = fit(Math.max(6, ...cols.map(c => String(c.type || 'BIGINT').length)), 6.8, 10, 60);
+    const colWidth = fit(Math.max(2, ...cols.map(c => String(c.name || '').length + (c.nullable ? 1 : 0))), 6.8, 12, 40);
+    const nameWidth = Math.max(colWidth, fit(t.name.length, 7.5, 16, 120) - keyWidth - typeWidth);
     const width = keyWidth + nameWidth + typeWidth, height = HEADER_H + cols.length * ROW_H;
 
     if (i > 0 && i % 3 === 0) { curX = START_X; curY += rowH + ROW_GAP; rowH = 0; }
@@ -36,13 +38,14 @@ function renderTable(t) {
   const headerCell = `<mxCell id="${esc(t.name)}" parent="1" style="${TABLE_STYLE}" value="${esc(t.name)}" vertex="1"><mxGeometry height="${t.height}" width="${t.width}" x="${t.x}" y="${t.y}" as="geometry"><mxRectangle height="${HEADER_H}" width="${t.width}" as="alternateBounds"/></mxGeometry></mxCell>`;
 
   const rowCells = t.columns.map((c, idx) => {
-    const rowId = `${t.name}.${String(c.name || '').replace(/\?$/, '')}`;
+    const rowId = `${t.name}.${c.name}`;
     const isPk = c.key === 'PK', y = HEADER_H + idx * ROW_H;
     const keyVal = c.key ? (isPk ? 'PK' : `&lt;b&gt;${esc(c.key)}&lt;/b&gt;`) : '';
+    const colVal = `${esc(c.name)}${c.nullable ? '?' : ''}`;
 
     return `<mxCell id="${esc(rowId)}" parent="${esc(t.name)}" style="${ROW_STYLE}" value="" vertex="1"><mxGeometry height="${ROW_H}" width="${t.width}" y="${y}" as="geometry"/></mxCell>` +
       `<mxCell id="${esc(rowId)}.key" parent="${esc(rowId)}" style="${CELL_STYLE}right=1;${isPk ? 'fontStyle=1;' : 'editable=1;'}" value="${keyVal}" vertex="1"><mxGeometry height="${ROW_H}" width="${t.keyWidth}" as="geometry"><mxRectangle height="${ROW_H}" width="${t.keyWidth}" as="alternateBounds"/></mxGeometry></mxCell>` +
-      `<mxCell id="${esc(rowId)}.col" parent="${esc(rowId)}" style="${CELL_STYLE}right=1;align=left;spacingLeft=6;" value="${esc(c.name)}" vertex="1"><mxGeometry height="${ROW_H}" width="${t.nameWidth}" x="${t.keyWidth}" as="geometry"><mxRectangle height="${ROW_H}" width="${t.nameWidth}" as="alternateBounds"/></mxGeometry></mxCell>` +
+      `<mxCell id="${esc(rowId)}.col" parent="${esc(rowId)}" style="${CELL_STYLE}right=1;align=left;spacingLeft=6;" value="${colVal}" vertex="1"><mxGeometry height="${ROW_H}" width="${t.nameWidth}" x="${t.keyWidth}" as="geometry"><mxRectangle height="${ROW_H}" width="${t.nameWidth}" as="alternateBounds"/></mxGeometry></mxCell>` +
       `<mxCell id="${esc(rowId)}.type" parent="${esc(rowId)}" style="${CELL_STYLE}right=0;align=left;spacingLeft=4;" value="${esc(c.type || 'BIGINT')}" vertex="1"><mxGeometry height="${ROW_H}" width="${t.typeWidth}" x="${t.keyWidth + t.nameWidth}" as="geometry"><mxRectangle height="${ROW_H}" width="${t.typeWidth}" as="alternateBounds"/></mxGeometry></mxCell>`;
   }).join('');
 
@@ -51,7 +54,7 @@ function renderTable(t) {
 
 // Dựng XML cho đường nối quan hệ (nối thẳng từ r.from đến r.to)
 function renderRelationship(r, idx) {
-  const from = String(r.from || '').replace(/\?$/, ''), to = String(r.to || '').replace(/\?$/, '');
+  const { from, to } = r;
   const [fromCard, toCard] = String(r.cardinality || '').toUpperCase().split(':');
   const sArrow = CARD_TO_ARROW[fromCard] || 'none', eArrow = CARD_TO_ARROW[toCard] || 'none';
   const edgeId = r.id || `rel_${idx + 1}_${from}_to_${to}`;

@@ -27,11 +27,10 @@ function validateSchema(schema) {
 
   for (const t of schema.tables) {
     if (!t?.name || !Array.isArray(t.columns)) throw new Error(`Invalid table "${t?.name || 'unknown'}": requires name and columns.`);
-    for (const c of t.columns) validCols.add(`${t.name}.${String(c.name || '').replace(/\?$/, '')}`);
+    for (const c of t.columns) validCols.add(`${t.name}.${c.name}`);
   }
   for (const r of schema.relationships || []) {
-    const from = String(r.from || '').replace(/\?$/, ''), to = String(r.to || '').replace(/\?$/, '');
-    if (!validCols.has(from) || !validCols.has(to)) throw new Error(`Relationship endpoints not found: from="${r.from}", to="${r.to}"`);
+    if (!validCols.has(r.from) || !validCols.has(r.to)) throw new Error(`Relationship endpoints not found: from="${r.from}", to="${r.to}"`);
   }
   return schema;
 }
@@ -113,8 +112,10 @@ function extractSchema(svgPath, withMeta = false) {
   const tables = rawTables.map(t => ({
     name: t.name, x: t.x, y: t.y,
     columns: t.rows.sort((a, b) => a.y - b.y).map(r => {
-      const [key, name, type] = (cellsByRow.get(r.id) || []).sort((a, b) => a.x - b.x).map(c => unesc(c.val));
-      return { name, type, ...(key ? { key } : {}) };
+      const [key, rawName, type] = (cellsByRow.get(r.id) || []).sort((a, b) => a.x - b.x).map(c => unesc(c.val));
+      const nullable = rawName.endsWith('?');
+      const name = nullable ? rawName.slice(0, -1) : rawName;
+      return { name, type, ...(key ? { key } : {}), ...(nullable ? { nullable: true } : {}) };
     })
   }));
 

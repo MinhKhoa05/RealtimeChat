@@ -15,7 +15,10 @@ Generates, updates, and verifies editable Draw.io SVG (`.drawio.svg`) ERD diagra
 
 ## When to Use
 
-- Create new `.drawio.svg` ERDs from SQL, codebase models, or images.
+- Create new `.drawio.svg` ERDs from SQL, codebase models, or images:
+  - **Type 1 (Architecture / Logical Overview)**: All tables (PK & FK only) with all relationships.
+  - **Type 2 (Data Dictionary / Table Overview)**: All tables (full columns) with no relationships.
+  - **Type 3 (Module / Physical ERD)**: Full columns for target module tables, PK-only stubs for referenced external tables, and all relationships among them.
 - Update tables, columns, or relationships in existing `.drawio.svg` files.
 - Audit `.drawio.svg` files for editability and layout overlaps.
 
@@ -43,9 +46,9 @@ Identify the user's intended operation first and enforce **minimal scope executi
 - If any prerequisite is missing, stop immediately and explain what is required. Do not install dependencies automatically.
 
 ### 2. Collect & Analyze Schema Input *(Skip for visual/template updates)*
-- **Only when creating a new diagram or explicitly syncing/adding schema from external sources**:
-  - **Inspect Specified Schema Source**: Extract tables, columns, types, `PK`, `FK`, `UNIQUE`, nullability (`nullable`), and indexes from the user-specified source.
-  - **Analyze Domain & Application Context (when authorized & needed)**: Inspect entity definitions, domain models, or validation rules only when schema constraints alone are insufficient to determine relationship participation.
+- **Classify Diagram Type**: Identify the requested diagram type (Type 1, Type 2, or Type 3; default to Type 1 for full-system requests or Type 3 for specific modules/tables).
+- **Inspect Specified Schema Source**: Extract tables, columns, types, `PK`, `FK`, `UNIQUE`, nullability (`nullable`), and indexes from the user-specified source.
+- **Analyze Domain & Application Context (when authorized & needed)**: Inspect entity definitions, domain models, or validation rules only when schema constraints alone are insufficient to determine relationship participation.
 
 ### 3. Prepare Schema JSON
 - **New Diagram**: Create `temp_schema.json` following the Schema Guide below.
@@ -105,7 +108,18 @@ Delete `temp_schema.json` after generation succeeds, then reply directly in chat
 }
 ```
 
-### 2. Table & Column Normalization
+### 2. Diagram Types & Schema Construction
+- **Type 1: Architecture / Logical Overview**:
+  - **`tables`**: Include all tables, but keep **only PK and FK** columns (omit all other business attributes).
+  - **`relationships`**: Include 100% foreign key relationships between all tables.
+- **Type 2: Data Dictionary / Table Overview**:
+  - **`tables`**: Include all tables with **all columns** (full types, nullability, badges).
+  - **`relationships`**: Set to empty array (`[]`). Do not generate any relationships.
+- **Type 3: Module / Physical ERD**:
+  - **`tables`**: Identify all tables belonging to the target module and include their full column definitions. Also include external tables directly referenced by FKs from these core tables as reduced stubs containing **only their PK**.
+  - **`relationships`**: Include 100% of FK relationships among the included tables.
+
+### 3. Table & Column Normalization
 - **Table & Column `name`**: Exact entity/table and column names (e.g., `"Users"`, `"AvatarMediaId"`).
 - **Nullability (`nullable`)**:
   - `NOT NULL`: Omit `nullable` (or set `false`).
@@ -119,7 +133,7 @@ Delete `temp_schema.json` after generation succeeds, then reply directly in chat
   - **Numbering (`{num}`)**: Number `FK`, `UK`, and `IX` sequentially and independently within each table (`UK1`, `UK2`, ...). Assign the **same number** to all columns sharing a composite constraint (e.g., composite unique on `(UserId, TargetUserId)` $\rightarrow$ both get `UK1`).
   - **Multiple badges**: Separate with a comma and space (e.g., `"FK1, UK1"`, `"PK, FK1"`).
 
-### 3. Relationship & Cardinality
+### 4. Relationship & Cardinality
 - **Endpoints (`from` & `to`)**: Format as `"TableName.ColumnName"`, where **`from` is the child FK** and **`to` is the parent PK** (`FK -> PK`).
 - **Cardinality Tokens**: `1..1` (Mandatory One `||`), `0..1` (Optional One `o|`), `0..N` (Optional Many `o<`), `1..N` (Mandatory Many `|<`).
 - **How to Determine `<fromEnd>:<toEnd>`**: Use **database constraints** as the primary source, supported by **domain/code logic** (including entity lifecycle states) and **user descriptions** to determine participation independently at each end:
@@ -138,6 +152,7 @@ Delete `temp_schema.json` after generation succeeds, then reply directly in chat
 ## Red Flags
 
 - **Never expand task scope or scan source code by default**: Do not read application source code (`DbContext`, entities, migrations) unless explicitly requested, and do not modify schema, relationships, or layout beyond the user's specific instruction.
+- **Never exceed 1-hop boundary in module diagrams**: When creating Type 3 diagrams, never traverse secondary FKs of external referenced tables (e.g., do not pull in `Medias` just because an external `Users` table points to `Medias`).
 - **Never hand-craft raw SVG or XML**: Do not write or edit `<svg>`, `<mxCell>`, or `<path>` elements by hand. Always follow the script workflow (`extract -> edit JSON -> generate`).
 - **Never rebuild existing diagrams from scratch**: Always run `--extract-json` first when updating an existing `.drawio.svg` to preserve unrelated tables, column ordering, and custom positions.
 - **Never manually calculate coordinates or widths for new tables**: Leave layout calculation to `template.js`; only adjust existing `x`, `y` coordinates if needed to resolve a table overlap error.

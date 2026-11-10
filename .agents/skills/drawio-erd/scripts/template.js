@@ -25,7 +25,7 @@ function calculateLayout(tables = []) {
     const width = keyWidth + nameWidth + typeWidth, height = HEADER_H + cols.length * ROW_H;
 
     if (i > 0 && i % 3 === 0) { curX = START_X; curY += rowH + ROW_GAP; rowH = 0; }
-    const x = t.x ?? curX, y = t.y ?? curY;
+    const x = t.metadata?.x ?? t.x ?? curX, y = t.metadata?.y ?? t.y ?? curY;
     curX += width + COL_GAP;
     rowH = Math.max(rowH, height);
 
@@ -35,7 +35,13 @@ function calculateLayout(tables = []) {
 
 // Dựng XML cho bảng (ID dòng đặt trực tiếp là "TableName.ColumnName")
 function renderTable(t) {
-  const headerCell = `<mxCell id="${esc(t.name)}" parent="1" style="${TABLE_STYLE}" value="${esc(t.name)}" vertex="1"><mxGeometry height="${t.height}" width="${t.width}" x="${t.x}" y="${t.y}" as="geometry"><mxRectangle height="${HEADER_H}" width="${t.width}" as="alternateBounds"/></mxGeometry></mxCell>`;
+  const tableFillColor = t.metadata?.color || t.color || HEADER_BG;
+  const tableStrokeColor = t.metadata?.strokeColor || t.strokeColor;
+  let tableStyle = TABLE_STYLE.replace(`fillColor=${HEADER_BG};`, `fillColor=${tableFillColor};`);
+  if (tableStrokeColor) {
+    tableStyle += `strokeColor=${tableStrokeColor};`;
+  }
+  const headerCell = `<mxCell id="${esc(t.name)}" parent="1" style="${tableStyle}" value="${esc(t.name)}" vertex="1"><mxGeometry height="${t.height}" width="${t.width}" x="${t.x}" y="${t.y}" as="geometry"><mxRectangle height="${HEADER_H}" width="${t.width}" as="alternateBounds"/></mxGeometry></mxCell>`;
 
   const rowCells = t.columns.map((c, idx) => {
     const rowId = `${t.name}.${c.name}`;

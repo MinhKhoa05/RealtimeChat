@@ -1,17 +1,16 @@
 ---
 name: drawio-erd
-description: >-
-  Guides creation and maintenance of editable Draw.io SVG (.drawio.svg)
-  database ERD diagrams. Use when creating a new .drawio.svg diagram,
-  converting static ERD images (PNG/JPG) or SQL/database schemas into editable
-  Draw.io SVG, or updating existing .drawio.svg diagrams.
+description: Guides creation and maintenance of editable Draw.io SVG (.drawio.svg) database ERD diagrams. Use when creating a new .drawio.svg diagram, converting static ERD images (PNG/JPG) or SQL/database schemas into editable Draw.io SVG, or updating existing .drawio.svg diagrams.
+metadata:
+  source: self-developed (MinhKhoa05)
+  repository: https://github.com/MinhKhoa05/software-diagram-skills
 ---
 
 # Draw.io SVG ERD Engineering
 
 ## Overview
 
-Generates, updates, and verifies editable Draw.io SVG (`.drawio.svg`) ERD diagrams via [`scripts/drawio-erd.js`](./scripts/drawio-erd.js) and [`scripts/template.js`](./scripts/template.js).
+Create and maintain accurate, well-structured, and fully editable Draw.io SVG ERD diagrams based on database schemas and structural definitions. The goal is diagrams that clearly represent database structures and relationships while remaining consistent, readable, and easy to maintain.
 
 ## When to Use
 
@@ -24,20 +23,13 @@ Generates, updates, and verifies editable Draw.io SVG (`.drawio.svg`) ERD diagra
 
 ## Task Scope & Source Selection
 
-Identify the user's intended operation first and enforce **minimal scope execution** (both in what sources are read and what elements are modified):
+- **Start with the minimum**: Identify and inspect only the sources directly required for the requested task.
+- **Execute directly**: Use the relevant existing files for edits or transfers; use the specified source materials or related code for creating diagrams. Do not inspect additional sources upfront.
+- **Expand only when necessary**: If the task cannot be completed reliably or potential issues arise, inspect only the additional information directly needed to resolve them.
+- **Ask before expanding scope** when further investigation goes beyond the user's request.
+- **Preserve unrelated content**: Modify only what the user requested.
 
-| Request Type | Permitted Sources | Permitted Changes |
-| :--- | :--- | :--- |
-| **Visual / Style / Template update** *(re-color, re-format, apply new template)* | Existing `.drawio.svg` + [`scripts/template.js`](./scripts/template.js) | Visual styling and template structure only. Treat the existing diagram as the single source of truth; do not alter schema, cardinalities, or layout (unless resolving a newly introduced table overlap). |
-| **Targeted diagram edit** *(add/edit/remove specific table, column, or relationship)* | Existing `.drawio.svg` + user-provided schema/input | Only the specified tables, columns, or relationships. Do not modify or re-infer unrelated elements. |
-| **Create / Sync from SQL or Code** *(new ERD, sync ERD with codebase)* | Explicitly specified/authorized SQL, migration, or source files | Full or targeted schema extraction and relationship analysis per user request. |
-
-- **Use the minimum required sources**: Only inspect files directly required by the classified task.
-- **Do not explore source code by default**: Never scan application source code, `DbContext`, entity configurations, or migrations unless:
-  1. The user explicitly requests source-code analysis or synchronization, or
-  2. The task cannot be completed without additional schema information — in which case, **ask the user** before expanding the scope.
-- **Avoid unnecessary analysis**: When updating presentation, template structure, or unrelated items, extract from the existing `.drawio.svg` and regenerate directly without re-extracting or re-interpreting the database schema.
-- **No implicit scope expansion**: Never bundle unrequested schema fixes, layout rearrangements, or relationship adjustments into a task.
+**Core rule: Inspect the minimum required, execute the task directly, and gather additional information only when necessary. Do not investigate broadly upfront.**
 
 ## Workflow
 
@@ -54,23 +46,16 @@ Identify the user's intended operation first and enforce **minimal scope executi
 - **New Diagram**: Create `temp_schema.json` following the Schema Guide below.
 - **Update Existing Diagram**: Extract the current schema from the `.drawio.svg` file first:
   ```powershell
-  node .agents/skills/drawio-erd/scripts/drawio-erd.js --extract-json path/to/diagram.drawio.svg --output temp_schema.json
+  node scripts/drawio-erd.js --extract-json path/to/diagram.drawio.svg --output temp_schema.json
   ```
   Apply only the changes required by the user's request to `temp_schema.json` (or leave `temp_schema.json` untouched if only applying visual/template changes from `template.js`).
 
-### 4. Generate Diagram
+### 4. Generate Diagram & Clean Up
 Run the generator script with the detected browser and webapp paths:
 ```powershell
-node .agents/skills/drawio-erd/scripts/drawio-erd.js --input temp_schema.json --output path/to/diagram.drawio.svg --browser "<browserPath>" --webapp "<webappPath>"
+node scripts/drawio-erd.js --input temp_schema.json --output path/to/diagram.drawio.svg --browser "<browserPath>" --webapp "<webappPath>"
 ```
-
-### 5. Clean Up & Report in Chat
-Delete `temp_schema.json` after generation succeeds, then reply directly in chat with a concise summary (do not create extra `.md` report files and do not list unchanged elements):
-- **Output**: Generated or updated `.drawio.svg` diagram file.
-- **Changes**: Applied visual/template updates, or added/modified/removed tables, columns, and relationships.
-- **Cardinality** *(only when relationships are added or modified)*: Identified relationships and brief reasoning for non-obvious decisions.
-- **Verification**: Generation status, editability, and visual validation results.
-- **Limitations**: Unresolved ambiguities or checks that could not be completed.
+Delete `temp_schema.json` immediately after generation succeeds.
 
 ---
 
@@ -83,6 +68,11 @@ Delete `temp_schema.json` after generation succeeds, then reply directly in chat
   "tables": [
     {
       "name": "Users",
+      "metadata": {
+        "x": 70,
+        "y": 150,
+        "color": "light-dark(#00ffff, #ededed)"
+      },
       "columns": [
         { "name": "Id", "type": "BIGINT", "key": "PK" },
         { "name": "Email", "type": "VARCHAR(255)", "key": "UK1" },
@@ -93,6 +83,10 @@ Delete `temp_schema.json` after generation succeeds, then reply directly in chat
     },
     {
       "name": "Relationships",
+      "metadata": {
+        "x": 300,
+        "y": 150
+      },
       "columns": [
         { "name": "Id", "type": "BIGINT", "key": "PK" },
         { "name": "UserId", "type": "BIGINT", "key": "FK1, UK1" },
@@ -107,6 +101,8 @@ Delete `temp_schema.json` after generation succeeds, then reply directly in chat
   ]
 }
 ```
+
+> **Note on `metadata`**: Avoid manual tweaking of `metadata` (`x`, `y`, `color`) unless necessary; the script automatically handles default layout and styling. Only customize colors to differentiate modules/tables or adjust `x`, `y` coordinates if needed to resolve layout overlap collisions.
 
 ### 2. Diagram Types & Schema Construction
 - **Type 1: Architecture / Logical Overview**:
@@ -163,9 +159,8 @@ Delete `temp_schema.json` after generation succeeds, then reply directly in chat
 
 ---
 
-## Verification Checklist
+## Verification & Handoff
 
-- [ ] **Script verification**: Confirm `Missing SVG cells: 0`, `CLEAN (0 overlaps)`, and `STATUS: VALID & EDITABLE`. These results validate the checks implemented by the generator, not the semantic correctness of the source schema.
-- [ ] **Schema verification**: Compare tables, columns, data types, nullability, keys, and relationships against the original source.
-- [ ] **Visual verification**: Inspect the rendered diagram for truncated labels, unreadable connectors, and layout issues.
-- [ ] **Clean workspace**: Confirm temporary JSON and other generated intermediate files have been deleted.
+- **Clean workspace**: Confirm temporary JSON and intermediate files created during execution have been deleted. Never delete user-owned files.
+- **Minimal confirmation**: After successful completion, provide a brief confirmation. Do not generate a separate report in chat.
+- **Raise issues only**: Explain only errors, missing prerequisites, table overlap collisions, or unresolved ambiguities that require user attention.

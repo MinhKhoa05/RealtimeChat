@@ -96,7 +96,20 @@ function extractSchema(svgPath, withMeta = false) {
     const ga = (inner.match(/<mxGeometry\b([^>]*)/) || [])[1] || '';
     const gx = +getAttr(ga, 'x') || 0, gy = +getAttr(ga, 'y') || 0, gw = +getAttr(ga, 'width') || 0, gh = +getAttr(ga, 'height') || 0;
 
-    if (style.includes('shape=table;')) tablesById.set(id, { name: unesc(getAttr(a, 'value')), x: gx, y: gy, w: gw, h: gh, rows: [] });
+    if (style.includes('shape=table;')) {
+      const fillColor = (style.match(/fillColor=([^;]+)/) || [])[1];
+      const strokeColor = (style.match(/strokeColor=([^;]+)/) || [])[1];
+      tablesById.set(id, {
+        name: unesc(getAttr(a, 'value')),
+        x: gx,
+        y: gy,
+        w: gw,
+        h: gh,
+        color: fillColor || undefined,
+        strokeColor: strokeColor || undefined,
+        rows: []
+      });
+    }
     else if (style.includes('shape=tableRow;')) rowsById.set(id, { id, parent, y: gy });
     else if (style.includes('shape=partialRectangle;')) {
       if (!cellsByRow.has(parent)) cellsByRow.set(parent, []);
@@ -110,7 +123,13 @@ function extractSchema(svgPath, withMeta = false) {
 
   const rawTables = [...tablesById.values()];
   const tables = rawTables.map(t => ({
-    name: t.name, x: t.x, y: t.y,
+    name: t.name,
+    metadata: {
+      x: t.x,
+      y: t.y,
+      ...(t.color ? { color: t.color } : {}),
+      ...(t.strokeColor ? { strokeColor: t.strokeColor } : {})
+    },
     columns: t.rows.sort((a, b) => a.y - b.y).map(r => {
       const [key, rawName, type] = (cellsByRow.get(r.id) || []).sort((a, b) => a.x - b.x).map(c => unesc(c.val));
       const nullable = rawName.endsWith('?');
@@ -172,4 +191,6 @@ function verifyDiagram(svgPath) {
     process.exit(1);
   }
 })();
+
+module.exports = { validateSchema, exportSvg, extractSchema, verifyDiagram };
 

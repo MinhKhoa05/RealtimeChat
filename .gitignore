@@ -30,3 +30,6 @@ uploads/
 
 # Node / tooling
 node_modules/
+
+# Agents
+.agents/

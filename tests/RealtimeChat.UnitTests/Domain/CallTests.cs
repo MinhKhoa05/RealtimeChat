@@ -14,6 +14,7 @@ public class CallTests
     private static readonly DateTime DefaultStartedAt =
         new(2026, 10, 15, 10, 0, 0, DateTimeKind.Utc);
 
+    // Tạo Call với trạng thái tương ứng thông qua các domain action methods.
     private static Call CreateDefault(CallStatus status = CallStatus.Ringing)
     {
         var call = Call.Create(DefaultCallerId, DefaultReceiverId, CallType.Audio);

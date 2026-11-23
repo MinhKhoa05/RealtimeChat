@@ -1,4 +1,3 @@
-
 using FluentAssertions;
 using RealtimeChat.Domain.Entities;
 using RealtimeChat.Domain.Enums;

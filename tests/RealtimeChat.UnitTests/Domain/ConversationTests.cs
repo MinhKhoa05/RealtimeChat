@@ -122,9 +122,11 @@ public class ConversationTests
     public void CreateGroup_WhenMemberCountIsLessThanTwo_ThrowsDomainException(int memberCount)
     {
         var memberIds = new List<long>();
+
+        // Tạo Id thành viên không trùng với AdminId
         for (int i = 0; i < memberCount; i++)
         {
-            memberIds.Add(DefaultGroupAdminId + i + 1); // Generate IDs distinct from the admin ID
+            memberIds.Add(DefaultGroupAdminId + i + 1);
         }
 
         var act = () => Conversation.CreateGroup(DefaultGroupAdminId, DefaultGroupName, memberIds);

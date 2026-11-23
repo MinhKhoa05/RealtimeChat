@@ -6,53 +6,32 @@ RealtimeChat lấy cảm hứng từ các ứng dụng như Zalo, Discord và Sl
 
 ## Features
 
-### Users & Authentication
+Tính năng của dự án được phát triển và mở rộng theo từng cấp độ:
 
-- Đăng ký, đăng nhập với JWT Authentication.
-- Quản lý hồ sơ người dùng và avatar.
-- Hỗ trợ nhiều kết nối trên cùng một tài khoản.
-- Theo dõi trạng thái Online / Offline.
+### 1. Nhắn tin cơ bản & Tài khoản (Core Chat)
 
-### Messaging
+- Đăng ký, đăng nhập và quản lý phiên với JWT & Refresh Token.
+- Tìm kiếm người dùng, gửi/chấp nhận lời mời kết bạn, quản lý danh sách bạn bè và chặn người dùng.
+- Nhắn tin văn bản 1-1 theo thời gian thực qua SignalR.
+- Lưu trữ lịch sử trò chuyện, phân trang tin nhắn và cập nhật trạng thái đã gửi / đã xem (Read Status).
 
-- Nhắn tin 1-1 và nhóm theo thời gian thực.
-- Lưu trữ, phân trang và truy xuất lịch sử tin nhắn.
-- Read Status, Reply, Reaction, Mention và Recall.
-- Hỗ trợ Text, Image, Video, Audio, File và Sticker.
-- Lưu lịch sử cuộc gọi trong conversation.
+### 2. Nhóm trò chuyện & Hoàn thiện trải nghiệm (Group & Rich Messaging)
 
-### Friends & Groups
+- Tạo nhóm, thêm/xóa thành viên, tham gia nhóm qua liên kết mời, chuyển quyền trưởng nhóm và giải tán nhóm.
+- Mở rộng tương tác tin nhắn: Gửi hình ảnh/file (Media), trả lời tin nhắn (Reply), nhắc tên (`@Mention`), thu hồi tin nhắn (Recall) và ghim hội thoại.
+- Theo dõi trạng thái Online / Offline (hỗ trợ đa kết nối trên cùng một tài khoản) và hiển thị trạng thái đang nhập (Typing Indicator).
 
-- Gửi, chấp nhận và từ chối lời mời kết bạn.
-- Quản lý danh sách bạn bè và chặn người dùng.
-- Gợi ý bạn bè dựa trên conversation chung và các mối quan hệ gián tiếp.
-- Tạo nhóm, quản lý thành viên và vai trò, chuyển quyền quản trị và giải tán nhóm.
+### 3. Gọi thoại / Video & Mở rộng quy mô (Call & Horizontal Scaling)
 
-### Sticker & Media
+- Gọi thoại và video 1-1 thời gian thực với WebRTC và SignalR signaling, quản lý vòng đời cuộc gọi và lưu lịch sử cuộc gọi vào hội thoại.
+- Tối ưu hiệu năng và định hướng mở rộng ngang (Horizontal Scaling) với Redis (quản lý Presence, Caching và SignalR Backplane khi chạy nhiều instance).
 
-- Tạo và quản lý bộ sưu tập Sticker Public / Private.
-- Chia sẻ bộ sưu tập qua mã chia sẻ và gửi Sticker trong conversation.
-- Tải lên, quản lý metadata và chia sẻ hình ảnh, video, audio và file.
-- Phân phối Media thông qua static file storage.
+### 4. Tính năng mở rộng (Extended & Planned Features)
 
-### Realtime Communication
-
-- Đồng bộ tin nhắn và sự kiện conversation qua SignalR.
-- Presence và Typing Indicator.
-- Hỗ trợ nhiều SignalR connection cho một người dùng.
-
-### Audio / Video Call
-
-- Gọi thoại và video 1-1 với WebRTC.
-- SignalR signaling để thiết lập kết nối giữa các client.
-- Quản lý vòng đời cuộc gọi và lưu lịch sử sau khi kết thúc.
-
-### Live Trip Sharing
-
-- Bắt đầu và kết thúc phiên chia sẻ hành trình.
-- Cập nhật và đồng bộ vị trí trực tiếp qua SignalR.
-- Quản lý trạng thái phiên và hiển thị hành trình trên bản đồ.
-- Hỗ trợ ETA khi tích hợp dịch vụ định tuyến.
+- Gợi ý kết bạn dựa trên bạn chung và nhóm chung.
+- Bộ sưu tập Sticker cá nhân và chia sẻ qua mã mời.
+- Chia sẻ vị trí và hành trình trực tiếp (Live Trip Sharing & ETA).
+- Bảng tin và tương tác bài viết cơ bản.
 
 ## Tech Stack
 
@@ -68,14 +47,45 @@ RealtimeChat lấy cảm hứng từ các ứng dụng như Zalo, Discord và Sl
 
 ## Architecture
 
-Project áp dụng **Clean Architecture** với bốn layer chính:
+### System Architecture
+
+Hệ thống sử dụng **Nginx** làm Reverse Proxy đứng trước **Frontend** và **Backend API**, kết nối với **MariaDB**, **Redis** và **File Storage**:
+
+```text
+                        +-------------------+
+                        |   Client (Web)    |
+                        +---------+---------+
+                                  |
+                     HTTP / REST  |  WebSocket (SignalR)
+                                  v
+                        +-------------------+
+                        |       Nginx       |
+                        |  (Reverse Proxy)  |
+                        +----+---------+----+
+                             |         |
+            Static UI (/...) |         | (/api, /hubs/chat, /media)
+                             v         v
+               +----------------+   +-----------------------+
+               | React Frontend |   |  ASP.NET Core Backend |
+               +----------------+   +---+-------+-------+---+
+                                        |       |       |
+                         +--------------+       |       +--------------+
+                         |                      |                      |
+                         v                      v                      v
+                 +---------------+      +---------------+      +---------------+
+                 |    MariaDB    |      |     Redis     |      | Media Storage |
+                 |  (Database)   |      | (Cache/Scale) |      | (Local Files) |
+                 +---------------+      +---------------+      +---------------+
+```
+
+### Backend Layer Architecture
+
+Backend áp dụng **Clean Architecture** kết hợp **Rich Domain Model** với bốn layer chính:
 
 - **Api:** HTTP endpoints, SignalR Hub, middleware và các thành phần giao tiếp với client.
 - **Application:** UseCase, workflow orchestration và các abstraction phục vụ nghiệp vụ.
-- **Domain:** Entity, Value Object, enum, exception và business rules.
-- **Infrastructure:** Implementation cho persistence và các dịch vụ hạ tầng.
-
-Application phụ thuộc vào abstraction; Infrastructure cung cấp các implementation tương ứng.
+- **Domain:** Entity, Value Object, enum, exception và business rules cốt lõi.
+- **Infrastructure:** Implementation cho persistence (EF Core), caching, storage và bảo mật.
 
 ```text
 Api  --->  Application  --->  Domain
@@ -85,53 +95,30 @@ Api  --->  Application  --->  Domain
        implements abstractions
 ```
 
-## Key Design Decisions
+### Luồng hoạt động (HTTP & SignalR)
 
-### Friend Recommendation
+Các thao tác gửi tin nhắn và nghiệp vụ cần đảm bảo tính hợp lệ, lưu trữ bền vững trong Database đều đi qua **HTTP REST API** (xác thực, kiểm tra quyền, thực thi business rules và lưu dữ liệu).
 
-Hệ thống gợi ý bạn bè dựa trên **conversation chung và mạng lưới bạn bè**. Các tài khoản đã có quan hệ hoặc không đủ điều kiện gợi ý sẽ bị loại trừ.
+Sau khi dữ liệu được lưu thành công, Backend mới dùng **SignalR Hub** để broadcast sự kiện đến các thành viên liên quan, bên cạnh việc xử lý các tín hiệu tức thời không lưu Database như Online/Offline, Typing Indicator và WebRTC Signaling. Cách tiếp cận này giúp thống nhất đầu vào xử lý nghiệp vụ ở Web API, dễ dàng kiểm thử và cho phép các client (Web, Mobile) gọi chung API mà không phụ thuộc vào kết nối SignalR khi gửi tin nhắn.
 
-- **[Candidate Generation](./backend/RealtimeChat.Application/Features/Recommendations/CandidatePool/PoolGenerator.cs):** Thu thập ứng viên từ conversation chung và bạn chung. Nếu chưa đủ ứng viên, hệ thống bổ sung người dùng ngẫu nhiên đủ điều kiện.
-- **Recommendation Scoring:** Mỗi conversation chung đóng góp 3 điểm, mỗi bạn chung đóng góp 5 điểm. Ứng viên xuất hiện ở nhiều nguồn được hợp nhất theo `UserId` và cộng điểm. Hệ thống xếp hạng và chọn top 50 ứng viên.
-- **Recommendation Pool:** Cache pool bằng Redis để tái sử dụng qua nhiều lần gợi ý, hạn chế chạy lại thuật toán cho mỗi request.
-- **Recommendation Selection:** Sử dụng weighted random để cân bằng mức độ liên quan và sự đa dạng. Trước khi trả kết quả, hệ thống kiểm tra lại quan hệ và loại bỏ ứng viên không còn hợp lệ.
-- **Candidate Suppression:** Cho phép tạm ẩn ứng viên trong 1 ngày bằng Redis TTL, tránh đề xuất lại trong thời gian này.
-
-**Trade-off:** Thuật toán chưa xét nội dung tin nhắn, tần suất tương tác hoặc mức độ gần đây của hoạt động. Trọng số hiện tại có thể được điều chỉnh dựa trên dữ liệu sử dụng thực tế.
-
-## Live Trip Sharing
-
-Live Trip Sharing cho phép người dùng chia sẻ vị trí trực tiếp hoặc hành trình có điểm đến ngay trong conversation. Tính năng hỗ trợ theo dõi tiến trình di chuyển và ETA dự kiến, phù hợp với các tình huống như hẹn gặp hoặc đón nhau mà không cần liên tục nhắn tin hỏi thăm.
-
-- **Live Location Updates:** Backend tiếp nhận vị trí định kỳ (ví dụ mỗi 10 giây) và đồng bộ đến các client liên quan qua SignalR, giúp cập nhật vị trí và theo dõi quá trình di chuyển.
-- **ETA Calculation:** Tích hợp routing service để tính thời gian dự kiến đến đích. Backend chỉ tính lại ETA khi người dùng di chuyển đủ xa (tối thiểu 100 m) và đã qua ít nhất 1 phút kể từ lần tính trước, với giới hạn tối đa 3 phút giữa hai lần tính. Cơ chế này giúp hạn chế các lần gọi dịch vụ định tuyến không cần thiết, đồng thời tránh để thông tin ETA quá cũ.
-
-### HTTP & SignalR
-
-Project tách thao tác nghiệp vụ cần persistence khỏi việc phát sự kiện realtime:
-
-- **HTTP:** Xử lý command/query và workflow nghiệp vụ.
-- **SignalR:** Phát realtime event, notification, Presence và Typing Indicator.
-
-Ví dụ, khi gửi tin nhắn, backend xử lý và lưu message trước khi thông báo cho các client liên quan.
+Ví dụ luồng gửi tin nhắn:
 
 ```text
-Client -> HTTP -> Controller -> SendMessageUseCase
-                                  |          |
-                               Persist     Notify
-                                             |
-                                          SignalR
-                                             |
-                                       Other Clients
+Client A  --(1) HTTP POST /messages/text-->  Controller
+                                                 |
+                                                 v
+                                        SendTextMessageUseCase
+                                           |            |
+                             (2) Lưu DB    |            | (3) Phát sự kiện
+                                           v            v
+                                        MariaDB     SignalR Hub
+                                                        |
+                                                        v
+                                           (4) Push realtime event
+                                                        |
+                                                        v
+                                               Client B, Client C
 ```
-
-### Shared Data Cache ở Frontend
-
-Frontend sử dụng **TanStack Query** để xây dựng shared cache cho những dữ liệu được dùng chung giữa nhiều feature, chẳng hạn như User Profile trong danh sách bạn bè, conversation, tin nhắn và thành viên nhóm.
-
-Các API nghiệp vụ được thiết kế để trả về dữ liệu tối thiểu cần cho từng chức năng, thay vì lặp lại những thông tin hiển thị như `userName` hoặc `avatarUrl` trong nhiều response. Frontend dựa vào `userId` để tra cứu User Profile từ shared cache, sau đó kết hợp dữ liệu cần thiết để hiển thị theo từng feature.
-
-Nếu profile chưa có trong cache, frontend gọi **batch API** để lấy thông tin của nhiều user trong một request và cập nhật cache. Nhờ vậy, dữ liệu dùng chung được quản lý tập trung ở frontend, hạn chế payload trùng lặp và các request riêng lẻ. Backend cũng không cần gắn chặt response của từng endpoint với nhu cầu hiển thị cụ thể của frontend; mỗi endpoint tập trung trả về dữ liệu cần thiết cho nghiệp vụ, còn cách sử dụng và hiển thị profile do frontend quản lý.
 
 ## Project Structure
 
@@ -139,51 +126,56 @@ Cấu trúc source code được chia theo trách nhiệm của từng layer đ�
 
 ```text
 RealtimeChat/
-├── .github/                              # GitHub workflows and project configuration
+├── .github/                              # Cấu hình GitHub Actions CI/CD
 │
 ├── backend/
 │   ├── RealtimeChat.Api/
-│   │   ├── Controllers/                  # HTTP endpoints
-│   │   ├── Filters/                      # API response filters
-│   │   ├── Hubs/                         # SignalR hubs and realtime connections
-│   │   ├── Middleware/                   # Request pipeline and exception handling
-│   │   ├── Security/                     # JWT and current-user context
-│   │   ├── Responses/                    # API response models
-│   │   ├── Swagger/                      # API documentation configuration
-│   │   ├── DependencyInjection.cs         # API-layer service registration
-│   │   └── Program.cs                    # Application entry point
+│   │   ├── Controllers/                  # Các HTTP API endpoints
+│   │   ├── Filters/                      # Bộ lọc chuẩn hóa response
+│   │   ├── Hubs/                         # SignalR Hub và kết nối realtime
+│   │   ├── Middleware/                   # Xử lý request pipeline và bắt lỗi
+│   │   ├── Security/                     # Cấu hình JWT và thông tin user hiện tại
+│   │   ├── Responses/                    # Khuôn mẫu API response
+│   │   ├── Swagger/                      # Cấu hình tài liệu Swagger
+│   │   ├── DependencyInjection.cs        # Đăng ký DI cho tầng API
+│   │   └── Program.cs                    # Điểm khởi chạy ứng dụng
 │   │
 │   ├── RealtimeChat.Application/
-│   │   ├── Common/                       # Shared application models and utilities
-│   │   ├── Features/                     # UseCases organized by feature
-│   │   ├── Interfaces/                   # Application abstractions
-│   │   ├── QueryExtensions/              # Reusable query extensions
-│   │   ├── Exceptions/                   # Application-level exceptions
-│   │   └── DependencyInjection.cs         # Application service registration
+│   │   ├── Common/                       # Các model và tiện ích dùng chung (phân trang)
+│   │   ├── Features/                     # Các UseCase chia theo tính năng
+│   │   ├── Interfaces/                   # Các interface trừu tượng
+│   │   ├── QueryExtensions/              # Các hàm mở rộng truy vấn tái sử dụng
+│   │   ├── Exceptions/                   # Các exception ở tầng Application
+│   │   └── DependencyInjection.cs        # Đăng ký DI cho tầng Application
 │   │
 │   ├── RealtimeChat.Domain/
-│   │   ├── Entities/                     # Domain entities and state transitions
-│   │   ├── ValueObject/                  # Value objects and value-based concepts
-│   │   ├── Enums/                        # Domain enumerations
-│   │   └── Exceptions/                   # Domain-specific exceptions
+│   │   ├── Entities/                     # Các thực thể và logic trạng thái
+│   │   ├── Factories/                    # Khởi tạo tin nhắn hệ thống
+│   │   ├── ValueObjects/                 # Các đối tượng giá trị (Value Objects)
+│   │   ├── Enums/                        # Các kiểu liệt kê trong Domain
+│   │   └── Exceptions/                   # Các exception vi phạm quy tắc nghiệp vụ
 │   │
 │   └── RealtimeChat.Infrastructure/
-│       ├── Caching/                      # Caching implementations
-│       ├── Persistence/                  # EF Core and database access
-│       ├── Presence/                     # Presence tracking implementations
-│       ├── Routings/                     # Routing and ETA service implementations
-│       ├── Security/                     # JWT and password-hashing implementations
-│       ├── Storage/                      # File and media storage implementations
-│       └── DependencyInjection.cs        # Infrastructure service registration
+│       ├── Caching/                      # Triển khai bộ nhớ đệm (Cache)
+│       ├── Persistence/                  # Cấu hình EF Core và truy cập Database
+│       ├── Presence/                     # Theo dõi trạng thái Online/Offline
+│       ├── Routings/                     # Dịch vụ định tuyến và tính ETA
+│       ├── Security/                     # Tạo JWT và băm mật khẩu
+│       ├── Storage/                      # Lưu trữ file và media
+│       └── DependencyInjection.cs        # Đăng ký DI cho tầng Infrastructure
+│
+├── tests/
+│   ├── RealtimeChat.UnitTests/           # Unit test cho tầng Domain
+│   └── RealtimeChat.IntegrationTests/    # Integration test cho hệ thống
 │
 ├── frontend/
-│   ├── src/                              # Frontend application source
-│   └── public/                           # Static public assets
+│   ├── src/                              # Mã nguồn giao diện React
+│   └── public/                           # Tài nguyên tĩnh
 │
-├── .env.example                          # Example environment configuration
-├── .gitignore                            # Files excluded from version control
-├── docker-compose.yml                    # Multi-service Docker configuration
-└── README.md                             # Project documentation
+├── .env.example                          # File mẫu biến môi trường
+├── .gitignore                            # Danh sách file bỏ qua của Git
+├── docker-compose.yml                    # Cấu hình chạy đa dịch vụ với Docker
+└── README.md                             # Tài liệu tổng quan dự án
 ```
 
 ## Getting Started

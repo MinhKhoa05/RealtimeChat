@@ -1,4 +1,3 @@
-
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -171,6 +170,16 @@ public class ConversationController : ControllerBase
     public async Task<IActionResult> TransferAdmin(long groupId, [FromBody] TransferAdminRequest request, CancellationToken ct)
     {
         await _transferAdmin.ExecuteAsync(groupId, request, ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Giải tán nhóm trò chuyện
+    /// </summary>
+    [HttpDelete("groups/{groupId:long}")]
+    public async Task<IActionResult> DisbandGroup(long groupId, CancellationToken ct)
+    {
+        await _disbandGroup.ExecuteAsync(groupId, ct);
         return NoContent();
     }
 

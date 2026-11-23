@@ -38,9 +38,28 @@ public class ConversationTests
 
         conversation.Type.Should().Be(ConversationType.Direct);
         conversation.DirectKey.Should().Be(directKey);
+        conversation.Name.Should().BeNull();
+        conversation.InviteCode.Should().BeNull();
+        conversation.DisbandedAt.Should().BeNull();
         conversation.Members.Should().HaveCount(2);
-        conversation.Members.Should().ContainSingle(x => x.MemberId == userId);
-        conversation.Members.Should().ContainSingle(x => x.MemberId == otherUserId);
+        conversation.Members.Should().ContainSingle(x =>
+            x.MemberId == userId &&
+            x.Role == ConversationMemberRole.Member &&
+            x.InvitedById == null);
+        conversation.Members.Should().ContainSingle(x =>
+            x.MemberId == otherUserId &&
+            x.Role == ConversationMemberRole.Member &&
+            x.InvitedById == null);
+    }
+
+    [Fact]
+    public void CreateDirectKey_RegardlessOfUserOrder_ReturnsConsistentNormalizedKey()
+    {
+        var key1 = Conversation.CreateDirectKey(1L, 5L);
+        var key2 = Conversation.CreateDirectKey(5L, 1L);
+
+        key1.Should().Be("1:5");
+        key2.Should().Be("1:5");
     }
 
     [Fact]
@@ -72,7 +91,17 @@ public class ConversationTests
         conversation.Members.Should().HaveCount(memberCount);
         conversation.Members.Should().ContainSingle(x =>
             x.MemberId == actorId &&
-            x.Role == ConversationMemberRole.Admin);
+            x.Role == ConversationMemberRole.Admin &&
+            x.InvitedById == null);
+
+        conversation.Members
+            .Where(x => x.MemberId != actorId)
+            .Should()
+            .AllSatisfy(x =>
+            {
+                x.Role.Should().Be(ConversationMemberRole.Member);
+                x.InvitedById.Should().Be(actorId);
+            });
 
         conversation.Members
             .Select(x => x.MemberId)
@@ -176,15 +205,33 @@ public class ConversationTests
     [Theory]
     [InlineData(ConversationType.Direct)]
     [InlineData(ConversationType.Group)]
-    public void UpdateReadState_WhenMemberExists_ReturnsTrue(ConversationType type)
+    public void UpdateReadState_WhenMemberExists_UpdatesLastReadMessageIdAndReturnsTrue(ConversationType type)
     {
         var conversation = CreateConversationDefault(type);
         var member = conversation.Members.First();
-        var messageId = 10;
+        var messageId = 10L;
 
         var result = conversation.UpdateReadState(member.MemberId, messageId);
 
         result.Should().BeTrue();
+        member.LastReadMessageId.Should().Be(messageId);
+    }
+
+    [Theory]
+    [InlineData(ConversationType.Direct)]
+    [InlineData(ConversationType.Group)]
+    public void UpdateReadState_WhenMessageIdIsEqualOrNewer_UpdatesLastReadMessageIdAndReturnsTrue(ConversationType type)
+    {
+        var conversation = CreateConversationDefault(type);
+        var member = conversation.Members.First();
+        conversation.UpdateReadState(member.MemberId, 10L);
+
+        var sameIdResult = conversation.UpdateReadState(member.MemberId, 10L);
+        var newerIdResult = conversation.UpdateReadState(member.MemberId, 15L);
+
+        sameIdResult.Should().BeTrue();
+        newerIdResult.Should().BeTrue();
+        member.LastReadMessageId.Should().Be(15L);
     }
 
     [Theory]
@@ -216,16 +263,19 @@ public class ConversationTests
     }
 
     [Theory]
-    [InlineData(ConversationType.Direct)]
-    [InlineData(ConversationType.Group)]
-    public void SetPinned_WhenMemberExists_SetsPinnedState(ConversationType type)
+    [InlineData(ConversationType.Direct, true)]
+    [InlineData(ConversationType.Direct, false)]
+    [InlineData(ConversationType.Group, true)]
+    [InlineData(ConversationType.Group, false)]
+    public void SetPinned_WhenMemberExists_SetsPinnedState(ConversationType type, bool isPinned)
     {
         var conversation = CreateConversationDefault(type);
         var member = conversation.Members.First();
+        conversation.SetPinned(member.MemberId, !isPinned);
 
-        conversation.SetPinned(member.MemberId, true);
+        conversation.SetPinned(member.MemberId, isPinned);
 
-        member.IsPinned.Should().BeTrue();
+        member.IsPinned.Should().Be(isPinned);
     }
 
     [Theory]
@@ -241,11 +291,12 @@ public class ConversationTests
         act.Should().Throw<DomainException>();
     }
 
-    [Fact]
-    public void AddMember_WhenInputIsValid_AddsMemberToGroup()
+    [Theory]
+    [InlineData(DefaultGroupAdminId)]
+    [InlineData(2L)]
+    public void AddMember_WhenActorIsAnyGroupMember_AddsMemberWithInvitedById(long actorId)
     {
         var conversation = CreateGroupDefault();
-        var actorId = DefaultGroupAdminId;
         var memberId = DefaultNewMemberId;
         var memberCount = DefaultGroupMemberIds.Count + 2; // Members + group admin + new member
 
@@ -253,7 +304,10 @@ public class ConversationTests
 
         isChange.Should().BeTrue();
         conversation.Members.Should().HaveCount(memberCount);
-        conversation.Members.Should().ContainSingle(x => x.MemberId == memberId);
+        conversation.Members.Should().ContainSingle(x =>
+            x.MemberId == memberId &&
+            x.Role == ConversationMemberRole.Member &&
+            x.InvitedById == actorId);
     }
 
     [Fact]
@@ -318,7 +372,7 @@ public class ConversationTests
     }
 
     [Fact]
-    public void JoinByInviteKey_WhenInputIsValid_AddsMemberToGroup()
+    public void JoinByInviteKey_WhenInputIsValid_AddsMemberToGroupWithNullInvitedById()
     {
         var conversation = CreateGroupDefault();
         var actorId = 10L;
@@ -328,7 +382,10 @@ public class ConversationTests
 
         isChange.Should().BeTrue();
         conversation.Members.Should().HaveCount(memberCount);
-        conversation.Members.Should().ContainSingle(x => x.MemberId == actorId);
+        conversation.Members.Should().ContainSingle(x =>
+            x.MemberId == actorId &&
+            x.Role == ConversationMemberRole.Member &&
+            x.InvitedById == null);
     }
 
     [Fact]
@@ -443,7 +500,7 @@ public class ConversationTests
         var conversation = CreateGroupDefault();
         var actorId = 2L;
 
-        var isChange =conversation.Leave(actorId);
+        var isChange = conversation.Leave(actorId);
 
         isChange.Should().BeTrue();
         conversation.Members.Should().HaveCount(2);
@@ -499,9 +556,9 @@ public class ConversationTests
         var actorId = DefaultGroupAdminId;
         var newAdminId = 2L;
 
-        var isChnage = conversation.TransferAdmin(actorId, newAdminId);
+        var isChange = conversation.TransferAdmin(actorId, newAdminId);
 
-        isChnage.Should().BeTrue();
+        isChange.Should().BeTrue();
 
         conversation.Members.Should().ContainSingle(x =>
             x.MemberId == newAdminId &&

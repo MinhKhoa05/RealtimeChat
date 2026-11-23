@@ -101,14 +101,17 @@ public class CallTests
     }
 
     [Fact]
-    public void Accept_WhenCallAlreadyAccepted_ReturnFalse()
+    public void Accept_WhenCallAlreadyAccepted_ReturnsFalse()
     {
         var call = CreateDefault(CallStatus.Accepted);
         var actorId = DefaultReceiverId;
+        var laterTime = DefaultStartedAt.AddMinutes(5);
 
-        var isChange = call.Accept(actorId, DefaultStartedAt);
+        var isChange = call.Accept(actorId, laterTime);
 
         isChange.Should().BeFalse();
+        call.Status.Should().Be(CallStatus.Accepted);
+        call.StartedAt.Should().Be(DefaultStartedAt);
     }
 
     [Theory]
@@ -150,14 +153,15 @@ public class CallTests
         act.Should().Throw<ForbiddenDomainException>();
     }
 
-     [Fact]
-    public void Rejected_WhenCallAlreadyRejected_ReturnFalse()
+    [Fact]
+    public void Reject_WhenCallAlreadyRejected_ReturnsFalse()
     {
         var call = CreateDefault(CallStatus.Rejected);
 
         var isChange = call.Reject(DefaultReceiverId);
 
         isChange.Should().BeFalse();
+        call.Status.Should().Be(CallStatus.Rejected);
     }
 
     [Theory]
@@ -200,13 +204,14 @@ public class CallTests
     }
 
     [Fact]
-    public void Cancel_WhenCallIsAlreadyCancelled_ReturnFalse()
+    public void Cancel_WhenCallIsAlreadyCancelled_ReturnsFalse()
     {
         var call = CreateDefault(CallStatus.Cancelled);
 
         var isChange = call.Cancel(DefaultCallerId);
-        
+
         isChange.Should().BeFalse();
+        call.Status.Should().Be(CallStatus.Cancelled);
     }
 
     [Theory]
@@ -236,13 +241,14 @@ public class CallTests
     }
 
     [Fact]
-    public void MarkAsMissed_WhenCallIsAlreadyMissed_ReturnFalse()
+    public void MarkAsMissed_WhenCallIsAlreadyMissed_ReturnsFalse()
     {
         var call = CreateDefault(CallStatus.Missed);
 
         var isChange = call.MarkAsMissed();
 
         isChange.Should().BeFalse();
+        call.Status.Should().Be(CallStatus.Missed);
     }
 
     [Theory]
@@ -286,13 +292,27 @@ public class CallTests
     }
 
     [Fact]
-    public void End_WhenCallIsAlreadyEnded_ReturnFalse()
+    public void End_WhenEndTimeIsEarlierThanStartedAt_ThrowsDomainException()
+    {
+        var call = CreateDefault(CallStatus.Accepted);
+        var earlierTime = DefaultStartedAt.AddSeconds(-1);
+
+        var act = () => call.End(DefaultCallerId, earlierTime);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void End_WhenCallIsAlreadyEnded_ReturnsFalse()
     {
         var call = CreateDefault(CallStatus.Ended);
+        var originalEndedAt = call.EndedAt;
 
-        var isChange = call.End(DefaultCallerId, DefaultStartedAt.AddMinutes(1));
+        var isChange = call.End(DefaultCallerId, DefaultStartedAt.AddMinutes(10));
 
         isChange.Should().BeFalse();
+        call.Status.Should().Be(CallStatus.Ended);
+        call.EndedAt.Should().Be(originalEndedAt);
     }
 
     [Theory]
@@ -311,7 +331,7 @@ public class CallTests
     }
 
     [Fact]
-    public void Duration_WhenCallIsEnded_ReturnDuration()
+    public void Duration_WhenCallIsEnded_ReturnsDuration()
     {
         var call = CreateDefault(CallStatus.Accepted);
         var duration = TimeSpan.FromMinutes(1);
@@ -328,7 +348,7 @@ public class CallTests
     [InlineData(CallStatus.Accepted)]
     [InlineData(CallStatus.Cancelled)]
     [InlineData(CallStatus.Missed)]
-    public void Duration_WhenCallIsNotEnded_ReturnNull(CallStatus status)
+    public void Duration_WhenCallIsNotEnded_ReturnsNull(CallStatus status)
     {
         var call = CreateDefault(status);
 

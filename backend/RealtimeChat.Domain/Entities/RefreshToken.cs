@@ -17,6 +17,8 @@ public class RefreshToken : BaseEntity
 
     public static RefreshToken Create(long userId, string tokenHash, DateTime now)
     {
+        if (string.IsNullOrWhiteSpace(tokenHash))
+            throw new DomainException("Token hash is required.");
 
         return new RefreshToken
         {

@@ -1,3 +1,5 @@
+using RealtimeChat.Domain.Exceptions;
+
 namespace RealtimeChat.Domain.Entities;
 
 public class User : BaseEntity
@@ -15,10 +17,19 @@ public class User : BaseEntity
 
     public static User Create(string name, string email, string passwordHash)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new DomainException("Name is required.");
+
+        if (string.IsNullOrWhiteSpace(email))
+            throw new DomainException("Email is required.");
+
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new DomainException("Password hash is required.");
+
         return new User
         {
-            Name = name,
-            Email = email,
+            Name = name.Trim(),
+            Email = email.Trim(),
             PasswordHash = passwordHash,
         };
     }
@@ -34,6 +45,9 @@ public class User : BaseEntity
 
     public void ChangePassword(string passwordHash)
     {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+            throw new DomainException("Password hash is required.");
+
         PasswordHash = passwordHash;
     }
 }

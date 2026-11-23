@@ -62,7 +62,7 @@ public class UserController : ControllerBase
     /// Lấy tóm tắt thông tin nhiều người dùng theo danh sách ID
     /// </summary>
     [HttpGet("batch")]
-    public async Task<ActionResult<List<UserSummaryResponse>>> GetUserSummaries(IReadOnlyList<long> userIds, CancellationToken ct)
+    public async Task<ActionResult<List<UserSummaryResponse>>> GetUserSummaries([FromQuery] IReadOnlyList<long> userIds, CancellationToken ct)
     {
         var result = await _getUserSummaries.ExecuteAsync(userIds, ct);
         return Ok(result);

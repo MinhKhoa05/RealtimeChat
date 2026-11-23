@@ -2,6 +2,7 @@ using FluentAssertions;
 using RealtimeChat.Domain.Entities;
 using RealtimeChat.Domain.Enums;
 using RealtimeChat.Domain.Exceptions;
+using RealtimeChat.Domain.Factories;
 
 namespace RealtimeChat.UnitTests.Domain;
 
@@ -38,19 +39,20 @@ public class MessageTests
     }
 
     [Theory]
+    [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("\t")]
     [InlineData("\n")]
-    public void CreateText_WhenContentIsEmpty_ThrowsDomainException(string content)
+    public void CreateText_WhenContentIsNullOrWhiteSpace_ThrowsDomainException(string? content)
     {
-        var act = () => CreateDefault(content: content);
+        var act = () => CreateDefault(content: content!);
 
         act.Should().Throw<DomainException>();
     }
 
     [Fact]
-    public void CreateText_WithMentionTokens_AddsDistinctMentions()
+    public void CreateText_WithMentionTokens_AddsDistinctMentionsPresentInContent()
     {
         var content = "Hello <@30> <@30>";
         var mentionUserIds = new List<long> { 30, 30, 20 };
@@ -58,7 +60,7 @@ public class MessageTests
         var message = Message.CreateText(
             DefaultConversationId, DefaultSenderId, content, mentionUserIds);
 
-        message.Mentions.Should().ContainSingle();
+        message.Mentions.Should().ContainSingle(x => x.UserId == DefaultMentionUserId);
     }
 
     [Fact]
@@ -96,6 +98,18 @@ public class MessageTests
     }
 
     [Fact]
+    public void CreateText_WhenReplyingToSystemMessage_ThrowsDomainException()
+    {
+        var systemMessage = SystemMessageFactory.CreateMemberJoined(DefaultConversationId, DefaultSenderId);
+
+        var act = () => Message.CreateText(
+            DefaultConversationId, DefaultOtherSenderId, "Reply",
+            replyToMessage: systemMessage);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
     public void CreateMedia_WithValidInput_CreatesMediaMessage()
     {
         var media = Media.Create("image.png", "image/png", 1024, ".png");
@@ -126,10 +140,14 @@ public class MessageTests
     }
 
     [Fact]
-    public void Recall_WhenActorIsSender_RecallsMessage()
+    public void Recall_WhenActorIsSender_RecallsTextMessageAndClearsMentions()
     {
-        var message = CreateDefault();
-        var now = DateTime.UtcNow;
+        var message = Message.CreateText(
+            DefaultConversationId,
+            DefaultSenderId,
+            $"Hello {Message.MentionToken(DefaultMentionUserId)}",
+            [DefaultMentionUserId]);
+        var now = message.CreatedAt.AddMinutes(5);
 
         var result = message.Recall(DefaultSenderId, now);
 
@@ -140,33 +158,60 @@ public class MessageTests
     }
 
     [Fact]
+    public void Recall_WhenMessageIsAtExactRecallWindowBoundary_RecallsMessage()
+    {
+        var message = CreateDefault();
+        var exactBoundary = message.CreatedAt.AddMinutes(15);
+
+        var result = message.Recall(DefaultSenderId, exactBoundary);
+
+        result.Should().BeTrue();
+        message.RecalledAt.Should().Be(exactBoundary);
+    }
+
+    [Fact]
+    public void Recall_WhenMessageIsMedia_RecallsMessage()
+    {
+        var media = Media.Create("image.png", "image/png", 1024, ".png");
+        var mediaMessage = Message.CreateMedia(DefaultConversationId, DefaultSenderId, media);
+        var now = mediaMessage.CreatedAt.AddMinutes(1);
+
+        var result = mediaMessage.Recall(DefaultSenderId, now);
+
+        result.Should().BeTrue();
+        mediaMessage.RecalledAt.Should().Be(now);
+    }
+
+    [Fact]
     public void Recall_WhenActorIsNotSender_ThrowsForbiddenDomainException()
     {
         var message = CreateDefault();
 
-        var act = () => message.Recall(DefaultUnauthorizedUserId, DateTime.UtcNow);
+        var act = () => message.Recall(DefaultUnauthorizedUserId, message.CreatedAt.AddMinutes(1));
 
         act.Should().Throw<ForbiddenDomainException>();
     }
 
     [Fact]
-    public void Recall_WhenAlreadyRecalled_ReturnsFalse()
+    public void Recall_WhenAlreadyRecalled_ReturnsFalseAndPreservesRecalledAt()
     {
         var message = CreateDefault();
-        message.Recall(DefaultSenderId, DateTime.UtcNow);
+        var firstRecallTime = message.CreatedAt.AddMinutes(1);
+        message.Recall(DefaultSenderId, firstRecallTime);
 
-        var result = message.Recall(DefaultSenderId, DateTime.UtcNow);
+        var result = message.Recall(DefaultSenderId, firstRecallTime.AddMinutes(2));
 
         result.Should().BeFalse();
+        message.RecalledAt.Should().Be(firstRecallTime);
     }
 
     [Fact]
     public void Recall_WhenOutsideRecallWindow_ThrowsDomainException()
     {
         var message = CreateDefault();
-        var now = DateTime.UtcNow.AddMinutes(16);
+        var outsideWindow = message.CreatedAt.AddMinutes(15).AddTicks(1);
 
-        var act = () => message.Recall(DefaultSenderId, now);
+        var act = () => message.Recall(DefaultSenderId, outsideWindow);
 
         act.Should().Throw<DomainException>();
     }
@@ -177,9 +222,19 @@ public class MessageTests
         var call = Call.Create(DefaultSenderId, DefaultOtherSenderId, CallType.Audio);
         var message = Message.CreateCall(DefaultConversationId, call);
 
-        var act = () => message.Recall(DefaultSenderId, DateTime.UtcNow);
+        var act = () => message.Recall(DefaultSenderId, message.CreatedAt.AddMinutes(1));
 
         act.Should().Throw<DomainException>();
+    }
+
+    [Fact]
+    public void Recall_WhenMessageIsSystem_ThrowsForbiddenDomainException()
+    {
+        var systemMessage = SystemMessageFactory.CreateMemberJoined(DefaultConversationId, DefaultSenderId);
+
+        var act = () => systemMessage.Recall(DefaultSenderId, systemMessage.CreatedAt.AddMinutes(1));
+
+        act.Should().Throw<ForbiddenDomainException>();
     }
 
     [Fact]

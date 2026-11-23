@@ -102,6 +102,9 @@ public class Call : BaseEntity
 
         EnsureStatus(CallStatus.Accepted, "ended");
 
+        if (now < StartedAt!.Value)
+            throw new DomainException("Call end time cannot be earlier than start time.");
+
         Status = CallStatus.Ended;
         EndedAt = now;
         return true;

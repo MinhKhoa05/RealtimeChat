@@ -1,35 +1,68 @@
 using FluentAssertions;
 using RealtimeChat.Domain.Entities;
+using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.UnitTests.Domain;
 
 public class MediaTests
 {
-    [Fact]
-    public void Create_WithValidInput_CreateMedia()
-    {
-        var originalName = "avatar.png";
-        var contentType = "image/png";
-        var size = 1024L;
-        var extension = ".png";
+    private const string DefaultOriginalName = "avatar.png";
+    private const string DefaultContentType = "image/png";
+    private const long DefaultSize = 1024L;
+    private const string DefaultExtension = ".png";
 
-        var media = Media.Create(originalName, contentType, size, extension);
+    [Fact]
+    public void Create_WithValidInput_CreatesMedia()
+    {
+        var media = Media.Create(DefaultOriginalName, DefaultContentType, DefaultSize, DefaultExtension);
 
         media.PublicId.Should().NotBeEmpty();
-        media.OriginalName.Should().Be(originalName);
-        media.ContentType.Should().Be(contentType);
-        media.Size.Should().Be(size);
-        media.StorageKey.Should().Be($"{media.PublicId:N}{extension}");
+        media.OriginalName.Should().Be(DefaultOriginalName);
+        media.ContentType.Should().Be(DefaultContentType);
+        media.Size.Should().Be(DefaultSize);
+        media.StorageKey.Should().Be($"{media.PublicId:N}{DefaultExtension}");
     }
 
     [Fact]
-    public void Create_Twice_GenerateDifferentPublicIds()
+    public void Create_WhenCalledMultipleTimes_GeneratesDistinctPublicIdsAndStorageKeys()
     {
-        var first = Media.Create("first.png", "image/png", 1024, ".png");
-
-        var second = Media.Create("second.png", "image/png", 2048, ".png");
+        var first = Media.Create("first.png", DefaultContentType, 1024L, DefaultExtension);
+        var second = Media.Create("second.png", DefaultContentType, 2048L, DefaultExtension);
 
         first.PublicId.Should().NotBe(second.PublicId);
         first.StorageKey.Should().NotBe(second.StorageKey);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Create_WhenOriginalNameIsNullOrWhiteSpace_ThrowsDomainException(string? originalName)
+    {
+        var act = () => Media.Create(originalName!, DefaultContentType, DefaultSize, DefaultExtension);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Create_WhenContentTypeIsNullOrWhiteSpace_ThrowsDomainException(string? contentType)
+    {
+        var act = () => Media.Create(DefaultOriginalName, contentType!, DefaultSize, DefaultExtension);
+
+        act.Should().Throw<DomainException>();
+    }
+
+    [Theory]
+    [InlineData(0L)]
+    [InlineData(-1L)]
+    [InlineData(-1024L)]
+    public void Create_WhenSizeIsZeroOrNegative_ThrowsDomainException(long size)
+    {
+        var act = () => Media.Create(DefaultOriginalName, DefaultContentType, size, DefaultExtension);
+
+        act.Should().Throw<DomainException>();
     }
 }

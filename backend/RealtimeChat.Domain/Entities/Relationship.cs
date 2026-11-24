@@ -3,8 +3,9 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Relationship : BaseEntity
+public class Relationship
 {
+    public long Id { get; private set; }
     public long UserId { get; private set; }
     public User User { get; private set; } = null!;
 
@@ -14,6 +15,8 @@ public class Relationship : BaseEntity
     public RelationshipType Type { get; private set; }
 
     public string? Introduction { get; private set; }
+
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
     private Relationship() { }
 

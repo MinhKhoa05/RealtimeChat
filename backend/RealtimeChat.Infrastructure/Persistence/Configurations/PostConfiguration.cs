@@ -4,12 +4,10 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class PostConfiguration : BaseEntityConfiguration<Post>
+public class PostConfiguration : IEntityTypeConfiguration<Post>
 {
-    public override void Configure(EntityTypeBuilder<Post> builder)
+    public void Configure(EntityTypeBuilder<Post> builder)
     {
-        base.Configure(builder);
-
         builder.Property(x => x.AuthorId)
             .IsRequired();
 

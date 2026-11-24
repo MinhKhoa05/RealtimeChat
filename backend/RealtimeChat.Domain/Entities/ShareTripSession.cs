@@ -4,8 +4,9 @@ using RealtimeChat.Domain.ValueObjects;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class ShareTripSession : BaseEntity
+public class ShareTripSession
 {
+    public long Id { get; private set; }
     public long OwnerId { get; private set; }
     public User Owner { get; private set; } = null!;
     public long ConversationId { get; private set; }
@@ -21,6 +22,7 @@ public class ShareTripSession : BaseEntity
     public GeoCoordinate? LastEtaLocation { get; private set; }
 
     public ShareTripStatus Status { get; private set; }
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? ExpiresAt { get; private set; }
     public DateTime? EndedAt { get; private set; }
 

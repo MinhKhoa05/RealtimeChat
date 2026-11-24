@@ -3,8 +3,11 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Conversation : BaseEntity
+public class Conversation
 {
+    public long Id { get; private set; }
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+
     public ConversationType Type { get; private set; }
     
     // Dùng cho Direct Chat

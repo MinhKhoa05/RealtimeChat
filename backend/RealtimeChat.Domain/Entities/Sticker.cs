@@ -2,8 +2,9 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Sticker : BaseEntity
+public class Sticker
 {
+    public long Id { get; private set; }
     public long CollectionId { get; private set; }
     public StickerCollection Collection { get; private set; } = null!;
 
@@ -12,6 +13,8 @@ public class Sticker : BaseEntity
 
     public long MediaId { get; private set; }
     public Media Media { get; private set; } = null!;
+
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     
     private Sticker() { }
 

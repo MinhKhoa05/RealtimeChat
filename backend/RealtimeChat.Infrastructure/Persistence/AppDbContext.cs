@@ -37,34 +37,11 @@ public class AppDbContext : DbContext, IAppDbContext
     {
         try
         {
-            ApplyTimestamps();
             return await base.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateException ex) when (IsDuplicateKey(ex))
         {
             throw new DuplicateKeyException(ex);
-        }
-    }
-
-    private void ApplyTimestamps()
-    {
-        var entries = ChangeTracker.Entries<BaseEntity>()
-            .Where(e => e.State is EntityState.Added or EntityState.Modified);
-
-        var now = DateTime.UtcNow;
-
-        foreach (var entry in entries)
-        {
-            if (entry.State == EntityState.Added)
-            {
-                entry.Property(e => e.CreatedAt).IsModified = false;
-                entry.Property(e => e.UpdatedAt).CurrentValue = null;
-            }
-            else
-            {
-                entry.Property(e => e.CreatedAt).IsModified = false;
-                entry.Property(e => e.UpdatedAt).CurrentValue = now;
-            }
         }
     }
 

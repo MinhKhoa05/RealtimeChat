@@ -3,8 +3,9 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Message : BaseEntity
+public class Message
 {
+    public long Id { get; private set; }
     public long ConversationId { get; private set; }
     public Conversation Conversation { get; private set; } = null!;
 
@@ -29,6 +30,7 @@ public class Message : BaseEntity
     public long? ReplyToMessageId { get; private set; }
     public Message? ReplyToMessage { get; private set; }
 
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? RecalledAt { get; private set; }
 
     private readonly List<Mention> _mentions = [];

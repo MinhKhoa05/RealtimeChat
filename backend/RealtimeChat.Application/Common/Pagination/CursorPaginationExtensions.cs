@@ -6,8 +6,7 @@ namespace RealtimeChat.Application.Common.Pagination;
 
 public static class CursorPaginationExtensions
 {
-    public static async Task<CursorPaginationResult<T>> ToCursorPageAsync<T>(this IQueryable<T> query, CursorPaginationQuery request, CancellationToken ct)
-        where T : BaseEntity
+    public static async Task<CursorPaginationResult<Message>> ToCursorPageAsync(this IQueryable<Message> query, CursorPaginationQuery request, CancellationToken ct)
     {
         Validate(request);
 
@@ -36,7 +35,7 @@ public static class CursorPaginationExtensions
             items.Reverse();
         }
 
-        return new CursorPaginationResult<T>
+        return new CursorPaginationResult<Message>
         {
             Items = items,
             HasMore = hasMore,

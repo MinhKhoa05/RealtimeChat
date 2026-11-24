@@ -1,14 +1,13 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class MediaConfiguration : BaseEntityConfiguration<Media>
+public class MediaConfiguration : IEntityTypeConfiguration<Media>
 {
-    public override void Configure(EntityTypeBuilder<Media> builder)
+    public void Configure(EntityTypeBuilder<Media> builder)
     {
-        base.Configure(builder);
-
         builder.Property(x => x.PublicId)
             .IsRequired();
 

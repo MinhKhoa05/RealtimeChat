@@ -4,12 +4,10 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class StickerCollectionConfiguration : BaseEntityConfiguration<StickerCollection>
+public class StickerCollectionConfiguration : IEntityTypeConfiguration<StickerCollection>
 {
-    public override void Configure(EntityTypeBuilder<StickerCollection> builder)
+    public void Configure(EntityTypeBuilder<StickerCollection> builder)
     {
-        base.Configure(builder);
-
         builder.Property(x => x.Label)
             .HasMaxLength(100)
             .IsRequired();

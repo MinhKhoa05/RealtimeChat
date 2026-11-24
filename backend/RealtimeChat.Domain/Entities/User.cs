@@ -2,8 +2,9 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class User : BaseEntity
+public class User
 {
+    public long Id { get; private set; }
     public string Name { get; private set; } = null!;
     public string Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
@@ -11,6 +12,7 @@ public class User : BaseEntity
     public long? AvatarMediaId { get; private set; }
     public Media? AvatarMedia { get; private set; }
 
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? LastSeenAt { get; private set; }
 
     private User() { }

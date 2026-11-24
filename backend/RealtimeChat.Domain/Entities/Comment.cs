@@ -2,8 +2,11 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Comment : BaseEntity
+public class Comment
 {
+    public long Id { get; private set; }
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+
     public long PostId { get; private set; }
     public Post Post { get; private set; } = null!;
 

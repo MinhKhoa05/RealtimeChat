@@ -51,9 +51,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CallerId");
@@ -87,9 +84,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
 
                     b.Property<long>("PostId")
                         .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -132,9 +126,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AvatarMediaId");
@@ -150,17 +141,11 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.ConversationMember", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
-
                     b.Property<long>("ConversationId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<long>("MemberId")
+                        .HasColumnType("bigint");
 
                     b.Property<long?>("InvitedById")
                         .HasColumnType("bigint");
@@ -168,26 +153,20 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsPinned")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<long?>("LastReadMessageId")
-                        .HasColumnType("bigint");
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime(6)");
 
-                    b.Property<long>("MemberId")
+                    b.Property<long?>("LastReadMessageId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
+                    b.HasKey("ConversationId", "MemberId");
 
                     b.HasIndex("InvitedById");
 
                     b.HasIndex("MemberId");
-
-                    b.HasIndex("ConversationId", "MemberId")
-                        .IsUnique();
 
                     b.ToTable("ConversationMember");
                 });
@@ -223,9 +202,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -291,9 +267,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CallId");
@@ -334,9 +307,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Privacy")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -382,9 +352,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                         .HasMaxLength(44)
                         .HasColumnType("varchar(44)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
@@ -418,9 +385,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
@@ -472,9 +436,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ConversationId");
@@ -509,9 +470,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PublicId")
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CollectionId");
@@ -545,9 +503,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("SharedKey")
                         .HasColumnType("char(36)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("Visibility")
                         .HasColumnType("int");
@@ -594,9 +549,6 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AvatarMediaId");
@@ -628,11 +580,8 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.UserStickerCollection", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<long>("UserId")
                         .HasColumnType("bigint");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<long>("CollectionId")
                         .HasColumnType("bigint");
@@ -640,18 +589,9 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
+                    b.HasKey("UserId", "CollectionId");
 
                     b.HasIndex("CollectionId");
-
-                    b.HasIndex("UserId", "CollectionId")
-                        .IsUnique();
 
                     b.ToTable("UserStickerCollections");
                 });
@@ -712,22 +652,18 @@ namespace RealtimeChat.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RealtimeChat.Domain.Entities.User", "InvitedBy")
+                    b.HasOne("RealtimeChat.Domain.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("InvitedById")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("RealtimeChat.Domain.Entities.User", "Member")
+                    b.HasOne("RealtimeChat.Domain.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("MemberId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Conversation");
-
-                    b.Navigation("InvitedBy");
-
-                    b.Navigation("Member");
                 });
 
             modelBuilder.Entity("RealtimeChat.Domain.Entities.Mention", b =>

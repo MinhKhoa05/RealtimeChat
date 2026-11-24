@@ -3,8 +3,11 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Call : BaseEntity
+public class Call
 {
+    public long Id { get; private set; }
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+
     public long CallerId { get; private set; }
     public User Caller { get; private set; } = null!;
 

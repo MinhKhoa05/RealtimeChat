@@ -3,7 +3,7 @@ using RealtimeChat.Domain.Enums;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class ConversationMember : BaseEntity
+public class ConversationMember
 {
     public long ConversationId { get; private set; }
     public Conversation Conversation { get; private set; } = null!;
@@ -17,6 +17,8 @@ public class ConversationMember : BaseEntity
     public bool IsPinned { get; private set; }
 
     public long? InvitedById { get; private set; } // Null nếu tham gia qua link nhóm.
+
+    public DateTime JoinedAt { get; private set; } = DateTime.UtcNow;
 
     private ConversationMember() { }
 

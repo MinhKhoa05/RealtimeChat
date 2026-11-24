@@ -29,7 +29,7 @@ public class GetGroupMembersUseCase
                 MemberId = x.MemberId,
                 Role = x.Role,
                 InvitedById = x.InvitedById,
-                JoinedAt = x.CreatedAt,
+                JoinedAt = x.JoinedAt,
             })
             .ToListAsync(ct);
 

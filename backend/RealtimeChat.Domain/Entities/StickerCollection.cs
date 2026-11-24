@@ -3,8 +3,9 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class StickerCollection : BaseEntity
+public class StickerCollection
 {
+    public long Id { get; private set; }
     public long OwnerId { get; private set; }
     public User Owner { get; private set; } = null!;
 
@@ -12,6 +13,8 @@ public class StickerCollection : BaseEntity
     public Guid SharedKey { get; private set; }
 
     public StickerCollectionVisibility Visibility { get; private set; }
+
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
     public ICollection<Sticker> Stickers { get; private set; } = new List<Sticker>();
 

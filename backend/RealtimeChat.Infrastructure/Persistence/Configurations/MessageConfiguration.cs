@@ -4,12 +4,10 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class MessageConfiguration : BaseEntityConfiguration<Message>
+public class MessageConfiguration : IEntityTypeConfiguration<Message>
 {
-    public override void Configure(EntityTypeBuilder<Message> builder)
+    public void Configure(EntityTypeBuilder<Message> builder)
     {
-        base.Configure(builder);
-
         builder.HasOne(x => x.Conversation)
             .WithMany()
             .HasForeignKey(x => x.ConversationId)

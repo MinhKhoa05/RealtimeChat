@@ -4,17 +4,15 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class ConversationMemberConfiguration : BaseEntityConfiguration<ConversationMember>
+public class ConversationMemberConfiguration : IEntityTypeConfiguration<ConversationMember>
 {
-    public override void Configure(EntityTypeBuilder<ConversationMember> builder)
+    public void Configure(EntityTypeBuilder<ConversationMember> builder)
     {
-        base.Configure(builder);
-
-        builder.HasIndex(x => new
+        builder.HasKey(x => new
         {
             x.ConversationId,
             x.MemberId
-        }).IsUnique();
+        });
 
         builder.HasOne(x => x.Conversation)
             .WithMany(x => x.Members)

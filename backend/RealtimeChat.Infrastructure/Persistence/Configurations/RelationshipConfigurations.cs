@@ -4,12 +4,10 @@ using RealtimeChat.Domain.Entities;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class RelationshipConfiguration : BaseEntityConfiguration<Relationship>
+public class RelationshipConfiguration : IEntityTypeConfiguration<Relationship>
 {
-    public override void Configure(EntityTypeBuilder<Relationship> builder)
+    public void Configure(EntityTypeBuilder<Relationship> builder)
     {
-        base.Configure(builder);
-
         builder.Property(x => x.Introduction)
             .HasMaxLength(500);
 

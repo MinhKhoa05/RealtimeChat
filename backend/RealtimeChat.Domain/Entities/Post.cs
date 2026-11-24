@@ -3,13 +3,15 @@ using RealtimeChat.Domain.Exceptions;
 
 namespace RealtimeChat.Domain.Entities;
 
-public class Post : BaseEntity
+public class Post
 {
+    public long Id { get; private set; }
     public long AuthorId { get; private set; }
     public User Author { get; private set; } = null!;
     public string Content { get; private set; } = null!;
     public PostPrivacy Privacy { get; private set; }
 
+    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? DeletedAt { get; private set; }
 
     private Post() { }

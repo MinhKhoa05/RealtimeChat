@@ -5,12 +5,10 @@ using RealtimeChat.Infrastructure.Persistence.Configurations.ValueObjectConfigs;
 
 namespace RealtimeChat.Infrastructure.Persistence.Configurations;
 
-public class ShareTripSessionConfiguration : BaseEntityConfiguration<ShareTripSession>
+public class ShareTripSessionConfiguration : IEntityTypeConfiguration<ShareTripSession>
 {
-    public override void Configure(EntityTypeBuilder<ShareTripSession> builder)
+    public void Configure(EntityTypeBuilder<ShareTripSession> builder)
     {
-        base.Configure(builder);
-
         builder.Property(x => x.TripTitle)
             .HasMaxLength(150)
             .IsRequired();
